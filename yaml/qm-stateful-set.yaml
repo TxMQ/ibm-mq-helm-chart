@@ -1,0 +1,69 @@
+kind: StatefulSet
+apiVersion: apps/v1
+metadata:
+spec:
+  replicas: 1
+  selector: {}
+  template:
+    metadata:
+      labels: {}
+      annotations: {}
+      spec:
+        volumes: []
+        initContainers: []
+        serviceAccountName: sa1
+        securityContext: {}
+        imagePullSecrets: ""
+        affinity: {}
+        terminationGracePeriodSeconds: 30
+        containers:
+        - name: qmgr
+          image: image-registry.openshift-image-registry.svc:5000/mqmq/mq-server-922:0.1
+          command: 
+          args:
+          workingDir: {}
+          ports:
+          - containerPort: 1414
+            protocol: TCP
+          - containerPort: 9443
+            protocol: TCP
+          - containerPort: 9157
+            protocol: TCP
+          resources:
+            limits:
+              cpu: ...
+              memory: ...
+            requests:
+              cpu: ...
+              memory: ...
+          startupProbe: 
+            exec:
+              command:
+              - helloprobe
+            timeoutSeconds: 5
+            periodSeconds: 5
+            successThreshold: 1
+            failureThreshold: 60
+          readinessProbe:
+            exec:
+              command:
+              - readyprobe
+            timeoutSeconds: 5
+            periodSeconds: 5
+            successThreshold: 1
+            failureThreshold: 1
+          livelinessProbe:
+            exec:
+              command:
+              - liveprobe
+            timeoutSeconds: 5
+            periodSeconds: 5
+            successThreshold: 1
+            failureThreshold: 1
+          imagePullPolicy: IfNotPresent
+          terminationMessagePath: /mnt/hello
+          env: {}
+          envFrom: {}
+          volumeMounts: []
+
+
