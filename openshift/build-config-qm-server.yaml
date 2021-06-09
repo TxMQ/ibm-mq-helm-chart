@@ -1,1 +1,24 @@
-apiVersion:
+apiVersion: build.openshift.io/v1
+kind: BuildConfig
+metadata:
+  name: mq-server-922
+  namespace: mqmq
+spec:
+  source:
+    git:
+      uri: 'https://github.com/szesto/mq-operator.git'
+    type: Git
+    images:
+    - from:
+        kind: DockerImage
+        name: "image-registry.openshift-image-registry.svc:5000/mqmq/mq-pkgs-922:1.0"
+      paths:
+      - destinationDir: .
+        sourcePath: /tmp/MQServer
+  strategy:
+    dockerStrategy:
+      dockerfilePath: Dockerfile
+  output:
+    to:
+      kind: DockerImage
+      name: "image-registry.openshift-image-registry.svc:5000/mqmq/mq-server-922:0.1"
