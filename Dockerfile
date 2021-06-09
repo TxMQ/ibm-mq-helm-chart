@@ -13,7 +13,7 @@ COPY MQServer /tmp/MQServer
 
 RUN rpm -Uvh /tmp/MQServer/MQSeriesRuntime*.rpm /tmp/MQServer/MQSeriesServer-*.rpm /tmp/MQServer/MQSeriesGSKit*.rpm /tmp/MQServer/MQSeriesJRE*.rpm /tmp/MQServer/MQSeriesWeb*.rpm /tmp/MQServer/MQSeriesJava*.rpm && /opt/mqm/bin/mqlicense -accept
 
-RUN microdnf clean all && rm -fr /tmp/MQServer && cat /tmp/mqconfig*.log
+RUN microdnf clean all && rm -fr /tmp/MQServer 
 
 # link /var/mqm to the /mnt/mqm/data; /var/mqm link is owned by root
 RUN rm -fr /var/mqm && mkdir -p /mnt/mqm/data && chown mqm:mqm /mnt/mqm/data && ln -s /mnt/mqm/data /var/mqm
