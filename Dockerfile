@@ -24,5 +24,5 @@ EXPOSE 1414 9157 9443
 
 USER 60001
 
-ENTRYPOINT ["/bin/bash", "-c", "/usr/bin/sleep 1000d"]
+ENTRYPOINT ["/bin/bash", "-c", "/opt/mqm/bin/crtmqdir -s -f && /usr/bin/sleep 1000d"]
 
