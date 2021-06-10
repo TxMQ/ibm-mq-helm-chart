@@ -1,69 +1,76 @@
 kind: StatefulSet
 apiVersion: apps/v1
 metadata:
+  name: simon1-qm
+  labels:
+    app.kubernetes.io/name: mq-queue-manager
+    app.kubernetes.io/instance: simon1-qm
+    app.kubernetes.io/version: "9.2.2.0"
+    app.kubernetes.io/component: messaging
 spec:
   replicas: 1
-  selector: {}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: mq-queue-manager
+      app.kubernetes.io/instance: simon1-qm
+      app.kubernetes.io/version: "9.2.2.0"
+      app.kubernetes.io/component: messaging
+  serviceName: qm
   template:
     metadata:
-      labels: {}
+      labels:
+        app.kubernetes.io/name: mq-queue-manager
+        app.kubernetes.io/instance: simon1-qm
+        app.kubernetes.io/version: "9.2.2.0"
+        app.kubernetes.io/component: messaging
       annotations: {}
-      spec:
-        volumes: []
-        initContainers: []
-        serviceAccountName: sa1
-        securityContext: {}
-        imagePullSecrets: ""
-        affinity: {}
-        terminationGracePeriodSeconds: 30
-        containers:
-        - name: qmgr
-          image: image-registry.openshift-image-registry.svc:5000/mqmq/mq-server-922:0.1
-          command: 
-          args:
-          workingDir: {}
-          ports:
+    spec:
+      restartPolicy: Always
+      volumes: []
+      initContainers: []
+      serviceAccountName: sa1
+      securityContext: {}
+      affinity: {}
+      terminationGracePeriodSeconds: 30
+      containers:
+      - name: qmgr
+        image: image-registry.openshift-image-registry.svc:5000/mqmq/mq-server-922:0.1
+        ports:
           - containerPort: 1414
             protocol: TCP
           - containerPort: 9443
             protocol: TCP
           - containerPort: 9157
             protocol: TCP
-          resources:
-            limits:
-              cpu: ...
-              memory: ...
-            requests:
-              cpu: ...
-              memory: ...
-          startupProbe: 
-            exec:
-              command:
-              - helloprobe
-            timeoutSeconds: 5
-            periodSeconds: 5
-            successThreshold: 1
-            failureThreshold: 60
-          readinessProbe:
-            exec:
-              command:
-              - readyprobe
-            timeoutSeconds: 5
-            periodSeconds: 5
-            successThreshold: 1
-            failureThreshold: 1
-          livelinessProbe:
-            exec:
-              command:
-              - liveprobe
-            timeoutSeconds: 5
-            periodSeconds: 5
-            successThreshold: 1
-            failureThreshold: 1
-          imagePullPolicy: IfNotPresent
-          terminationMessagePath: /mnt/hello
-          env: {}
-          envFrom: {}
-          volumeMounts: []
-
-
+        resources:
+          limits:
+            cpu: 100m
+            memory: 50Mi
+          requests:
+            cpu: 100m
+            memory: 50Mi
+        startupProbe: 
+          exec:
+            command: ["/bin/bash","-c","exit 0"]
+          timeoutSeconds: 5
+          periodSeconds: 5
+          successThreshold: 1
+          failureThreshold: 60
+        readinessProbe:
+          exec:
+            command: ["/bin/bash","-c","exit 0"]
+          timeoutSeconds: 5
+          periodSeconds: 5
+          successThreshold: 1
+          failureThreshold: 1
+        livenessProbe:
+          exec:
+            command: ["/bin/bash","-c","exit 0"]
+          timeoutSeconds: 5
+          periodSeconds: 5
+          successThreshold: 1
+          failureThreshold: 1
+        imagePullPolicy: IfNotPresent
+        env: []
+        envFrom: []
+        volumeMounts: []
