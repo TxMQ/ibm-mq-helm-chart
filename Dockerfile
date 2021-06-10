@@ -24,7 +24,8 @@ EXPOSE 1414 9157 9443
 
 RUN mkdir -p /etc/mqm && chown mqm:mqm /etc/mqm
 
-ENV MQ_EPHEMERAL_PREFIX=/etc/mqm PATH="${PATH}:/opt/mqm/bin"
+#ENV MQ_EPHEMERAL_PREFIX=/etc/mqm PATH="${PATH}:/opt/mqm/bin"
+ENV PATH="${PATH}:/opt/mqm/bin"
 
 RUN /opt/mqm/bin/crtmqdir -s -f
 
