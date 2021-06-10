@@ -5,7 +5,7 @@ RUN microdnf install -y shadow-utils bc tar procps-ng gzip findutils pam passwd 
 RUN microdnf install -y libgcc libstdc++
 
 # mqm user and group, outside the range of auto assigned uid/gid
-RUN groupadd -g 60001 mqm && useradd -u 60001 -g 60001 -d /var/mqm -M -e "" -K PASS_MAX_DAYS=-1  mqm
+RUN groupadd -g 1001 mqm && useradd -u 1001 -g 1001 -d /var/mqm -M -e "" -K PASS_MAX_DAYS=-1  mqm
 RUN mkdir -p /etc/security && echo "mqm hard nofile 10240" >> /etc/security/limits.conf && echo "mqm soft nofile 10240" >> /etc/security/limits.conf
 
 RUN mkdir -p /tmp/MQServer
@@ -30,7 +30,7 @@ ENV PATH="${PATH}:/opt/mqm/bin"
 RUN /opt/mqm/bin/crtmqdir -s -f
 RUN /opt/mqm/bin/security/amqpamcf
 
-USER 60001
+USER 1001
 
 ENTRYPOINT ["/bin/bash", "-c", "/usr/bin/sleep 100d"]
 
