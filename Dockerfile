@@ -22,7 +22,11 @@ RUN rm -fr /var/mqm && mkdir -p /mnt/mqm/data && chown mqm:mqm /mnt/mqm/data && 
 # default mq port 1414, metrics 9157, web 9443
 EXPOSE 1414 9157 9443
 
+RUN mkdir -p /etc/mqm && chown mqm:mqm /etc/mqm
+
+ENV MQ_EPHEMERAL_PREFIX=/etc/mqm PATH="${PATH}:/opt/mqm/bin"
+
 USER 60001
 
-ENTRYPOINT ["/bin/bash", "-c", "/opt/mqm/bin/crtmqdir -s -f && /usr/bin/sleep 1000d"]
+ENTRYPOINT ["/bin/bash", "-c", "/usr/bin/sleep 100d"]
 
