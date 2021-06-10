@@ -1,7 +1,7 @@
 FROM registry.access.redhat.com/ubi8/ubi-minimal:8.4
 USER 0
 
-RUN microdnf install -y shadow-utils bc tar procps-ng gzip findutils pam passwd wget
+RUN microdnf install -y shadow-utils bc tar procps-ng gzip findutils pam passwd wget util-linux sudo
 RUN microdnf install -y libgcc libstdc++
 
 # mqm user and group, outside the range of auto assigned uid/gid
