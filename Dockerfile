@@ -16,7 +16,7 @@ RUN rpm -Uvh /tmp/MQServer/MQSeriesRuntime*.rpm /tmp/MQServer/MQSeriesServer-*.r
 RUN microdnf clean all && rm -fr /tmp/MQServer 
 
 # link /var/mqm to the /mnt/mqm/data; /var/mqm link is owned by root
-RUN rm -fr /var/mqm && mkdir -p /mnt/mqm/data && chown mqm:mqm /mnt/mqm/data && ln -s /mnt/mqm/data /var/mqm
+RUN rm -fr /var/mqm && mkdir -mode 2775 -p /mnt/mqm/data && chown mqm:mqm /mnt/mqm/data && ln -s /mnt/mqm/data /var/mqm
 
 # expose listening ports
 # default mq port 1414, metrics 9157, web 9443
