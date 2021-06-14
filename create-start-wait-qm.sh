@@ -11,5 +11,7 @@
 
 pid=`ps -ef | grep qm | grep amqzxma0 | tr -s " " | cut -d " " -f 2`
 
-# wait for queue manager
-wait $pid
+ps -ef | grep $pid
+
+sleep 10d
+

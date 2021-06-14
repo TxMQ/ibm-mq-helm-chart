@@ -30,4 +30,4 @@ ENV MQ_USER_NAME="mqm"
 ENV PATH="${PATH}:/opt/mqm/bin"
 
 #ENTRYPOINT ["/bin/bash", "-c", "sleep 100d"]
-ENTRYPOINT ["/opt/mqm/bin/create-start-wait-qm.sh"]
+ENTRYPOINT ["/bin/bash", "-c", /opt/mqm/bin/create-start-wait-qm.sh"]
