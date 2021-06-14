@@ -1,8 +1,9 @@
 FROM registry.access.redhat.com/ubi8/ubi-minimal:8.4
 USER 0
 
-RUN microdnf install -y shadow-utils bc tar procps-ng gzip findutils pam passwd wget util-linux sudo libselinux-utils
-RUN microdnf install -y libgcc libstdc++
+RUN microdnf --disableplugin=subscription-manager install shadow-utils bc tar procps-ng gzip findutils pam passwd wget util-linux sudo libselinux-utils
+RUN microdnf --disableplugin=subscription-manager install bash ca-certificates file gawk glibc-common grep ncurses-compat-libs sed which
+RUN microdnf --disableplugin=subscription-manager install libgcc libstdc++
 
 RUN mkdir /tmp/MQServer-noi
 COPY MQServer-noi /tmp/MQServer-noi
@@ -10,14 +11,18 @@ COPY MQServer-noi /tmp/MQServer-noi
 COPY mq-install-noi.sh mq-install-noi.sh
 COPY copy-mq-runtime.sh copy-mq-runtime.sh
 
+RUN mkdir -p /opt/mqm
 RUN ./mq-install-noi.sh /tmp/MQServer-noi /opt/mqm 1001
 
 RUN /opt/mqm/bin/security/amqpamcf
 
 EXPOSE 1414 1957 9443
 
-ENV MQ_OVERRIDE_DATA_PATH=/mnt/mqm/data MQ_OVERRIDE_INSTALATION_NAME="Installation1" MQ_USER_NAME="mqm" PATH="${PATH}:/opt/mqm/bin"
-
 USER 1001
 
-ENTRYPOINT ["/bin/bash"]
+ENV MQ_OVERRIDE_DATA_PATH=/mnt/mqm/data 
+ENV MQ_OVERRIDE_INSTALATION_NAME=Installation1
+ENV MQ_USER_NAME="mqm" 
+ENV PATH="${PATH}:/opt/mqm/bin"
+
+ENTRYPOINT ["/bin/bash", "-c", "sleep 100d"]

@@ -63,7 +63,7 @@ export genmqpkg_incmqft=0
 export genmqpkg_incmqsf=0
 
 # incmqxr "Does the runtime require Telemetry (MQXR) support?"
-export genmqpkg_incmqxr=1
+export genmqpkg_incmqxr=0
 
 # incweb "Does the runtime require the MQ Console?"
 export genmqpkg_incweb=1
