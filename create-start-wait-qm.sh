@@ -9,7 +9,5 @@
 # start queue manager
 /opt/mqm/bin/strmqm qm
 
-qmpid=$!
-
 # wait for queue manager
-wait $qmpid
+wait
