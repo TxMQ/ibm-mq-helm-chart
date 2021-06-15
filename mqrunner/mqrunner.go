@@ -5,6 +5,8 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"os/signal"
+	"syscall"
 )
 
 func main() {
@@ -32,10 +34,31 @@ func main() {
 	}
 
 	// wait for termination
+	var ctl chan int
+	ctl = make(chan int)
+
 	var sig chan os.Signal
 	sig = make(chan os.Signal)
+
+	var cld chan os.Signal
+	cld = make(chan os.Signal)
+	signal.Notify(cld, syscall.SIGCHLD)
+
+	go func() {
+		for {
+			select {
+			case <- cld:
+				fmt.Println("zombie...")
+			case <- sig:
+				fmt.Println("signal, exiting...")
+				ctl <- 1
+				break
+			}
+		}
+	}()
+
 	select {
-	case <- sig:
+	case <- ctl:
 		fmt.Println("mqrunner exiting...")
 	}
 }
