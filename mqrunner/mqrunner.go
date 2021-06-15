@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"golang.org/x/sys/unix"
+	"log"
 	"net/http"
 	"os"
 	"os/exec"
@@ -100,7 +101,7 @@ func main() {
 	}
 
 	fmt.Println("directories created...")
-/*
+
 	// create queue manager
 	cmd = exec.Command("/opt/mqm/bin/crtmqm", "-c", "qm", "-p", "1414", "-q", "qm")
 	err = cmd.Run()
@@ -118,7 +119,7 @@ func main() {
 	}
 
 	fmt.Println("queue manager started...")
-*/
+
 	// wait for termination
 	fmt.Println("waiting for termination...")
 
