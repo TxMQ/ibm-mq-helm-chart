@@ -18,13 +18,14 @@ func main() {
 
 	var sig chan os.Signal
 	sig = make(chan os.Signal)
-	signal.Notify(sig, syscall.SIGINT)
+	signal.Notify(sig, syscall.SIGINT, syscall.SIGTERM)
 
 	var cld chan os.Signal
 	cld = make(chan os.Signal)
 	signal.Notify(cld, syscall.SIGCHLD)
 
 	go func() {
+
 		ctl <- 0
 		for {
 			select {
