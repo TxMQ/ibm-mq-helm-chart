@@ -1,0 +1,180 @@
+kind: StatefulSet
+apiVersion: apps/v1
+metadata:
+  name: simon1-sts-mq-noi
+  namespace: mqmq
+  finalizers: []
+  labels:
+    app.kubernetes.io/component: messagingg
+    app.kubernetes.io/instance: simon1-sts-mq-noi
+#    app.kubernetes.io/managed-by: operator
+    app.kubernetes.io/name: mq-mq
+    app.kubernetes.io/version: 9.2.2.0
+spec:
+  replicas: 1
+  serviceName: qm-qm
+  podManagementPolicy: OrderedReady
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      partition: 0
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: messagingg
+      app.kubernetes.io/instance: simon1-sts-mq-noi
+#      app.kubernetes.io/managed-by: operator
+      app.kubernetes.io/name: mq-mq
+  template:
+    metadata:
+      finalizers: []
+      labels:
+        app.kubernetes.io/component: messagingg
+        app.kubernetes.io/instance: simon1-sts-mq-noi
+#        app.kubernetes.io/managed-by: operator
+        app.kubernetes.io/name: mq-mq
+        app.kubernetes.io/version: 9.2.2.0
+      annotations:
+        productVersion: 9.2.2.0
+        productName: IBM MQ Advanced
+        productMetric: VIRTUAL_PROCESSOR_CORE
+    spec:
+      serviceAccount: sa2
+      serviceAccountName: sa2
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      affinity: {}
+      terminationGracePeriodSeconds: 30
+      dnsPolicy: ClusterFirst
+      securityContext: {}
+      containers:
+        - name: mq-mq-qmgr-noi
+          image: 'image-registry.openshift-image-registry.svc:5000/mqmq/mq-server-noi:0.1'
+#          terminationMessagePolicy: File
+#          terminationMessagePath: /run/termination-log
+#          image: >-
+#            cp.icr.io/cp/ibm-mqadvanced-server-integration@sha256:99c9bc6d3fb56a62b841ed51175fa2239d57124da7e84dca2c9a9472dcba0374
+#          resources:
+#            limits:
+#              cpu: '1'
+#              memory: 1Gi
+#            requests:
+#              cpu: '1'
+#              memory: 1Gi
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 40000
+            initialDelaySeconds: 10
+            timeoutSeconds: 3
+            periodSeconds: 5
+            successThreshold: 1
+            failureThreshold: 1
+          livenessProbe:
+            httpGet:
+              path: /healthy
+              port: 40000
+            initialDelaySeconds: 10
+            timeoutSeconds: 5
+            periodSeconds: 10
+            successThreshold: 1
+            failureThreshold: 1
+#          env:
+#            - name: MQSNOAUT
+#              value: 'yes'
+#            - name: LICENSE
+#              value: accept
+#            - name: MQ_QMGR_NAME
+#              value: QUICKSTART
+#            - name: MQ_MULTI_INSTANCE
+#              value: 'false'
+#            - name: MQ_ENABLE_METRICS
+#              value: 'true'
+#            - name: MQ_ENABLE_EMBEDDED_WEB_SERVER
+#              value: 'true'
+#            - name: LOG_FORMAT
+#              value: basic
+#            - name: DEBUG
+#              value: 'false'
+#            - name: MQ_ENABLE_TRACE_STRMQM
+#              value: 'false'
+#            - name: MQ_EPHEMERAL_PREFIX
+#              value: /run/mqm
+#            - name: MQ_GRACE_PERIOD
+#              value: '29'
+#            - name: MQ_NATIVE_HA
+#              value: 'false'
+#            - name: MQ_GENERATE_CERTIFICATE_HOSTNAME
+#              value: cpd-cp4i.apps.openshift.txmq.int
+#            - name: MQ_BETA_ENABLE_SSO
+#              value: 'true'
+#            - name: MQ_CONSOLE_DEFAULT_CCDT_HOSTNAME
+#              value: simon1-ibm-mq-qm-cp4i.apps.openshift.txmq.int
+#            - name: MQ_CONSOLE_DEFAULT_CCDT_PORT
+#              value: '443'
+#            - name: IAM_URL
+#              value: 'https://cp-console.apps.openshift.txmq.int:443'
+#            - name: MQ_NAMESPACE
+#              value: mq-mq
+#            - name: MQ_ZEN_CONTEXT_NAME
+#              value: simon1
+#            - name: MQ_ZEN_CONTEXT_NAMESPACE
+#              value: cp4i
+#            - name: MQ_ZEN_BASE_URI
+#              value: >-
+#                https://cpd-cp4i.apps.openshift.txmq.int/integration/messaging/cp4i/simon1-ibm-mq/
+#            - name: MQ_ZEN_URI_SUFFIX
+#              value: /integration/messaging/cp4i/simon1-ibm-mq/
+#            - name: MQ_ZEN_ISSUER_IDENTIFIER
+#              value: KNOXSSO
+#            - name: MQ_ZEN_UNIQUE_USER_IDENTIFIER
+#              value: sub
+#            - name: MQ_ZEN_AUDIENCES
+#              value: DSX
+#            - name: MQ_ZEN_INTERNAL_ENDPOINT
+#              value: 'https://internal-nginx-svc.cp4i.svc:12443/auth'
+#            - name: MQ_ENABLE_OPEN_TRACING
+#              value: 'false'
+          securityContext:
+#            capabilities:
+#              drop:
+#                - ALL
+            privileged: false
+            runAsNonRoot: true
+            readOnlyRootFilesystem: false
+            allowPrivilegeEscalation: false
+          ports:
+            - containerPort: 1414
+              protocol: TCP
+            - containerPort: 9157
+              protocol: TCP
+            - containerPort: 9443
+              protocol: TCP
+#          imagePullPolicy: IfNotPresent
+          imagePullPolicy: Always
+          volumeMounts:
+            - mountPath: /mnt/mqm/data
+              name: mqmdata
+#            - name: oidc-certificate
+#              mountPath: /etc/mqm/pki/trust/default
+#            - name: zen-ca-certificate
+#              mountPath: /etc/mqm/pki/trust/zenca
+      volumes:
+        - name: mqmdata
+          persistentVolumeClaim:
+            claimName: qm-sts-claim
+#        - name: oidc-certificate
+#          secret:
+#            secretName: ibmcloud-cluster-ca-cert
+#            items:
+#              - key: ca.crt
+#                path: OIDC_CERTIFICATE.crt
+#            defaultMode: 420
+#        - name: zen-ca-certificate
+#          secret:
+#            secretName: internal-nginx-svc-tls
+#            items:
+#              - key: tls.crt
+#                path: ZEN_CERTIFICATE.crt
+#            defaultMode: 420
+
