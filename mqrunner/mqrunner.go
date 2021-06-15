@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"os"
 	"os/exec"
 )
 
@@ -31,6 +32,9 @@ func main() {
 	}
 
 	// wait for termination
-	str := make(chan int)
-	<- str
+	var c2 chan os.Signal
+	select {
+	case <- c2:
+		fmt.Println("mqrunner exiting...")
+	}
 }
