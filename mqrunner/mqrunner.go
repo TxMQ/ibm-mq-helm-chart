@@ -28,13 +28,14 @@ func main() {
 	cmd = exec.Command("/opt/mqm/bin/strmqm", "qm")
 	err = cmd.Run()
 	if err != nil {
-		// complain...
+		log.Fatal(err)
 	}
 
 	// wait for termination
-	var c2 chan os.Signal
+	var sig chan os.Signal
+	sig = make(chan os.Signal)
 	select {
-	case <- c2:
+	case <- sig:
 		fmt.Println("mqrunner exiting...")
 	}
 }
