@@ -1,5 +1,11 @@
-#!/bin/bash -x
+#!/bin/bash
 
-# sleep 10 days...
-sleep 10d
+set -x
 
+/opt/mqm/bin/crtmqdir -f -a
+
+/opt/mqm/bin/crtmqm -c "qm" -p 1414 -q qm
+
+/opt/mqm/bin/strmqm qm
+
+sleep 100d

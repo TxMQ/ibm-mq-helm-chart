@@ -19,6 +19,8 @@ RUN /opt/mqm/bin/security/amqpamcf
 # temporary
 COPY create-start-wait-qm.sh /opt/mqm/bin/create-start-wait-qm.sh
 RUN chown 1001:root /opt/mqm/bin/create-start-wait-qm.sh
+COPY mqrunner/mqrunner /opt/mqm/bin/mqrunner
+RUN chown 1001:root /opt/mqm/bin/mqrunner & chmod u+x,g+x,o+x /opt/mqm/bin/mqrunner
 
 EXPOSE 1414 1957 9443
 
@@ -29,5 +31,5 @@ ENV MQ_OVERRIDE_INSTALLATION_NAME=Installation1
 ENV MQ_USER_NAME="mqm" 
 ENV PATH="${PATH}:/opt/mqm/bin"
 
-ENTRYPOINT ["/bin/bash", "-c", "sleep 100d"]
-#ENTRYPOINT ["/bin/bash", "-c", /opt/mqm/bin/create-start-wait-qm.sh"]
+#ENTRYPOINT ["/bin/bash", "-c", "sleep 100d"]
+ENTRYPOINT ["/opt/mqm/bin/mqrunner"]
