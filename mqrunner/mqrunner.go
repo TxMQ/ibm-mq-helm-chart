@@ -1,20 +1,58 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"golang.org/x/sys/unix"
 	"log"
+	"net/http"
 	"os"
 	"os/exec"
 	"os/signal"
 	"syscall"
+	"time"
 )
+
+type probe struct {}
+func (p *probe) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+
+	if r.RequestURI == "/ready" {
+		fmt.Println("ready probe called... return 200")
+
+	} else if r.RequestURI == "/healthy" {
+		fmt.Println("healthy probe called... return 200")
+
+	} else {
+		fmt.Println("probe called... return 200")
+	}
+
+	w.WriteHeader(200)
+	w.Write([]byte("ok"))
+}
 
 func main() {
 
 	// setup signals
 	var ctl chan int
 	ctl = make(chan int)
+
+	srv := &http.Server{
+		Addr:           ":40000",
+		Handler:        new(probe),
+		ReadTimeout:    10 * time.Second,
+		WriteTimeout:   10 * time.Second,
+	}
+
+	// probe
+	go func() {
+		fmt.Println("probe running...")
+		ctl <- 0
+
+		err := srv.ListenAndServe()
+		fmt.Printf("probe stopped... %v\n", err)
+	}()
+
+	<- ctl
 
 	var sig chan os.Signal
 	sig = make(chan os.Signal)
@@ -42,6 +80,9 @@ func main() {
 
 			case <- sig:
 				fmt.Println("signal, exiting...")
+				// shutdown probe
+				srv.Shutdown(context.Background())
+
 				ctl <- 1
 				break
 			}
