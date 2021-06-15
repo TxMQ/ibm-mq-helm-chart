@@ -100,12 +100,16 @@ func main() {
 		fmt.Printf("%v\n", err)
 	}
 
+	fmt.Println("directories created...")
+
 	// create queue manager
 	cmd = exec.Command("/opt/mqm/bin/crtmqm", "-c", "qm", "-p", "1414", "-q", "qm")
 	err = cmd.Run()
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	fmt.Println("queue manager created...")
 
 	// start queue manager
 	cmd = exec.Command("/opt/mqm/bin/strmqm", "qm")
@@ -114,7 +118,11 @@ func main() {
 		log.Fatal(err)
 	}
 
+	fmt.Println("queue manager started...")
+
 	// wait for termination
+	fmt.Println("waiting for termination...")
+
 	<- ctl
 	fmt.Println("mqrunner exiting...")
 }
