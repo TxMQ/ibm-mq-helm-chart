@@ -2,7 +2,7 @@ FROM registry.access.redhat.com/ubi8/ubi-minimal:8.4
 USER 0
 
 RUN microdnf --disableplugin=subscription-manager install shadow-utils bc tar procps-ng gzip findutils pam passwd wget util-linux sudo libselinux-utils
-RUN microdnf --disableplugin=subscription-manager install bash ca-certificates file gawk glibc-common grep ncurses-compat-libs sed which
+RUN microdnf --disableplugin=subscription-manager install bash ca-certificates file gawk glibc-common grep ncurses-compat-libs sed which openldap-clients
 RUN microdnf --disableplugin=subscription-manager install libgcc libstdc++
 
 RUN mkdir /tmp/MQServer-noi
