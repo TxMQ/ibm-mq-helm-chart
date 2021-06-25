@@ -2,6 +2,7 @@ package util
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os/exec"
 	"strings"
 )
@@ -59,9 +60,9 @@ func StopQmgr(qmgrname string) error {
 	return nil
 }
 
-func IsQmgrRunning(qmgrname string) (bool, error) {
+func IsQmgrRunning(qmgr string) (bool, error) {
 
-	st, err := QmgrStatus(qmgrname)
+	st, err := QmgrStatus(qmgr)
 	if err != nil {
 		return false, err
 	}
@@ -73,9 +74,9 @@ func IsQmgrRunning(qmgrname string) (bool, error) {
 	return false,nil
 }
 
-func QmgrExists(qmgrname string) (bool, error) {
+func QmgrExists(qmgr string) (bool, error) {
 
-	st, err := QmgrStatus(qmgrname)
+	st, err := QmgrStatus(qmgr)
 	if err != nil {
 		return false, err
 	}
@@ -87,28 +88,43 @@ func QmgrExists(qmgrname string) (bool, error) {
 	return true,nil
 }
 
-func QmgrStatus(qmgrname string) (string, error) {
+func parseParenValue(input, keyword string) (bool, string) {
+	n1 := strings.Index(input, keyword)
+	if n1 < 0 { return false, "" }
 
-	out, err := exec.Command("/opt/mqm/bin/dspmq", "-m", qmgrname).CombinedOutput()
+	n11 := strings.Index(input[n1:], "(")
+	if n11 < 0 { return false, "" }
+
+	n12 := strings.Index(input[n1:], ")")
+	if n12 < 0 { return false, "" }
+
+	value := input[n1+n11+1:n1+n12]
+	return true, value
+}
+
+func QmgrStatus(qmgr string) (string, error) {
+
+	out, err := exec.Command("/opt/mqm/bin/dspmq", "-m", qmgr).CombinedOutput()
+
 	if err != nil {
+		cerr := strings.TrimSpace(string(out))
+
+		// AMQ7048E: The queue manager name is either not valid or not known.
+		if strings.HasPrefix(cerr, "AMQ7048E") {
+			return "notknown", nil
+		}
+
 		return "", err
 	}
 
-	// AMQ7048E: The queue manager name is either not valid or not known.
-	if strings.HasPrefix(strings.TrimSpace(string(out)), "AMQ7048E") {
-		return "notknown", nil
-	}
+	cout := strings.TrimSpace(string(out))
 
 	// QMNAME(qm) STATUS(Running)
-	if strings.HasPrefix(strings.TrimSpace(string(out)), "QMNAME") {
+	if strings.HasPrefix(cout, "QMNAME") {
 
-		var pname, pstatus string
-		_, err := fmt.Scanf(strings.TrimSpace(string(out)), "QMNAME(%s) STATUS(%s)", &pname, &pstatus)
-		if err != nil {
-			return "", err
-		}
+		ok, status := parseParenValue(cout, "STATUS")
 
-		if strings.ToLower(pstatus) == "running" {
+		if ok && strings.ToLower(status) == "running" {
 			return "running", nil
 		}
 	}
@@ -117,61 +133,79 @@ func QmgrStatus(qmgrname string) (string, error) {
 	return "notrunning", nil
 }
 
-func setQmgrParam(name, value string) error {
+func Runmqsc(qmgr, command string) (string, error) {
+	var cmdfile = "/tmp/cmd.mqsc"
 
-	cname := fmt.Sprintf("echo \"alter util %s(%s)\" | /opt/mqm/bin/runmqsc -e",
-		strings.ToUpper(strings.TrimSpace(name)), strings.TrimSpace(value))
-
-	err := exec.Command(cname).Run()
-	return err
-}
-
-func getQmgrParam(param string) (string, error) {
-	paramuc := strings.TrimSpace(strings.ToUpper(param))
-	name := fmt.Sprintf("display util %s | /opt/mqm/bin/runmqsc -e | grep %s", paramuc, paramuc)
-
-	cout, err := exec.Command(name).Output()
+	err := ioutil.WriteFile(cmdfile, []byte(command), 0777)
 	if err != nil {
 		return "", err
 	}
 
-	// qmname(qm) maxhands(256)
-	// sslkeyr(/mnt/mqm/data/.../key)
-	// qmname(qm)
-
-	for _, p := range strings.Split(strings.TrimSpace(string(cout)), " ") {
-
-		var paramName, paramValue string
-		_, err = fmt.Scanf(p, "%s(%s)", &paramName, paramValue)
-		if err != nil {
+	cout, err := exec.Command("/opt/mqm/bin/runmqsc", "-e", "-f", cmdfile, qmgr).CombinedOutput()
+	if err != nil {
+		if cout != nil {
+			// AMQ8118E: IBM MQ queue manager does not exist.
+			cerr := string(cout)
+			if idx := strings.Index(cerr, "AMQ8118E"); idx >= 0 {
+				return "", fmt.Errorf("AMQ8118E: IBM MQ queue manager %s does not exist", qmgr)
+			} else {
+				return cerr, err
+			}
+		} else {
 			return "", err
-		}
-
-		if paramName == paramuc {
-			return paramValue, nil
 		}
 	}
 
-	return "", fmt.Errorf("util parameter %s not found", param)
+	return strings.TrimSpace(string(cout)), nil
 }
 
-func refreshSsl() error {
+func SetQmgrParam(qmgr, param, value string) error {
+
+	paramuc := strings.TrimSpace(strings.ToUpper(param))
+	cmd := fmt.Sprintf("alter qmgr %s(%s)", paramuc, strings.TrimSpace(value))
+
+	_, err := Runmqsc(qmgr, cmd)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func GetQmgrParam(qmgr, param string) (string, error) {
+
+	paramuc := strings.TrimSpace(strings.ToUpper(param))
+	cmd := fmt.Sprintf("display qmgr %s", paramuc)
+
+	out, err := Runmqsc(qmgr, cmd)
+	if err != nil {
+		return "", err
+	}
+
+	if ok, value := parseParenValue(out, paramuc); ok {
+		return value, nil
+	}
+
+	return "", fmt.Errorf("qmgr parameter %s not found", param)
+}
+
+func RefreshSsl() error {
 	// todo
 	return nil
 }
 
-func setSslKeyRepo(sslkeyr string) error {
-	return setQmgrParam("SSLKEYR", sslkeyr)
+func SetSslKeyRepo(qmgr, sslkeyr string) error {
+	return SetQmgrParam(qmgr,"SSLKEYR", sslkeyr)
 }
 
-func getSslKeyRepo() (string, error) {
-	return getQmgrParam("SSLKEYR")
+func GetSslKeyRepo(qmgr string) (string, error) {
+	return GetQmgrParam(qmgr, "SSLKEYR")
 }
 
-func setCertLabel(certlabel string) error {
-	return setQmgrParam("CERTLABL", certlabel)
+func SetCertLabel(qmgr, certlabel string) error {
+	return SetQmgrParam(qmgr,"CERTLABL", certlabel)
 }
 
-func getCertLabel() (string, error) {
-	return getQmgrParam("CERTLABL")
+func GetCertLabel(qmgr string) (string, error) {
+	return GetQmgrParam(qmgr, "CERTLABL")
 }
