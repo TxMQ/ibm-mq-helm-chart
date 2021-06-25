@@ -1,19 +1,23 @@
 package util
 
 import (
+	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
+	"strings"
 )
 
-type TlsInfo struct {
-	certdir string // pem secrets mounted on this directory
-	keyfile string // key file in cert directory: tls.key
-	certfile string // cert file in cert directory: tls.crt
-	cafile string // ca file in cert directory
-	ssldir string // queue manager ssl directory
-	keyrepo string // key repo in qm ssl directory
-	p12file string // p12 file in ssl directory
-}
+const keyDatabaseStem = "key"
+const keydbSuffix = ".kdb"
+const rdbSuffix = ".rdb"
+const sthSuffix = ".sth"
+
+const _keyfile = "tls.key"
+const _certfile = "tls.crt"
+const _cafile = "ca.crt"
+
+const _certlabel = "ibmwebspheremq"
 
 //
 // ImportCertificates from certdir into keyrepo in ssldir
@@ -23,12 +27,12 @@ func ImportCertificates(qmgr string) error {
 	//
 	// /etc/mqm/pki/certs - pki keys and certs
 	// /etc/mqm/pki/trust - pki trust roots
-	// /etc/mqm/ssl - util key repo directory
+	// /etc/mqm/ssl - qmgr key repo directory
 	//
 
 	certdir := "/etc/mqm/pki/certs"
 	ssldir := "/etc/mqm/ssl"
-	keyrepo := "key.kdb"
+	trustdir := "/etc/mqm/pki/trust"
 
 	// certs are mounted into the container as secrets
 	// with keys tls.key, tls.crt, and ca.crt
@@ -38,28 +42,34 @@ func ImportCertificates(qmgr string) error {
 	// openssl req -newkey rsa:2048 -nodes -keyout tls.key -subj "/CN=localhost" -x509 -days 3650 -out tls.crt
 
 	// re-create cms keystore
-	keyrepoPath, err := RecreateCMSKeyStore(ssldir, keyrepo)
+	kdbpath, err := RecreateCMSKeyStore(ssldir)
 	if err != nil {
 		return err
 	}
 
 	// import ca chains into the keystore. ca-chains include self-signed certs.
-	err = importCAChain(keyrepoPath, certdir)
+	err = ImportTrustChains(kdbpath, certdir, trustdir)
 	if err != nil {
 		return err
 	}
 
-	// call a function
-	certlabel := "imbwebshperemq" + qmgr
+	// format cert label
+	certlabel := formatCertLabel(qmgr)
 
 	// convert pem key and cert files into p12 format
-	p12file, err := pemToP12(certdir, ssldir, certlabel)
+	p12path, err := PemToP12(certdir, ssldir, certlabel)
 	if err != nil {
 		return err
 	}
 
 	// import p12 file into the keystore
-	err = importP12(p12file, keyrepoPath, certlabel)
+	err = ImportP12(p12path, kdbpath, certlabel)
+	if err != nil {
+		return err
+	}
+
+	// delete p12 file
+	err = deleteFile(p12path)
 	if err != nil {
 		return err
 	}
@@ -67,102 +77,204 @@ func ImportCertificates(qmgr string) error {
 	return nil
 }
 
-func RecreateCMSKeyStore(ssldir, keyrepo string) (string, error) {
-	return CreateCMSKeyStore(ssldir, keyrepo, true)
+func RecreateCMSKeyStore(ssldir string) (string, error) {
+	return CreateCMSKeyStore(ssldir, true)
 }
 
-func CreateCMSKeyStore(ssldir, keyrepo string, deleteOldKeystore bool) (string, error) {
+func expandKeyDatabaseStemName(stem string) (string, string, string) {
+	return stem + keydbSuffix, stem + rdbSuffix, stem + sthSuffix
+}
+
+func CreateCMSKeyStore(ssldir string, deleteExistingKeystore bool) (string, error) {
 
 	// check if ssldir exists
+	_, err := os.Stat(ssldir)
+	if err != nil {
+		return "", err
+	}
 
-	// build key repo path
-	keyrepoPath := ssldir + string(os.PathSeparator) + keyrepo
+	// keyr is key repo file w/o extension
+	// keyr expands into 3 files: keyr.kdb, keyr.rdb, keyr.sth
+	keydb, rdb, sth := expandKeyDatabaseStemName(keyDatabaseStem)
 
-	// delete old keystore if requested
-	if deleteOldKeystore == true {
+	keydbpath := filepath.Join(ssldir, keydb)
+	rdbpath := filepath.Join(ssldir, rdb)
+	sthpath := filepath.Join(ssldir, sth)
 
+	if deleteExistingKeystore {
+		for _, fpath := range []string {keydbpath, rdbpath, sthpath} {
+			err = os.Remove(fpath)
+			if err != nil && !os.IsNotExist(err) {
+				return "", err
+			}
+		}
 	}
 
 	// runmqckm -keydb -create -db zorro.kdb -pw password -type cms -stash
-	// -rw-------. 1 1000680000 root  88 Jun 23 17:28 zorro.kdb
-	//-rw-------. 1 1000680000 root  80 Jun 23 17:28 zorro.rdb
-	//-rw-------. 1 1000680000 root 193 Jun 23 17:28 zorro.sth
+	// -rw-------. 1 1000680000 root  88 Jun 23 17:28 key.kdb
+	//-rw-------. 1 1000680000 root  80 Jun 23 17:28 key.rdb
+	//-rw-------. 1 1000680000 root 193 Jun 23 17:28 key.sth
 
-	// todo: generate password
+	// generate password
+	password, err := exec.Command("openssl", "rand", "-base64", "14").CombinedOutput()
+	if err != nil {
+		return "", err
+	}
 
-	cmd := exec.Command("/opt/mqm/bin/runmqckm", "-keydb", "-create", "-db", keyrepoPath,
-		"-pw", "password", "-type", "cms", "-stash")
+	// create keystore
+	err = exec.Command("/opt/mqm/bin/runmqckm", "-keydb", "-create", "-db", keydbpath,
+		"-pw", string(password), "-type", "cms", "-stash").Run()
 
-	err := cmd.Run()
 	if err != nil {
 		return "", err
 	}
 
 	// change access mode for the keyrepo
 	// chmod g+rw zorro.*
-	// -rw-rw----. 1 1000680000 root  88 Jun 23 17:28 zorro.kdb
-	//-rw-rw----. 1 1000680000 root  80 Jun 23 17:28 zorro.rdb
-	//-rw-rw----. 1 1000680000 root 193 Jun 23 17:28 zorro.sth
+	// -rw-rw----. 1 1000680000 root  88 Jun 23 17:28 key.kdb
+	//-rw-rw----. 1 1000680000 root  80 Jun 23 17:28 key.rdb
+	//-rw-rw----. 1 1000680000 root 193 Jun 23 17:28 key.sth
 
-	return keyrepoPath, nil
+	for _, fpath := range []string {keydbpath, rdbpath, sthpath} {
+		err = os.Chmod(fpath, 0660)
+		if err != nil && !os.IsNotExist(err) {
+			return "", err
+		}
+	}
+
+	return keydbpath, nil
 }
 
-func importCAChain(keyrepoPath, certdir string) error {
+func IsSelfSigned(certpath string) (bool, error) {
 
-	// certdir contains files: tls.key, tls.crt, ca.crt
+	out, err := exec.Command("openssl", "x509", "-text", "-in", certpath, "-noout").CombinedOutput()
+	if err != nil {
+		return false, fmt.Errorf("%v\n", string(out))
+	}
 
-	// todo: check if tls.crt is self-signed cert
-	// for now assume it is
+	cout := string(out)
 
-	// self signed cert must be imported with this function
-	// runmqckm -cert -add -db ./zorro.kdb -stashed -label zorro -file ./tls.crt -format ascii
+	issuerIdx := strings.Index(cout, "Issuer:")
+	if issuerIdx < 0 { return false, nil }
 
-	label := "ca"
-	cert := "tls.crt"
-	certpath := certdir + string(os.PathSeparator) + cert
+	colidx := strings.Index(cout[issuerIdx:], ":")
+	nlidx := strings.Index(cout[issuerIdx:], "\n")
+	issuer := strings.TrimSpace(cout[issuerIdx+colidx+1: issuerIdx+nlidx])
 
-	cmd := exec.Command("/opt/mqm/bin/runmqckm", "-cert", "-add", "-db", keyrepoPath, "-stashed",
-		"-label", label, "-file", certpath, "-format", "ascii")
+	subjectIdx := strings.Index(cout, "Subject:")
+	if subjectIdx < 0 { return false, nil }
 
-	err := cmd.Run()
+	colidx = strings.Index(cout[subjectIdx:], ":")
+	nlidx = strings.Index(cout[subjectIdx:], "\n")
+	subject := strings.TrimSpace(cout[subjectIdx+colidx+1: subjectIdx+nlidx])
+
+	return issuer == subject, nil
+}
+
+func ImportTrustChains(keydbpath, certdir, trustdir string) error {
+
+	// in the certdir we expect:
+	// tls.key, tls.crt, [ca.crt]
+
+	// if certdir is mounted from the certificate-manger secret then
+	// tls.cert may contain cert chain, terminating before root ca.
+	// root ca will be in the ca.crt file.
+	// trustdir may conain additional trust chains
+
+	// check if cert directory exists
+	_, err := os.Stat(certdir)
 	if err != nil {
 		return err
 	}
 
+	// check if tls.crt exists
+	certpath := filepath.Join(certdir, _certfile)
+
+	_, err = os.Stat(certpath)
+	if err != nil {
+		return err
+	}
+
+	selfsigned, err := IsSelfSigned(certpath)
+	if err != nil {
+		return err
+	}
+
+	if selfsigned {
+
+		// add self-signed certificate:
+		// runmqckm -cert -add -db filename -stashed -label label -file filename -format ascii
+
+		label := "ssca"
+		err = exec.Command("/opt/mqm/bin/runmqckm", "-cert", "-add", "-db", keydbpath, "-stashed",
+			"-label", label, "-file", certpath, "-format", "ascii").Run()
+
+		if err != nil {
+			return err
+		}
+	}
+
+	//
+	// certdir 'may' contain ca.crt
+	//
+	capath := filepath.Join(certdir, _cafile)
+
+	_, err = os.Stat(capath)
+	if err == nil {
+
+		// add ca certificate:
+		// runmqckm -cert -add -db filename -stashed -label label -file filename -format ascii
+
+		label := "ca1"
+		err = exec.Command("/opt/mqm/bin/runmqckm", "-cert", "-add", "-db", keydbpath, "-stashed",
+			"-label", label, "-file", capath, "-format", "ascii").Run()
+
+	} else if !os.IsNotExist(err) {
+		return err
+	}
+
+	// todo
+	// trust directory may contain trust chains
 	// chain: root->ca1->ca2->...->ca
-	// root->ca1->ca
-
-	// to import:
-	// runmqckm -cert -add -db filename -stashed -label label
-	// -file filename -format ascii
-
-	// runmqakm -cert -add -db filename -stashed -label label
-	// -file filename -format ascii -fips
 
 	return nil
 }
 
-func pemToP12(certdir, ssldir, certlabel string) (string, error) {
+func PemToP12(certdir, ssldir, certlabel string) (string, error) {
 
-	keyfile := "tls.key"
-	keypath := certdir + string(os.PathSeparator) + keyfile
+	keypath := filepath.Join(certdir, _keyfile)
+	_, err := os.Stat(keypath)
+	if err != nil {
+		return "", err
+	}
 
-	certfile := "tls.crt"
-	certpath := certdir + string(os.PathSeparator) + certfile
+	certpath := filepath.Join(certdir, _certfile)
+	_, err = os.Stat(certpath)
+	if err != nil {
+		return "", err
+	}
 
-	//cafile := "ca.crt"
-	//capath := certdir + string(os.PathSeparator) + cafile
+	p12path :=  filepath.Join(ssldir, "qm.p12")
+	_, err = os.Stat(ssldir)
+	if err != nil {
+		return "", err
+	}
 
-	p12path := ssldir + string(os.PathSeparator) + "qm.p12"
-
-	// openssl pkcs12 -export -name "label" -out qm.p12 -inkey keyfile -in certfile -certfile chainfile
+	// openssl pkcs12 -export -name "label" -out qm.p12 -inkey keyfile -in certfile [-certfile chainfile]
 	// -keypbe NONE -certpbe NONE -nomaciter -passout pass:
+	// note that we do not include cert chain because cert chains are imported separately
 
 	cmd := exec.Command("/usr/bin/openssl", "pkcs12", "-export", "-name", certlabel, "-out", p12path,
 		"-inkey", keypath, "-in", certpath, "-keypbe", "NONE", "-certpbe", "NONE", "-nomaciter",
 		"-passout", "pass:")
 
-	err := cmd.Run()
+	err = cmd.Run()
+	if err != nil {
+		return "", err
+	}
+
+	// chanage p12 mode
+	err = os.Chmod(p12path, 0660)
 	if err != nil {
 		return "", err
 	}
@@ -170,7 +282,17 @@ func pemToP12(certdir, ssldir, certlabel string) (string, error) {
 	return p12path, nil
 }
 
-func importP12(p12path, kdbpath, certlabel string) error {
+func ImportP12(p12path, kdbpath, certlabel string) error {
+
+	_, err := os.Stat(p12path)
+	if err != nil {
+		return err
+	}
+
+	_, err = os.Stat(kdbpath)
+	if err != nil {
+		return err
+	}
 
 	// runmqckm -cert -import -file ./qm.p12 -pw "" -type pkcs12 -target ./zorro.kdb -target_pw password
 	// -target_type cms -label label -new_label qm
@@ -179,8 +301,24 @@ func importP12(p12path, kdbpath, certlabel string) error {
 		"-pw", "", "-type", "pkcs12", "-target", kdbpath, "-target_stashed",
 		"-target_type", "cms", "-label", certlabel, "-new_label", certlabel)
 
-	err := cmd.Run()
+	err = cmd.Run()
 	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func formatCertLabel(qmgr string) string {
+	return _certlabel + qmgr
+}
+
+func deleteFile(file string) error {
+	err := os.Remove(file)
+
+	if err != nil && os.IsNotExist(err) {
+		return nil
+	} else if err != nil {
 		return err
 	}
 
