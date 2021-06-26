@@ -7,56 +7,83 @@ import (
 	"strings"
 )
 
+const _qmgrrunning = "running"
+const _qmgrnotrunning = "notrunning"
+const _qmgrnotknown = "notknown"
+
 func CreateDirectories() error {
 
+	//
 	// create mq directories
-	cmd := exec.Command("/opt/mqm/bin/crtmqdir", "-f", "-a")
-	err := cmd.Run()
+	// this command requires su on rpm install
+	//
+	out, err := exec.Command("/opt/mqm/bin/crtmqdir", "-f", "-a").CombinedOutput()
 	if err != nil {
-		// complains about chmod 2775 on /mnt/mqm/data
-		fmt.Printf("%v\n", err)
-		return err
+		if out != nil {
+			cerr := string(out)
+			return fmt.Errorf("%v\n", cerr)
+		} else {
+			return err
+		}
 	}
 
-	fmt.Println("directories created...")
 	return nil
 }
 
-func CreateQmgr(qmgrname string) error {
+func CreateQmgr(qmgr string) error {
 
-	// todo
 	// create queue manager
-	cmd := exec.Command("/opt/mqm/bin/crtmqm", "-c", "qm", "-p", "1414", "-q", "qm")
-	err := cmd.Run()
-	if err != nil {
-		//log.Fatal(err)
-		return nil
-	}
+	//
+	// crtmqm -c "queue manager" -ic mqsi-file-path -ii ini-file-path -lc -p 1414 -q -u SYSTEM.DEAD.LETTER.QUEUE
+	// -lc - circular logging
+	// -ii argument is not passed yet
+	// -ic argument is not passed yet
+	// -md - qmgr data path, /var/mqm/qmgrs
+	// -oa group - (default) authorization mode
+	out, err := exec.Command("/opt/mqm/bin/crtmqm", "-c", "queue manager", "-lc",
+		"-u", "SYSTEM.DEAD.LETTER.QUEUE", "-p", "1414", "-q", qmgr).CombinedOutput()
 
-	fmt.Println("queue manager created...")
+	if err != nil {
+		if out != nil {
+			cerr := string(out)
+			return fmt.Errorf("%v\n", cerr)
+		} else {
+			return err
+		}
+	}
 	return nil
 }
 
-func StartQmgr(qmgrname string) error {
+func StartQmgr(qmgr string) error {
 
-	// apply mq.ini overrides: -ii flag
-	// apply mqsi-ini scripts - ic flag
-
-	// todo
 	// start queue manager
-	cmd := exec.Command("/opt/mqm/bin/strmqm", "qm")
-	err := cmd.Run()
+	out, err := exec.Command("/opt/mqm/bin/strmqm", qmgr).CombinedOutput()
+
 	if err != nil {
-		//log.Fatal(err)
-		return err
+		if out != nil {
+			cerr := string(out)
+			return fmt.Errorf("%v\n", cerr)
+		} else {
+			return err
+		}
 	}
 
-	fmt.Println("queue manager started...")
 	return nil
 }
 
-func StopQmgr(qmgrname string) error {
-	// todo
+func StopQmgr(qmgr string) error {
+	// stop queue manager
+	out, err := exec.Command("/opt/mqm/bin/endmqm", qmgr).CombinedOutput()
+
+	if err != nil {
+		if out != nil {
+			cerr := string(out)
+			return fmt.Errorf("%v\n", cerr)
+		} else {
+			return err
+		}
+	}
+
 	return nil
 }
 
@@ -67,7 +94,7 @@ func IsQmgrRunning(qmgr string) (bool, error) {
 		return false, err
 	}
 
-	if st == "running" {
+	if st == _qmgrrunning {
 		return true, nil
 	}
 
@@ -81,7 +108,7 @@ func QmgrExists(qmgr string) (bool, error) {
 		return false, err
 	}
 
-	if st == "notknown" {
+	if st == _qmgrnotknown {
 		return false, nil
 	}
 
@@ -111,7 +138,7 @@ func QmgrStatus(qmgr string) (string, error) {
 
 		// AMQ7048E: The queue manager name is either not valid or not known.
 		if strings.HasPrefix(cerr, "AMQ7048E") {
-			return "notknown", nil
+			return _qmgrnotknown, nil
 		}
 
 		return "", err
@@ -125,12 +152,12 @@ func QmgrStatus(qmgr string) (string, error) {
 		ok, status := parseParenValue(cout, "STATUS")
 
 		if ok && strings.ToLower(status) == "running" {
-			return "running", nil
+			return _qmgrrunning, nil
 		}
 	}
 
-	// QMNAME(qm)  STATUS(Ended normally)
-	return "notrunning", nil
+	// QMNAME(qm)  STATUS(Ended normally|immediately)
+	return _qmgrnotrunning, nil
 }
 
 func Runmqsc(qmgr, command string) (string, error) {

@@ -28,6 +28,7 @@ func StartRunner() chan int {
 	signal.Notify(cld, syscall.SIGCHLD)
 
 	go func() {
+		ctl <- 0
 
 		for {
 			select {
