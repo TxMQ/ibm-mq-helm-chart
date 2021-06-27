@@ -1,3 +1,10 @@
+FROM docker.io/golang:1.16.5 AS mqrunner
+USER 0
+RUN mkdir /go/src/mqrunner
+WORKDIR /go/src/mqrunner
+COPY mqrunner .
+RUN go install ./cmd
+
 FROM registry.access.redhat.com/ubi8/ubi-minimal:8.4
 USER 0
 
@@ -16,10 +23,8 @@ RUN ./mq-install-noi.sh /tmp/MQServer-noi /opt/mqm 1001
 
 RUN /opt/mqm/bin/security/amqpamcf
 
-# temporary
-COPY create-start-wait-qm.sh /opt/mqm/bin/create-start-wait-qm.sh
-RUN chown 1001:root /opt/mqm/bin/create-start-wait-qm.sh
-COPY mqrunner/mqrunner /opt/mqm/bin/mqrunner
+# copy mqrunner from go builder
+COPY --from=mqrunner /go/bin/cmd /opt/mqm/bin/mqrunner
 RUN chown 1001:root /opt/mqm/bin/mqrunner & chmod u+x,g+x,o+x /opt/mqm/bin/mqrunner
 
 EXPOSE 1414 1957 9443
@@ -31,5 +36,4 @@ ENV MQ_OVERRIDE_INSTALLATION_NAME=Installation1
 ENV MQ_USER_NAME="mqm" 
 ENV PATH="${PATH}:/opt/mqm/bin"
 
-#ENTRYPOINT ["/bin/bash", "-c", "sleep 100d"]
-ENTRYPOINT ["/opt/mqm/bin/mqrunner"]
+#ENTRYPOINT ["/opt/mqm/bin/mqrunner"]

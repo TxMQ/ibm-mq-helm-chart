@@ -34,6 +34,13 @@ func Runmain() {
 		}
 	}
 
+	// start runner
+	log.Printf("mq runner %s starting...\n", qmgr)
+	ctl := util.StartRunner()
+	<-ctl
+
+	//defer util.StopRunner()
+
 	// check if qmgr exists
 	exists, err := util.QmgrExists(qmgr)
 	if err != nil {
@@ -52,36 +59,35 @@ func Runmain() {
 		log.Printf("qmgr %s created", qmgr)
 	}
 
-	// check if qmgr is running
-	running, err := util.IsQmgrRunning(qmgr)
-	if err != nil {
-		// log and exit
-		log.Fatalf("is-qmgr-running: %v\n", err)
-	}
+	// todo: stop/start: make sure qmgr completely stopped
+	// this is an edge use case
 
-	// if running, stop qmgr
-	if running {
-		err = util.StopQmgr(qmgr)
-		if err != nil {
-			// log and exit
-			log.Fatalf("stop-qmgr: %v\n", err)
-		}
-
-		// wait for the queue manager to stop
-
-		log.Printf("qmgr %s stopped", qmgr)
-	}
-
-	// start runner
-	log.Printf("mq runner %s starting...\n", qmgr)
-	ctl := util.StartRunner()
-	<-ctl
+	//// check if qmgr is running
+	//running, err := util.IsQmgrRunning(qmgr)
+	//if err != nil {
+	//	// log and exit
+	//	log.Fatalf("is-qmgr-running: %v\n", err)
+	//}
+	//
+	//// if running, stop qmgr
+	//if running {
+	//	err = util.StopQmgr(qmgr)
+	//	if err != nil {
+	//		// log and exit
+	//		log.Fatalf("stop-qmgr: %v\n", err)
+	//	}
+	//
+	//	log.Printf("qmgr %s stopped", qmgr)
+	//}
 
 	// start qeueue manager
 	err = util.StartQmgr(qmgr)
 	if err != nil {
 		// log and exit
 		log.Fatalf("start-qmgr: %v\n", err)
+
+		// queue manager stop may take time
+		// 2021/06/25 20:45:57 start-qmgr: IBM MQ queue manager 'qm10' ending.
 	}
 
 	log.Printf("qmgr %s started", qmgr)
@@ -90,10 +96,10 @@ func Runmain() {
 
 	// start webconsole
 
-	fmt.Printf("mq runner %s running...\n", qmgr)
+	log.Printf("mq runner %s running...\n", qmgr)
 
 	<-ctl
-	fmt.Printf("mq runner %s exiting...\n", qmgr)
+	log.Printf("mq runner %s exiting...\n", qmgr)
 }
 
 func main() {

@@ -3,16 +3,21 @@ package util
 import (
 	"fmt"
 	"golang.org/x/sys/unix"
+	"log"
 	"os"
 	"os/signal"
 	"syscall"
 )
 
+//var _stopctl chan int
+
 func StartRunner() chan int {
 
-	// control channel
+	// output control channel
 	var ctl chan int
 	ctl = make(chan int)
+
+	//_stopctl = make(chan int)
 
 	// start probe
 	probe := StartProbe(ctl)
@@ -33,14 +38,14 @@ func StartRunner() chan int {
 		for {
 			select {
 			case <- cld:
-				fmt.Println("zombie...")
+				log.Printf("zobmie...")
 				var ws unix.WaitStatus
 
 				pid, err := unix.Wait4(-1, &ws, unix.WNOHANG, nil)
 				if err != nil {
-					fmt.Printf("%v\n", err)
+					log.Printf("%v\n", err)
 				} else {
-					fmt.Printf("Reaped PID %v", pid)
+					log.Printf("Reaped PID %v", pid)
 				}
 
 			case <- sig:
@@ -50,9 +55,20 @@ func StartRunner() chan int {
 
 				ctl <- 1
 				break
+
+			//case <- _stopctl:
+			//	fmt.Println("shutdown, exiting...")
+			//	// shutdown probe
+			//	_ = probe.Shutdown()
+			//
+			//	break
 			}
 		}
 	}()
 
 	return ctl
 }
+
+//func StopRunner() {
+//	_stopctl <- 1
+//}
