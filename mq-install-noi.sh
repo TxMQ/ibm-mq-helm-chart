@@ -24,7 +24,10 @@ install -d -m 0755 -o $uid -g root /mnt/mqm-data/qmgrs
 
 # mq configuration files
 install -d -m 0775 -o $uid -g root /etc/mqm
-install -d -m 0775 -o $uid -g root /etc/mqm/pki/certs
+install -d -m 0775 -o $uid -g root /etc/mqm/bin
+install -d -m 0775 -o $uid -g root /etc/mqm/ssl
+install -d -m 0775 -o $uid -g root /etc/mqm/pki/cert
+install -d -m 0775 -o $uid -g root /etc/mqm/pki/trust
 
 # directory for mq runtime files
 install -d -m 0755 -o $uid -g root /run/runmqserver
