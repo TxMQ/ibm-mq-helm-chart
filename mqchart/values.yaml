@@ -1,0 +1,83 @@
+qmgr:
+  name: qm1
+  access:
+    defaultuser: 'nobody'
+    blockip:
+    blockuser:
+  authority:
+  - group: [devs, qa, sres]
+    grant: [connect, create]
+    revoke: [delete]
+  - principal: [roky, karson, tobsky]
+    grant: [connect, create]
+    revoke: [delete]
+  setauthrec:
+  alter:
+  - alter qmgr chlauth(enabled)
+
+auth:
+  ldap:
+    connect:
+      ldapHost: openldap.mqmq.svc.cluster.local
+      ldapPort: 389
+      bindDn: cn=admin,dc=szesto,dc=com
+      bindPasswordSecret: admin
+      tls: true
+    groups:
+      groupSearchBaseDn: ou=groups,dc=szesto,dc=com
+      objectClass: groupOfNames
+      groupNameAttr: cn
+      groupMembershipAttr: member
+    users:
+      userSearchBaseDn: ou=users,dc=szesto,dc=com
+      objectClass: inetOrgPerson
+      userNameAttr: uid
+      shortUserNameAttr: cn
+
+svrconn:
+- name: app.channel
+  access:
+    defaultuser: 'nobody'
+    blockip: [192.168.1.*,192.168.10.*]
+    blockuser: [roky, karrson, tobsky]
+  authority:
+  capacity:
+    maxclients: 100
+    maxmsglen: 4096
+    msgpersecond: 100
+  tls:
+    enable: true
+    clientauth: true
+    ciphers: strong
+  setauthrec:
+  alter:
+
+localqueue:
+-  name: q.a
+   model: system.model.queue
+   authority:
+   - group: [devs]
+     grant: [put]
+     revoke: [get]
+   - group: [sres]
+     grant: [get]
+     revoke: [browse]
+   - principal: [roky, karson]
+     grant: [browse]
+     revoke: [put, get]
+   setauthrec:
+   alter:
+-  name: q.b
+   model: system.model.queue
+   authority:
+   - group: [devs]
+     grant: [put]
+     revoke: [get]
+   - group: [sres]
+     grant: [get]
+     revoke: [browse]
+   - principal: [roky, karson]
+     grant: [browse]
+     revoke: [put, get]
+   setauthrec:
+   alter:

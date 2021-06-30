@@ -1,0 +1,165 @@
+{{- define "mq.ldap" }}
+    ALTER QMGR CONNAUTH(USE.LDAP)
+    *
+    DEFINE AUTHINFO(USE.LDAP) +
+    AUTHTYPE(idpwldap) +
+    REPLACE +
+    ADOPTCTX(yes) +
+    AUTHORMD(searchgrp) +
+    BASEDNG({{ .groups.groupSearchBaseDn | squote }}) +
+    BASEDNU({{ .users.userSearchBaseDn  | squote }}) +
+    CLASSGRP({{ .groups.objectClass }}) +
+    CLASSUSR({{ .users.objectClass }}) +
+    CONNAME('{{ .connect.ldapHost }}({{ .connect.ldapPort }})') +
+    CHCKCLNT(required) +
+    CHCKLOCL(optional) +
+    DESCR('ldap authinfo') +
+    FAILDLAY(1) +
+    FINDGRP({{ .groups.groupMembershipAttr }}) +
+    GRPFIELD({{ .groups.groupNameAttr }}) +
+    LDAPPWD({{ .connect.bindPasswordSecret | squote }}) +
+    LDAPUSER({{ .connect.bindDn | squote }}) +
+    NESTGRP(yes) +
+    SECCOMM(no) +
+    SHORTUSR({{ .users.shortUserNameAttr }}) +
+    USRFIELD({{ .users.userNameAttr }});
+    *
+    REFRESH SECURITY TYPE(CONNAUTH)
+{{- end }}
+#
+{{- define "mq.svrconn" }}
+    DEFINE CHANNEL({{ .name }}) +
+    CHLTYPE(SVRCONN) +
+    DESCR({{ .description | squote }}) +
+    TRPTYPE(TCP) +
+    REPLACE +
+    DISCINT(0) +
+    HBINT(300) +
+    KAINT(AUTO) +
+    MAXINST(100000) +
+    MAXINSTC(1000) +
+    MAXMSGL(4096) +
+    MONCHL(QMGR) +
+    SHARECNV(100000) +
+    {{- if eq .tls.enable true }}
+    {{- if eq .tls.clientauth true }}
+    SSLCAUTH(required) +
+    {{- else }}
+    SSLCAUTH(optional) +
+    {{- end }}
+    SSLCIPH(ANY_TLS12_OR_HIGHER);
+    {{- else }}
+    SSLCAUTH(none);
+    {{- end }}
+    *
+    SET CHLAUTH({{ .name }}) +
+    TYPE(ADDRESSMAP) +
+    ADDRESS(*) +
+    USERSRC(CHANNEL);
+{{- end }}
+#
+{{- define "mq.chlauth" }}
+  {{- $chl := .}}
+  {{- range $ip := $chl.access.blockip }}
+  set chlauth({{$chl.name | squote }}) type(addressmap) address({{$ip | squote}}) usersrc(noaccess)
+  {{- end }}
+  {{- range $user := $chl.access.blockuser }}
+  set chlauth({{$chl.name | squote }}) type(blockuser) userlist({{$user | squote }})
+  {{- end }}
+{{- end }}
+#
+{{- define "mq.authrec" }}
+    {{- $profile := .profile }}
+    {{- $objtype := .objtype }}
+    {{- range $aut := .authority }}
+    {{- if $aut.grant }}
+    {{- range $grant := $aut.grant }}
+    {{- if $aut.group }}
+    {{- range $group := $aut.group }}
+    set authrec profile({{$profile | squote }}) objtype({{$objtype}}) group({{$group}}) authadd({{$grant}})
+    {{- end }}
+    {{- end }}
+    {{- if $aut.principal }}
+    {{- range $principal := $aut.principal }}
+    set authrec profile({{$profile | squote }}) objtype({{$objtype}}) principal({{$principal}}) authadd({{$grant}})
+    {{- end }}
+    {{- end }}
+    {{- end }}
+    {{- end }}
+    {{- if $aut.revoke }}
+    {{- range $revoke := $aut.revoke }}
+    {{- if $aut.group }}
+    {{- range $group := $aut.group }}
+    set authrec profile({{$profile | squote }}) objtype({{$objtype}}) group({{$group}}) authrm({{$revoke}})
+    {{- end }}
+    {{- end }}
+    {{- if $aut.principal }}
+    {{- range $principal := $aut.principal }}
+    set authrec profile({{$profile | squote }}) objtype({{$objtype}}) principal({{$principal}}) authrm({{$revoke}})
+    {{- end }}
+    {{- end }}
+    {{- end }}
+    {{- end }}
+    {{- end }}
+{{- end }}
+#
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: zorro
+data:
+  mqsc: |-
+    *
+    * ldap auth
+    *
+    {{- if .Values.auth.ldap }}
+    {{- include "mq.ldap" .Values.auth.ldap }}
+    {{- end }}
+
+    *
+    * queue manager
+    *
+
+    *
+    * svrconn channels
+    *
+    {{- range $ch := .Values.svrconn }}
+    {{- include "mq.svrconn" $ch }}
+    {{- end }}
+
+    *
+    * svrconn chlauth
+    *
+    {{- range $svrconn := .Values.svrconn }}
+    {{- $chl := dict "name" $svrconn.name "access" $svrconn.access }}
+    {{- include "mq.chlauth" $chl | indent 2 }}
+    {{- end }}
+
+    *
+    * local queues
+    *
+    {{- range $lq := .Values.localqueue -}}
+    {{- end }}
+
+    *
+    * queue manager authrec
+    *
+    {{- $aut := dict "objtype" "qmgr" "profile" .Values.qmgr.name "authority" .Values.qmgr.authority }}
+    {{- include "mq.authrec" $aut }}
+
+    *
+    * svrconn authrec
+    *
+    {{- range $ch := .Values.svrconn }}
+    {{- $aut := dict "objtype" "channel" "profile" $ch.name "authority" $ch.authority }}
+    {{- include "mq.authrec" $aut }}
+    {{- end }}
+
+    *
+    * local queues authrec
+    *
+    {{- range $lq := .Values.localqueue -}}
+    {{- $aut := dict "objtype" "queue" "profile" $lq.name "authority" $lq.authority }}
+    {{- include "mq.authrec" $aut }}
+    {{- end -}}
+    
