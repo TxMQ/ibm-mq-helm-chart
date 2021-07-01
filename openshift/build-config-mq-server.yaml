@@ -21,4 +21,4 @@ spec:
   output:
     to:
       kind: DockerImage
-      name: "image-registry.openshift-image-registry.svc:5000/mqmq/mq-server-922:0.1"
+      name: "image-registry.openshift-image-registry.svc:5000/mqmq/mq-server-rpm:0.1"
