@@ -14,6 +14,7 @@ install -d -m 0755 -o $uid -g root /mnt/mqm-data/qmgrs
 
 # mq init and config directories
 install -d -m 0775 -o $uid -g root /etc/mqm
+install -d -m 0775 -o $uid -g root /etc/mqm/sockets
 install -d -m 0775 -o $uid -g root /etc/mqm/qmini
 install -d -m 0775 -o $uid -g root /etc/mqm/mqsc
 install -d -m 0775 -o $uid -g root /etc/mqm/bin
