@@ -1,3 +1,17 @@
+{{- define "mq.qmgr"}}
+  alter qmgr chlauth(enabled) +
+  alter qmgr monchl(medium) +
+  alter qmgr monq(medium) +
+  alter qmgr perfmev(enabled) +
+  alter qmgr remoteev(enabled) +
+  alter qmgr sslev(enabled) +
+  alter qmgr schinit(qmgr) +
+  alter qmgr scmdserv(qmgr) +
+  alter qmgr statchl(medium) +
+  alter qmgr statq(on) +
+  alter qmgr statmqi(on) +
+  alter qmgr strstpev(enabled)
+#
 {{- define "mq.ldap" }}
     ALTER QMGR CONNAUTH(USE.LDAP)
     *
@@ -101,6 +115,39 @@
     {{- end }}
     {{- end }}
     {{- end }}
+{{- end }}
+#
+{{- define "mq.qlocal" }}
+  DEFINE QLOCAL({{ .name }}) +
+  DESCR({{default "local queue" .descr }}) +
+  REPLACE +
+  MON(QMGR) +
+  STATQ(QMGR) +
+  PUT({{ default "ENABLED" .put }}) +
+  GET({{ default "ENABLED" .get }}) +
+  USAGE(NORMAL) +
+  ACCTQ(ON) +
+  {{- if .priority }}
+  MSGDLVSQ(PRIORITY) +
+  {{- else }}
+  MSGDLVSQ(FIFO) +
+  {{- end }}
+  {{- if .defaultpri }}
+  DEFPRTY({{.defaultpri}}) +
+  {{- end }}
+  {{- if .defaultpersistence }}
+  DEFPSIST(YES) +
+  {{- else }}
+  DEFPSIST(NO) +
+  {{- end }}
+  {{- if not .trigger }}
+  NOTRIGGER +
+  {{- end }}
+  {{- if .initq }}
+  INITQ({{.initq}}) +
+  {{- end }}
+  MAXDEPTH({{ default "5000" .maxdepth }}) +
+  MAXMSGL({{ default 4194304 .maxmsglen }})
 {{- end }}
 #
 apiVersion: v1

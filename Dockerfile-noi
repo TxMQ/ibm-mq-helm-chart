@@ -8,29 +8,37 @@ RUN go install ./cmd
 FROM registry.access.redhat.com/ubi8/ubi-minimal:8.4
 USER 0
 
+# packages
 RUN microdnf --disableplugin=subscription-manager install shadow-utils bc tar procps-ng gzip findutils pam passwd wget util-linux sudo libselinux-utils
 RUN microdnf --disableplugin=subscription-manager install bash ca-certificates file gawk glibc-common grep ncurses-compat-libs sed which openldap-clients openssl
 RUN microdnf --disableplugin=subscription-manager install libgcc libstdc++
 
+ARG ACETARDIR=MQServer-noi
 RUN mkdir /tmp/MQServer-noi
-COPY MQServer-noi /tmp/MQServer-noi
+COPY $ACETARDIR /tmp/MQServer-noi
 
-COPY mq-install-noi.sh mq-install-noi.sh
-COPY copy-mq-runtime.sh copy-mq-runtime.sh
+#ARG ACETAR
+#RUN mkdir /tmp/MQServer-noi && tar -xvf $ACETAR -C /tmp/MQServer-noi
+
+COPY scripts/*.sh .
 
 RUN mkdir -p /opt/mqm
-RUN ./mq-install-noi.sh /tmp/MQServer-noi /opt/mqm 1001
+RUN .scripts/mq-install-noi.sh /tmp/MQServer-noi /opt/mqm 1001
 
-RUN /opt/mqm/bin/security/amqpamcf
+# from this point common install rpm/noi
+
+# create directories and accept license
+RUN ./create-directories.sh 1001 && ./accept-license.sh
 
 # copy mqrunner from go builder
 COPY --from=mqrunner /go/bin/cmd /opt/mqm/bin/mqrunner
 RUN chown 1001:root /opt/mqm/bin/mqrunner & chmod u+x,g+x,o+x /opt/mqm/bin/mqrunner
 
-EXPOSE 1414 1957 9443
+EXPOSE 1414 9157 9443
 
 USER 1001
 
+ENV MQ_EPHEMERAL_PREFIX=/etc/mqm
 ENV MQ_OVERRIDE_DATA_PATH=/mnt/mqm/data 
 ENV MQ_OVERRIDE_INSTALLATION_NAME=Installation1
 ENV MQ_USER_NAME="mqm" 

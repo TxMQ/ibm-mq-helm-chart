@@ -2,8 +2,8 @@ qmgr:
   name: qm1
   access:
     defaultuser: 'nobody'
-    blockip:
-    blockuser:
+    blockip: [10.5.*]
+    blockuser: [user1]
   authority:
   - group: [devs, qa, sres]
     grant: [connect, create]
@@ -53,31 +53,27 @@ svrconn:
   alter:
 
 localqueue:
--  name: q.a
-   model: system.model.queue
-   authority:
-   - group: [devs]
-     grant: [put]
-     revoke: [get]
-   - group: [sres]
-     grant: [get]
-     revoke: [browse]
-   - principal: [roky, karson]
-     grant: [browse]
-     revoke: [put, get]
-   setauthrec:
-   alter:
--  name: q.b
-   model: system.model.queue
-   authority:
-   - group: [devs]
-     grant: [put]
-     revoke: [get]
-   - group: [sres]
-     grant: [get]
-     revoke: [browse]
-   - principal: [roky, karson]
-     grant: [browse]
-     revoke: [put, get]
-   setauthrec:
-   alter:
+- name: q.a
+  descr: local queue a
+  put: true
+  get: true
+  priority: true
+  defaultpri: 9
+  defaultpersistence: true
+  trigger: false
+  initq: q.z
+  maxdepth: 5000
+  maxmsglen: 4194303
+  authority:
+  - group: [devs]
+    grant: [put]
+    revoke: [get]
+  - group: [sres]
+    grant: [get]
+    revoke: [browse]
+  - principal: [roky, karson]
+    grant: [browse]
+    revoke: [put, get]
+  setauthrec:
+  alter:
+  - DEFREADA(YES) HARDENBO
