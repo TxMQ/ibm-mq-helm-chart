@@ -1,17 +1,15 @@
-{{- $inst := uuidv4 -}}
 kind: StatefulSet
 apiVersion: apps/v1
 metadata:
-  name: {{ .Values.qmgr.name }}
-  namespace: {{ .Values.qmgr.namespace }}
+  name: {{ .Release.Name }}-{{ .Values.qmgr.name }}
   finalizers: []
   labels:
     app.kubernetes.io/component: messaging
     app.kubernetes.io/name: txmq-mq
-    app.kubernetes.io/instance: txmq-mq-{{ $inst }}
+    app.kubernetes.io/instance: txmq-mq-{{ .Release.Name }}
     app.kubernetes.io/managed-by: helm
     app.kubernetes.io/created-by: controller-manager
-    app.kubernetes.io/version: 9.2.2.0
+    app.kubernetes.io/version: {{ .Chart.AppVersion }}
 spec:
   replicas: 1
   serviceName: qmgr
@@ -25,45 +23,47 @@ spec:
     matchLabels:
       app.kubernetes.io/component: messaging
       app.kubernetes.io/name: txmq-mq
-      app.kubernetes.io/instance: txmq-mq-{{ $inst }}
+      app.kubernetes.io/instance: txmq-mq-{{ .Release.Name }}
       app.kubernetes.io/managed-by: helm
       app.kubernetes.io/created-by: controller-manager
-      app.kubernetes.io/version: 9.2.2.0
+      app.kubernetes.io/version: {{ .Chart.AppVersion }}
   template:
     metadata:
       finalizers: []
       labels:
         app.kubernetes.io/component: messaging
         app.kubernetes.io/name: txmq-mq
-        app.kubernetes.io/instance: txmq-mq-{{ $inst }}
+        app.kubernetes.io/instance: txmq-mq-{{ .Release.Name }}
         app.kubernetes.io/managed-by: helm
         app.kubernetes.io/created-by: controller-manager
-        app.kubernetes.io/version: 9.2.2.0
+        app.kubernetes.io/version:  {{ .Chart.AppVersion }}
       annotations:
-        productVersion: 9.2.2.0
+        productVersion: {{ .Values.mqver }}
         productName: IBM MQ Advanced
         productMetric: VIRTUAL_PROCESSOR_CORE
     spec:
-      serviceAccount: sa2
-      serviceAccountName: sa2
+      serviceAccount: {{.Release.Name}}-{{.Values.serviceAccount.name}}
+      serviceAccountName: {{.Release.Name}}-{{.Values.serviceAccount.name}}
       restartPolicy: Always
       schedulerName: default-scheduler
+      # param: affinity
       affinity: {}
       terminationGracePeriodSeconds: 30
       dnsPolicy: ClusterFirst
-      securityContext: {}
       containers:
-        - name: mq-mq-qmgr-noi
-          image: 'image-registry.openshift-image-registry.svc:5000/mqmq/mq-server-noi:0.1'
+        - name: mq-mq-qmgr
+          image: {{ .Values.image | squote }}
 #          terminationMessagePolicy: File
 #          terminationMessagePath: /run/termination-log
+#          {{- if .Values.resources }}
 #          resources:
 #            limits:
-#              cpu: '1'
-#              memory: 1Gi
+#              cpu: {{ default "1" .Values.resources.limits.cpu }}
+#              memory: {{ default "1Gi" .Values.resources.limits.memory }}
 #            requests:
-#              cpu: '1'
-#              memory: 1Gi
+#              cpu: {{ default "1" .Values.resources.requests.cpu }}
+#              memory: {{ default "1Gi" .Values.resources.requests.memory }}
+#          {{- end }}
           readinessProbe:
             httpGet:
               path: /ready
@@ -84,70 +84,13 @@ spec:
             failureThreshold: 1
           env:
             - name: MQ_QMGR_NAME
-              value: "qm99"
+              value: {{ .Values.qmgr.name | quote }}
             - name: MQ_ENABLE_TLS
               value: "1"
-#            - name: LICENSE
-#              value: accept
-#            - name: MQ_MULTI_INSTANCE
-#              value: 'false'
-#            - name: MQSNOAUT
-#              value: 'yes'
-#            - name: MQ_ENABLE_METRICS
-#              value: 'true'
-#            - name: MQ_ENABLE_EMBEDDED_WEB_SERVER
-#              value: 'true'
-#            - name: LOG_FORMAT
-#              value: basic
-#            - name: DEBUG
-#              value: 'false'
-#            - name: MQ_ENABLE_TRACE_STRMQM
-#              value: 'false'
-#            - name: MQ_EPHEMERAL_PREFIX
-#              value: /run/mqm
-#            - name: MQ_GRACE_PERIOD
-#              value: '29'
-#            - name: MQ_NATIVE_HA
-#              value: 'false'
-#            - name: MQ_GENERATE_CERTIFICATE_HOSTNAME
-#              value: cpd-cp4i.apps.openshift.txmq.int
-#            - name: MQ_BETA_ENABLE_SSO
-#              value: 'true'
-#            - name: MQ_CONSOLE_DEFAULT_CCDT_HOSTNAME
-#              value: simon1-ibm-mq-qm-cp4i.apps.openshift.txmq.int
-#            - name: MQ_CONSOLE_DEFAULT_CCDT_PORT
-#              value: '443'
-#            - name: IAM_URL
-#              value: 'https://cp-console.apps.openshift.txmq.int:443'
-#            - name: MQ_NAMESPACE
-#              value: mq-mq
-#            - name: MQ_ZEN_CONTEXT_NAME
-#              value: simon1
-#            - name: MQ_ZEN_CONTEXT_NAMESPACE
-#              value: cp4i
-#            - name: MQ_ZEN_BASE_URI
-#              value: >-
-#                https://cpd-cp4i.apps.openshift.txmq.int/integration/messaging/cp4i/simon1-ibm-mq/
-#            - name: MQ_ZEN_URI_SUFFIX
-#              value: /integration/messaging/cp4i/simon1-ibm-mq/
-#            - name: MQ_ZEN_ISSUER_IDENTIFIER
-#              value: KNOXSSO
-#            - name: MQ_ZEN_UNIQUE_USER_IDENTIFIER
-#              value: sub
-#            - name: MQ_ZEN_AUDIENCES
-#              value: DSX
-#            - name: MQ_ZEN_INTERNAL_ENDPOINT
-#              value: 'https://internal-nginx-svc.cp4i.svc:12443/auth'
-#            - name: MQ_ENABLE_OPEN_TRACING
-#              value: 'false'
           securityContext:
-#            capabilities:
-#              drop:
-#                - ALL
-            privileged: false
-            runAsNonRoot: true
             readOnlyRootFilesystem: false
-            allowPrivilegeEscalation: false
+            runAsUser: 1001
+            runAsGroup: 1001
           ports:
             - containerPort: 1414
               protocol: TCP
@@ -155,8 +98,7 @@ spec:
               protocol: TCP
             - containerPort: 9443
               protocol: TCP
-#          imagePullPolicy: IfNotPresent
-          imagePullPolicy: Always
+          imagePullPolicy: {{ default "IfNotPresent" .Values.imagePullPolicy }}
           volumeMounts:
             - mountPath: /mnt/mqm/data
               name: mqmdata
@@ -171,7 +113,7 @@ spec:
       volumes:
         - name: mqmdata
           persistentVolumeClaim:
-            claimName: qm-sts-claim
+            claimName: {{ .Release.Name }}-qm-sts-claim
         - name: mqsc-ini
           configMap:
             name: mqsc-ini

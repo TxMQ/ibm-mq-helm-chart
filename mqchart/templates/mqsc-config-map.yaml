@@ -11,6 +11,7 @@
   alter qmgr statq(on) +
   alter qmgr statmqi(on) +
   alter qmgr strstpev(enabled)
+{{- end }}
 #
 {{- define "mq.ldap" }}
     ALTER QMGR CONNAUTH(USE.LDAP)
@@ -44,7 +45,7 @@
 {{- define "mq.svrconn" }}
     DEFINE CHANNEL({{ .name }}) +
     CHLTYPE(SVRCONN) +
-    DESCR({{ .description | squote }}) +
+    DESCR({{ default "svrconn channel" .description | squote }}) +
     TRPTYPE(TCP) +
     REPLACE +
     DISCINT(0) +
@@ -75,10 +76,10 @@
 {{- define "mq.chlauth" }}
   {{- $chl := .}}
   {{- range $ip := $chl.access.blockip }}
-  set chlauth({{$chl.name | squote }}) type(addressmap) address({{$ip | squote}}) usersrc(noaccess)
+  SET CHLAUTH({{$chl.name | squote }}) TYPE(addressmap) ADDRESS({{$ip | squote}}) USERSRC(noaccess)
   {{- end }}
   {{- range $user := $chl.access.blockuser }}
-  set chlauth({{$chl.name | squote }}) type(blockuser) userlist({{$user | squote }})
+  SET CHLAUTH({{$chl.name | squote }}) TYPE(blockuser) USERLIST({{$user | squote }})
   {{- end }}
 {{- end }}
 #
@@ -90,12 +91,12 @@
     {{- range $grant := $aut.grant }}
     {{- if $aut.group }}
     {{- range $group := $aut.group }}
-    set authrec profile({{$profile | squote }}) objtype({{$objtype}}) group({{$group}}) authadd({{$grant}})
+    SET AUTHREC PROFILE({{ $profile }}) OBJTYPE({{ $objtype }}) GROUP({{ $group }}) AUTHADD({{ $grant }})
     {{- end }}
     {{- end }}
     {{- if $aut.principal }}
     {{- range $principal := $aut.principal }}
-    set authrec profile({{$profile | squote }}) objtype({{$objtype}}) principal({{$principal}}) authadd({{$grant}})
+    SET AUTHREC PROFILE({{ $profile }}) OBJTYPE({{ $objtype }}) PRINCIPAL({{ $principal }}) AUTHADD({{ $grant }})
     {{- end }}
     {{- end }}
     {{- end }}
@@ -104,12 +105,12 @@
     {{- range $revoke := $aut.revoke }}
     {{- if $aut.group }}
     {{- range $group := $aut.group }}
-    set authrec profile({{$profile | squote }}) objtype({{$objtype}}) group({{$group}}) authrm({{$revoke}})
+    SET AUTHREC PROFILE({{ $profile }}) OBJTYPE({{ $objtype }}) GROUP({{ $group }}) AUTHRMV({{ $revoke }})
     {{- end }}
     {{- end }}
     {{- if $aut.principal }}
     {{- range $principal := $aut.principal }}
-    set authrec profile({{$profile | squote }}) objtype({{$objtype}}) principal({{$principal}}) authrm({{$revoke}})
+    SET AUTHREC PROFILE({{ $profile }}) OBJTYPE({{ $objtype }}) PRINCIPAL({{ $principal }}) AUTHRMV({{ $revoke }})
     {{- end }}
     {{- end }}
     {{- end }}
@@ -153,7 +154,7 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: zorro
+  name: mqsc-ini
 data:
   mqsc: |-
     *

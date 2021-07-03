@@ -1,16 +1,24 @@
+image: image-registry.openshift-image-registry.svc:5000/mqmq/mq-server-rpm:0.1
+imagePoolPolicy: Always
+mqver: 9.2.2.0
+
+serviceAccount:
+  create: true
+  name: sa3
+
 qmgr:
   name: qm1
   access:
     defaultuser: 'nobody'
     blockip: [10.5.*]
-    blockuser: [user1]
+    blockuser: [karson]
   authority:
-  - group: [devs, qa, sres]
-    grant: [connect, create]
-    revoke: [delete]
+  - group: [devs]
+    grant: [connect, crt]
+    revoke: [dlt]
   - principal: [roky, karson, tobsky]
-    grant: [connect, create]
-    revoke: [delete]
+    grant: [connect, crt]
+    revoke: [dlt]
   setauthrec:
   alter:
   - alter qmgr chlauth(enabled)

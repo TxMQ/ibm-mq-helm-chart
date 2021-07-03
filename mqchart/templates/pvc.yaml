@@ -1,0 +1,24 @@
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  annotations:
+  labels:
+    app.kubernetes.io/component: messaging
+    app.kubernetes.io/name: txmq-mq
+    app.kubernetes.io/instance: txmq-mq-{{ .Release.Name }}
+    app.kubernetes.io/managed-by: helm
+    app.kubernetes.io/created-by: controller-manager
+    app.kubernetes.io/version: {{ .Chart.AppVersion }}
+  name: {{ .Release.Name }}-qm-sts-claim
+  namespace: {{ .Release.Namespace }}
+  finalizers:
+    - kubernetes.io/pvc-protection
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 10Gi
+  storageClassName: managed-nfs-storage
+  volumeMode: Filesystem
+  

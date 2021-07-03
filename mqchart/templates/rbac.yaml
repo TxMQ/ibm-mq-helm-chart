@@ -1,0 +1,54 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{.Release.Name}}-{{.Values.serviceAccount.name}}
+  labels:
+    app.kubernetes.io/component: messaging
+    app.kubernetes.io/name: txmq-mq
+    app.kubernetes.io/instance: txmq-mq-{{ .Release.Name }}
+    app.kubernetes.io/managed-by: helm
+    app.kubernetes.io/created-by: controller-manager
+    app.kubernetes.io/version: {{ .Chart.AppVersion }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: {{ .Release.Name }}-allow-anyuid-scc
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/component: messaging
+    app.kubernetes.io/name: txmq-mq
+    app.kubernetes.io/instance: txmq-mq-{{ .Release.Name }}
+    app.kubernetes.io/managed-by: helm
+    app.kubernetes.io/created-by: controller-manager
+    app.kubernetes.io/version: {{ .Chart.AppVersion }}
+rules:
+- apiGroups:
+  - security.openshift.io
+  resourceNames:
+  - anyuid
+  resources:
+  - securitycontextconstraints
+  verbs:
+  - use
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: {{ .Release.Name }}-anyuid-scc
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/component: messaging
+    app.kubernetes.io/name: txmq-mq
+    app.kubernetes.io/instance: txmq-mq-{{ .Release.Name }}
+    app.kubernetes.io/managed-by: helm
+    app.kubernetes.io/created-by: controller-manager
+    app.kubernetes.io/version: {{ .Chart.AppVersion }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: {{ .Release.Name }}-allow-anyuid-scc
+subjects:
+- kind: ServiceAccount
+  name: {{.Release.Name}}-{{.Values.serviceAccount.name}}
+  namespace: {{ .Release.Namespace }}
