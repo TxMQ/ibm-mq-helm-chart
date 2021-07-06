@@ -154,7 +154,7 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: mqsc-ini
+  name: mqsc-ini-{{ .Release.Name }}
 data:
   mqsc: |-
     *

@@ -116,7 +116,7 @@ spec:
             claimName: {{ .Release.Name }}-qm-sts-claim
         - name: mqsc-ini
           configMap:
-            name: mqsc-ini
+            name: mqsc-ini-{{ .Release.Name }}
         - name: qm-tls
           secret:
             secretName: qm-tls
