@@ -4,12 +4,7 @@ metadata:
   name: {{ .Release.Name }}-{{ .Values.qmgr.name }}
   finalizers: []
   labels:
-    app.kubernetes.io/component: messaging
-    app.kubernetes.io/name: txmq-mq
-    app.kubernetes.io/instance: txmq-mq-{{ .Release.Name }}
-    app.kubernetes.io/managed-by: helm
-    app.kubernetes.io/created-by: controller-manager
-    app.kubernetes.io/version: {{ .Chart.AppVersion }}
+    {{- include "mqchart.labels" . | nindent 4 }}
 spec:
   replicas: 1
   serviceName: qmgr
@@ -21,22 +16,12 @@ spec:
   revisionHistoryLimit: 10
   selector:
     matchLabels:
-      app.kubernetes.io/component: messaging
-      app.kubernetes.io/name: txmq-mq
-      app.kubernetes.io/instance: txmq-mq-{{ .Release.Name }}
-      app.kubernetes.io/managed-by: helm
-      app.kubernetes.io/created-by: controller-manager
-      app.kubernetes.io/version: {{ .Chart.AppVersion }}
+      {{- include "mqchart.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       finalizers: []
       labels:
-        app.kubernetes.io/component: messaging
-        app.kubernetes.io/name: txmq-mq
-        app.kubernetes.io/instance: txmq-mq-{{ .Release.Name }}
-        app.kubernetes.io/managed-by: helm
-        app.kubernetes.io/created-by: controller-manager
-        app.kubernetes.io/version:  {{ .Chart.AppVersion }}
+        {{- include "mqchart.labels" . | nindent 8 }}
       annotations:
         productVersion: {{ .Values.mqver }}
         productName: IBM MQ Advanced
