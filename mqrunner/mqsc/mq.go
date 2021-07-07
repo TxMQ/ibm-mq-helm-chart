@@ -87,3 +87,8 @@ func Outputmqsc(mqscfile string) error {
 func Printmqsc(mqsc string) {
 	fmt.Printf("%s\n", mqsc)
 }
+
+func Outputuserxml(userxmlfile string) error {
+	// todo
+	return nil
+}
