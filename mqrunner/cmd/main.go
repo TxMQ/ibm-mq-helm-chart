@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"szesto.com/mqrunner/util"
+	"szesto.com/mqrunner/webmq"
 )
 
 func Runmain() {
@@ -94,7 +95,19 @@ func Runmain() {
 
 	// set qmgr tls key repository and label
 
+	// configure webconsole
+	err = webmq.ConfigureWebconsole()
+	if err != nil {
+		// log and exit
+		log.Fatalf("configure-webconsole: %v\n", err)
+	}
+
 	// start webconsole
+	err = webmq.StartWebconsole()
+	if err != nil {
+		// log and exit
+		log.Fatalf("configure-webconsole: %v\n", err)
+	}
 
 	log.Printf("mq runner %s running...\n", qmgr)
 

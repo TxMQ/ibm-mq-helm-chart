@@ -64,8 +64,8 @@ type Localqueue struct {
 	Descr string // descr(%s) - plain text comment - param
 	Like string // like - name of a queue to model this def - param
 
-	Put bool // enable put 	get(%s) enabled/disabled
-	Get bool // enable get 	put(%s) enabled/disabled
+	Put string // enable put 	get(%s) enabled/disabled
+	Get string // enable get 	put(%s) enabled/disabled
 
 	DefaultPriority int //	defprty(%d)
 	DefaultPersistence bool // 	defpsist(%s) yes/no
@@ -133,11 +133,11 @@ func (lq *Localqueue) Mqsc() string {
 		descr := fmt.Sprintf("local queue %s", lq.Name)
 		if len(lq.Descr) > 0 { descr = lq.Descr}
 
-		put := "disabled"
-		if lq.Put {put = "enabled"}
+		put := "enabled"
+		if len(lq.Put) > 0 && strings.ToLower(lq.Put) == "disabled" {put = "disabled"}
 
-		get := "disabled"
-		if lq.Get {get = "enabled"}
+		get := "enabled"
+		if len(lq.Get) > 0 && strings.ToLower(lq.Get) == "disabled" {get = "disabled"}
 
 		defpersist := "yes"
 		if lq.DefaultPersistence == false { defpersist = "no" }

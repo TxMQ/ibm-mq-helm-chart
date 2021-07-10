@@ -26,6 +26,7 @@ spec:
         productVersion: {{ .Values.mqver }}
         productName: IBM MQ Advanced
         productMetric: VIRTUAL_PROCESSOR_CORE
+        checksum/config: {{ include (print $.Template.BasePath "/mqsc-config-map.yaml") . | sha256sum }}
     spec:
       serviceAccount: {{.Release.Name}}-{{.Values.serviceAccount.name}}
       serviceAccountName: {{.Release.Name}}-{{.Values.serviceAccount.name}}
@@ -40,15 +41,15 @@ spec:
           image: {{ .Values.image | squote }}
 #          terminationMessagePolicy: File
 #          terminationMessagePath: /run/termination-log
-#          {{- if .Values.resources }}
-#          resources:
-#            limits:
-#              cpu: {{ default "1" .Values.resources.limits.cpu }}
-#              memory: {{ default "1Gi" .Values.resources.limits.memory }}
-#            requests:
-#              cpu: {{ default "1" .Values.resources.requests.cpu }}
-#              memory: {{ default "1Gi" .Values.resources.requests.memory }}
-#          {{- end }}
+          {{- if .Values.resources }}
+          resources:
+            limits:
+              cpu: {{ .Values.resources.limits.cpu }}
+              memory: {{ .Values.resources.limits.memory }}
+            requests:
+              cpu: {{ .Values.resources.requests.cpu }}
+              memory: {{ .Values.resources.requests.memory }}
+          {{- end }}
           readinessProbe:
             httpGet:
               path: /ready
@@ -67,6 +68,7 @@ spec:
             periodSeconds: 10
             successThreshold: 1
             failureThreshold: 1
+          # environemnt variables
           env:
             - name: MQ_QMGR_NAME
               value: {{ .Values.qmgr.name | quote }}
@@ -104,7 +106,7 @@ spec:
             name: mqsc-ini-{{ .Release.Name }}
         - name: qm-tls
           secret:
-            secretName: qm-tls
+            secretName: qm-tls-{{ .Release.Name }}
 #        - name: oidc-certificate
 #          secret:
 #            secretName: ibmcloud-cluster-ca-cert
@@ -119,4 +121,3 @@ spec:
 #              - key: tls.crt
 #                path: ZEN_CERTIFICATE.crt
 #            defaultMode: 420
-

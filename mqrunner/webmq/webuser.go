@@ -2,6 +2,8 @@ package webmq
 
 import (
 	"fmt"
+	"gopkg.in/yaml.v2"
+	"io/ioutil"
 	"strings"
 )
 
@@ -16,16 +18,54 @@ type Variable struct {
 	Value string
 }
 
+type Groupdef struct {
+	ObjectClass string
+	GroupNameAttr string
+	GroupMembershipAttr string
+}
+
+type Userdef struct {
+	ObjectClass string
+	UsernameAttr string
+}
+
 type Ldapregistry struct {
-	Realm string
+	Realm string			// real name represents user registry
 	Host string
 	Port int
-	Ldaptype string
+	Ldaptype string			// custom, mad, ...
+
 	Binddn string
-	Bindpassword string
-	Basedn string
-	Userfilter string
-	Groupfilter string
+	Bindpassword string		// encode with securityUtility tool
+	Basedn string			// start searching from this dn
+
+	SslEnabled bool			// if enabled, ssl ref is required
+
+	Groupdef Groupdef
+	Userdef Userdef
+
+	// example:
+	// dn: cn=devs,ou=,o=,dc=,dc=
+	// objectclass: groupOfNames
+	// objectclass: top
+	// cn=devs
+	// member: uid=karson,ou=..
+	// member: uid=roky,ou=...
+	// member: uid=tobsky,ou=...
+	//
+	// groupfilter: (&(cn=%v)(objectclass=groupOfNames))
+	// groupIdMap: *:cn - map a name of a group (devs) to an ldap entry by cn attribute type
+	// groupMemberIdMap: groupOfNames:member - group membership attribute type
+	// user filter: (&(uid=%v)(objectclass=inetOrgPerson))
+	// userIdMap: *:uid - map a name of a user (roky) to an ldap entry by uid attribute type
+	//
+	// we can reuse mq ldap configuration attributes instead of filters and ldap entry maps
+	// groupobjectclass, groupnameattr, groupmembershipattr
+	// userobjectclass, usernameattr
+	//
+	// default custom filter:
+	// (&(cn=%v)(|(objectclass=groupOfNames)(objectclass=groupOfUniqueNames)
+	//	(objectclass=groupOfURLs ???)))
 }
 
 type Clientauth struct {
@@ -33,6 +73,25 @@ type Clientauth struct {
 	Truststorepass string
 	Enabled bool
 }
+
+/*
+	mqconsoleroles:
+		mqwebadmin:
+			groups: []
+			users: []
+		mqwebadminro:
+			groups: []
+			users: []
+		mqwebuser:
+			groups: []
+			users: []
+		mftwebadmin:
+			groups: []
+			users: []
+		mftwebadminro:
+			groups: []
+			users: []
+ */
 
 type Webuser struct {
 	Webroles []Approle
@@ -122,7 +181,74 @@ func (webuser Webuser) roleBindings(roles []Approle) string {
 	return appbinding
 }
 
-func (webuser Webuser) Webuserxml() string {
+func (webuser Webuser) ldapregistry() string {
+
+	ldapf :=
+	"   <ldapRegistry id=\"%s\"\n" +
+	"      realm=\"%s\"\n" +
+	"      host=\"%s\"\n" +
+	"      port=\"%d\"\n" +
+	"      bindDn=\"%s\"\n" +
+	"      bindPassword=\"%s\"\n" +
+	"      baseDn=\"%s\"\n" +
+	"      ldapType=\"%s\"\n" +
+	"      customFiltersRef=\"%s\">\n" +
+	"   </ldapRegistry>\n\n"
+
+	ldaptype := "custom"
+	filtersid := "custom_filters"
+
+	ldap := fmt.Sprintf(ldapf, "ldap", webuser.Ldapregistry.Realm, webuser.Ldapregistry.Host,
+		webuser.Ldapregistry.Port, webuser.Ldapregistry.Binddn, webuser.Ldapregistry.Bindpassword,
+		webuser.Ldapregistry.Basedn, ldaptype, filtersid)
+
+	filtersf :=
+	"   <customLdapFilterProperties id=\"%s\"\n" +
+	"      userFilter=\"%s\"\n" +
+	"      groupFilter=\"%s\"\n" +
+	"      userIdMap=\"%s\"\n" +
+	"      groupIdMap=\"%s\"\n" +
+	"      groupMemberIdMap=\"%s\"\n" +
+	"   </customLdapFilterProperties>"
+
+	userfilter := fmt.Sprintf("(&(%s=%s)(objectclass=%s))", webuser.Ldapregistry.Userdef.UsernameAttr, "%v",
+		webuser.Ldapregistry.Userdef.ObjectClass)
+
+	groupfilter := fmt.Sprintf("(&(%s=%s)(objectclass=%s))", webuser.Ldapregistry.Groupdef.GroupNameAttr, "%v",
+		webuser.Ldapregistry.Groupdef.ObjectClass)
+
+	useridmap := fmt.Sprintf("*:%s", webuser.Ldapregistry.Userdef.UsernameAttr)
+
+	groupidmap := fmt.Sprintf("*:%s", webuser.Ldapregistry.Groupdef.GroupNameAttr)
+
+	groupmemberidmap := fmt.Sprintf("%s:%s", webuser.Ldapregistry.Groupdef.ObjectClass,
+		webuser.Ldapregistry.Groupdef.GroupMembershipAttr)
+
+	filters := fmt.Sprintf(filtersf, filtersid, userfilter, groupfilter, useridmap, groupidmap, groupmemberidmap)
+
+	return ldap + filters
+}
+
+func (webuser Webuser) tls(p12path, encpass string) string {
+
+	ksf :=
+	"   <keyStore id=\"defaultKeyStore\"\n"+
+	"     location=\"%s\"\n" +
+	"     type=\"PKCS12\"\n" +
+	"     password=\"%s\">\n\n" +
+	"   <ssl id=\"webmqSSLConfig\"\n" +
+	"     clientAuthenticationSupported=\"true\"\n" +
+	"     keyStoreRef=\"defaultKeyStore\"\n" +
+	"     serverKeyAlias=\"default\"\n" +
+	"     trustStoreRef=\"defaultTrustStore\"\n" +
+	"     sslProtocol=\"TLSv1.2\"/>\n\n" +
+	"   <sslDefault sslRef=\"webmqSSLConfig\"/>"
+
+	ks := fmt.Sprintf(ksf, p12path, encpass)
+	return ks
+}
+
+func (webuser Webuser) Webuserxml(p12path, encpass string) string {
 
 	const nl = "\n"
 
@@ -140,8 +266,12 @@ func (webuser Webuser) Webuserxml() string {
 	server += apiRoles + nl + nl
 
 	// ldap registry
+	ldap := webuser.ldapregistry()
+	server += ldap + nl + nl
 
 	// tls config
+	tls := webuser.tls(p12path, encpass)
+	server += tls + nl + nl
 
 	// client auth
 
@@ -152,4 +282,51 @@ func (webuser Webuser) Webuserxml() string {
 
 	server += "</server>" + nl
 	return server
+}
+
+func ConfigureWebconsole() error {
+
+	// import webconsole certs
+	p12path, encpass, err := ImportWebconsoleCerts()
+	if err != nil {
+		return err
+	}
+
+	// read webconfig
+	// assume that config is mounted at /etc/mqm/config/webconfig.yaml
+	// otherwise we can pass it as a parameter
+	const webconfigpath = "/etc/mqm/config/webconfig.yaml"
+
+	data, err := ioutil.ReadFile(webconfigpath)
+	if err != nil {
+		return err
+	}
+
+	// unmarshall webuser config yaml
+	webuser := Webuser{}
+
+	err = yaml.Unmarshal([]byte(data), &webuser)
+	if err != nil {
+		return err
+	}
+
+	// p12 keystore path and encoded password are not part
+	// of static webconfig and are passed in as parameters
+	xml := webuser.Webuserxml(p12path, encpass)
+
+	// write xml into webuser.xml file
+	// this file is included by the webconsole server.xml
+	// todo: use env var for directory path
+	const mqwebuserxmlpath = "/var/mqm/web/installations/Installation1/servers/mqweb/mqwebuser.xml"
+
+	err = ioutil.WriteFile(mqwebuserxmlpath, []byte(xml), 0777)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func StartWebconsole() error {
+	return nil
 }

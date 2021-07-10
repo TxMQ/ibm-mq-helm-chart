@@ -7,81 +7,76 @@ serviceAccount:
   name: sa3
 
 qmgr:
-  name: qm1
+  name: qm20
+
+mq:
+  qmgr:
+    name: qm20
   access:
-    defaultuser: 'nobody'
-    blockip: [10.5.*]
-    blockuser: [karson]
+    blockip: [192.168.*]
+    blockuser: [roky, karson, tobsky, kathy]
+    allowip: [10.*]
   authority:
-  - group: [devs]
-    grant: [connect, crt]
-    revoke: [dlt]
-  - principal: [roky, karson, tobsky]
-    grant: [connect, crt]
-    revoke: [dlt]
-  setauthrec:
-  alter:
-  - alter qmgr chlauth(enabled)
+    - group: [devs]
+      grant: [connect, inq]
+    - group: [admins]
+      # todo: 'set' on qm on admin only
+      grant: [alladm, chg, clr, crt, dlt, dsp]
+  alter: []
 
-auth:
-  ldap:
-    connect:
-      ldapHost: openldap.mqmq.svc.cluster.local
-      ldapPort: 389
-      bindDn: cn=admin,dc=szesto,dc=com
-      bindPasswordSecret: admin
-      tls: true
-    groups:
-      groupSearchBaseDn: ou=groups,dc=szesto,dc=com
-      objectClass: groupOfNames
-      groupNameAttr: cn
-      groupMembershipAttr: member
-    users:
-      userSearchBaseDn: ou=users,dc=szesto,dc=com
-      objectClass: inetOrgPerson
-      userNameAttr: uid
-      shortUserNameAttr: cn
+  auth:
+    ldap:
+      connect:
+        ldaphost: "openldap.mqmq.svc.cluster.local"
+        ldapport: 389
+        binddn: "cn=admin,dc=szesto,dc=com"
+        bindpasswordsecret: "admin"
+        tls: false
+      groups:
+        groupsearchbasedn: "ou=groups,dc=szesto.dc=com"
+        objectclass: "groupOfNames"
+        groupnameattr: "cn"
+        groupmembershipattr: "member"
+      users:
+        usersearchbasedn: "ou=users,dc=szesto,dc=com"
+        objectclass: "inetOrgPerson"
+        usernameattr: "uid"
+        shortusernameattr: "cn"
 
-svrconn:
-- name: app.channel
-  access:
-    defaultuser: 'nobody'
-    blockip: [192.168.1.*,192.168.10.*]
-    blockuser: [roky, karrson, tobsky]
-  authority:
-  capacity:
-    maxclients: 100
-    maxmsglen: 4096
-    msgpersecond: 100
-  tls:
-    enable: true
-    clientauth: true
-    ciphers: strong
-  setauthrec:
-  alter:
+  svrconn:
+  - svrconnproperties:
+      name: app.channel
+      maxmsgl: 4096
+    tls:
+      enabled: false
+      clientauth: false
+      ciphers: []
+    access:
+      defaultuser: ""
+      blockip: ["10.2.100.*"]
+      blockuser: []
+      allowip: []
+    authority:
+      # todo: set mcauser on the channel def
+      - group: [devs]
+        grant: [chg, clr, crt, dlt, dsp, ctrl, ctrlx]
+      - group: [admins]
+        # crt is system-wide authority
+        grant: [alladm, chg, clr, dlt, dsp]
+    alter:
+    - monchl(off)
+    - alter channel(app.channel) monchl(low)
 
-localqueue:
-- name: q.a
-  descr: local queue a
-  put: true
-  get: true
-  priority: true
-  defaultpri: 9
-  defaultpersistence: true
-  trigger: false
-  initq: q.z
-  maxdepth: 5000
-  maxmsglen: 4194303
-  authority:
-  - group: [devs]
-    grant: [put]
-    revoke: [get]
-  - group: [sres]
-    grant: [get]
-    revoke: [browse]
-  - principal: [roky, karson]
-    grant: [browse]
-    revoke: [put, get]
-  setauthrec:
-  alter:
-  - DEFREADA(YES) HARDENBO
+  localqueue:
+  - name: q.a
+    defaultprioprity: 2
+    defaultpersistence: true
+    maxmsgl: 4096
+    maxdepth: 1000
+    authority:
+      - group: [devs]
+        grant: [put, get, setall, passall]
+      - group: [admins]
+        grant: [alladm, chg, clr, dlt, dsp]
+  - name: q.b
+    like: q.a
