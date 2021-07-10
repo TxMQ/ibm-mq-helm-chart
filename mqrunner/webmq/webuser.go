@@ -208,13 +208,13 @@ func (webuser Webuser) ldapregistry() string {
 	"      groupFilter=\"%s\"\n" +
 	"      userIdMap=\"%s\"\n" +
 	"      groupIdMap=\"%s\"\n" +
-	"      groupMemberIdMap=\"%s\"\n" +
+	"      groupMemberIdMap=\"%s\">\n" +
 	"   </customLdapFilterProperties>"
 
-	userfilter := fmt.Sprintf("(&(%s=%s)(objectclass=%s))", webuser.Ldapregistry.Userdef.UsernameAttr, "%v",
+	userfilter := fmt.Sprintf("(&amp;(%s=%s)(objectclass=%s))", webuser.Ldapregistry.Userdef.UsernameAttr, "%v",
 		webuser.Ldapregistry.Userdef.ObjectClass)
 
-	groupfilter := fmt.Sprintf("(&(%s=%s)(objectclass=%s))", webuser.Ldapregistry.Groupdef.GroupNameAttr, "%v",
+	groupfilter := fmt.Sprintf("(&amp;(%s=%s)(objectclass=%s))", webuser.Ldapregistry.Groupdef.GroupNameAttr, "%v",
 		webuser.Ldapregistry.Groupdef.ObjectClass)
 
 	useridmap := fmt.Sprintf("*:%s", webuser.Ldapregistry.Userdef.UsernameAttr)
@@ -232,15 +232,15 @@ func (webuser Webuser) ldapregistry() string {
 func (webuser Webuser) tls(p12path, encpass string) string {
 
 	ksf :=
-	"   <keyStore id=\"defaultKeyStore\"\n"+
+	"   <keyStore id=\"webmqKeyStore\"\n"+
 	"     location=\"%s\"\n" +
 	"     type=\"PKCS12\"\n" +
-	"     password=\"%s\">\n\n" +
+	"     password=\"%s\"/>\n\n" +
 	"   <ssl id=\"webmqSSLConfig\"\n" +
 	"     clientAuthenticationSupported=\"true\"\n" +
-	"     keyStoreRef=\"defaultKeyStore\"\n" +
+	"     keyStoreRef=\"webmqKeyStore\"\n" +
 	"     serverKeyAlias=\"default\"\n" +
-	"     trustStoreRef=\"defaultTrustStore\"\n" +
+	//"     trustStoreRef=\"defaultTrustStore\"\n" +
 	"     sslProtocol=\"TLSv1.2\"/>\n\n" +
 	"   <sslDefault sslRef=\"webmqSSLConfig\"/>"
 

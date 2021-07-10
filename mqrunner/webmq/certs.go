@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 )
 
 const _keyfile = "tls.key"
@@ -53,24 +54,27 @@ func CreateWebmqKeystore(ssldir, certdir string, deleteExistingKeystore bool) (s
 
 	// generate random password
 	// openssl rand -base64 14 > keystore.password
-	password, err := exec.Command("openssl", "rand", "-base64", "14").CombinedOutput()
+	passbytes, err := exec.Command("openssl", "rand", "-base64", "14").CombinedOutput()
 	if err != nil {
 		return "","", err
 	}
 
+	// strip newline character at the end of the password
+	password := strings.TrimSuffix(string(passbytes), "\n")
+
 	// save password into the file?
 
 	// encode password
-	out, err := exec.Command("/opt/mqm/web/bin/securityUtility", "encode", string(password)).CombinedOutput()
+	encbytes, err := exec.Command("/opt/mqm/web/bin/securityUtility", "encode", string(password)).CombinedOutput()
 	if err != nil {
-		if out != nil {
-			return "","", fmt.Errorf("%s\n", string(out))
+		if encbytes != nil {
+			return "","", fmt.Errorf("%s\n", string(encbytes))
 		} else {
 			return "","", err
 		}
 	}
 
-	encpass := string(out)
+	encpass := strings.TrimSuffix(string(encbytes), "\n")
 
 	// we expect to find key, cert and [ca] files in certdir
 	keypath := filepath.Join(certdir, _keyfile)
@@ -79,9 +83,8 @@ func CreateWebmqKeystore(ssldir, certdir string, deleteExistingKeystore bool) (s
 
 	//capath := filepath.Join(certdir, _cafile)
 
-
 	// openssl pkcs12 -export -name name -out p12path -inkey tls.key -in tls.crt [-certfile ca.crt] -password pass:password
-	out, err = exec.Command("/usr/bin/openssl", "pkcs12", "-export", "-name", _certlabel, "-out", p12path,
+	out, err := exec.Command("/usr/bin/openssl", "pkcs12", "-export", "-name", _certlabel, "-out", p12path,
 		"-inkey", keypath, "-in", certpath, "-password", "pass:" + string(password)).CombinedOutput()
 	if err != nil {
 		if out != nil {
@@ -92,7 +95,7 @@ func CreateWebmqKeystore(ssldir, certdir string, deleteExistingKeystore bool) (s
 	}
 
 	// change p12 file mode
-	err = os.Chmod(p12path, 0660)
+	err = os.Chmod(p12path, 0666)
 	if err != nil {
 		return "", "", err
 	}

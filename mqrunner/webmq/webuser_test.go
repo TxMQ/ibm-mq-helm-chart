@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"gopkg.in/yaml.v2"
 	"log"
+	"os/user"
 	"testing"
 )
 
@@ -180,4 +181,42 @@ func TestWebuser_Webuserxml2(t *testing.T) {
 	}
 
 	fmt.Printf("--- m dump:\n%s\n\n", string(d))
+}
+
+func TestCreateWebmqKeystore(t *testing.T) {
+
+	u, err := user.Current()
+	if err != nil {
+		log.Fatalf("error: %v", err)
+	}
+
+	certdir := u.HomeDir + "/etc/mqm/pki/cert"
+	ssldir := u.HomeDir + "/etc/mqm/ssl"
+
+	p12path, encpass, err := CreateWebmqKeystore(ssldir, certdir, true)
+	if err != nil {
+		log.Fatalf("error: %v", err)
+	}
+
+	fmt.Printf("%s, %s\n", p12path, encpass)
+}
+
+func TestImportWebconsoleCerts(t *testing.T) {
+
+	p12path, encpass, err := ImportWebconsoleCerts()
+	if err != nil {
+		log.Fatalf("error: %v", err)
+	}
+
+	fmt.Printf("%s, %s\n", p12path, encpass)
+}
+
+func TestConfigureWebconsole(t *testing.T) {
+
+	err := ConfigureWebconsole()
+	if err != nil {
+		log.Fatalf("error: %v", err)
+	}
+
+	fmt.Printf("%s\n","webconsole configured")
 }
