@@ -1,5 +1,6 @@
 qmspec:
   annotations: {} # podTemplateSpec
+  licenseAnnotations: {}
   labels: {} # podTemplateSpec
 
   affinity: # podSpec
@@ -36,7 +37,6 @@ qmspec:
     mqsc: {} # config map, mount as a volume
     logFormat: {} # env
     metrics: true # prometeus metrics env
-    route: {} # qmgr route, webconsole route
     storage:
       # dependency
       pvcName: qm-sts-claim
