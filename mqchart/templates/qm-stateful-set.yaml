@@ -25,8 +25,10 @@ spec:
       annotations:
         # inject, there could be more annotations
         productVersion: {{ .Values.qmspec.version }}
-        productName: IBM MQ Advanced
-        productMetric: VIRTUAL_PROCESSOR_CORE
+        productName: "IBM MQ Advanced"
+        productID: "208423bb063c43288328b1d788745b0c"
+        productChargedContainers: {{ .Release.Name }}-{{ .Values.qmspec.qmconf.name }}-0
+        productMetric: VIRTUAL_PROCESSOR_CORE 
         checksum/config: {{ include (print $.Template.BasePath "/mqsc-config-map.yaml") . | sha256sum }}
     spec:
       # inject
