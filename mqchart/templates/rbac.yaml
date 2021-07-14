@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: {{.Release.Name}}-{{.Values.serviceAccount.name}}
+  name: {{.Release.Name}}-{{.Values.qmspec.serviceAccount.name}}
   labels:
     {{- include "mqchart.labels" . | nindent 4 }}
 ---
@@ -35,5 +35,5 @@ roleRef:
   name: {{ .Release.Name }}-allow-anyuid-scc
 subjects:
 - kind: ServiceAccount
-  name: {{.Release.Name}}-{{.Values.serviceAccount.name}}
+  name: {{.Release.Name}}-{{.Values.qmspec.serviceAccount.name}}
   namespace: {{ .Release.Namespace }}

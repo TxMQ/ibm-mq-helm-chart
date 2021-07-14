@@ -1,13 +1,50 @@
-image: image-registry.openshift-image-registry.svc:5000/mqmq/mq-server-rpm:0.1
-imagePoolPolicy: Always
-mqver: 9.2.2.0
+qmspec:
+  annotations: {} # podTemplateSpec
+  labels: {} # podTemplateSpec
 
-serviceAccount:
-  create: true
-  name: sa3
+  affinity: # podSpec
+    nodeAffinity: {}
+    podAffinity: {}
+    podAntiAffinity: {}
 
-qmgr:
-  name: qm20
+  serviceAccount:
+    create: true
+    name: sa3
+
+  # dependency
+  imagePullSecrets: # podSpec
+    - name: image-pull-secret
+
+  license: {} # -> env
+
+  pki:
+    # dependency
+    tlsSecretName: qm-tls
+
+  terminationGracePeriodSeconds: 10
+  version: 9.2.2.0
+  web: enabled
+
+  qmconf:
+    name: qm20 # (=> env, qmgr pod name)
+#    image: image-registry.openshift-image-registry.svc:5000/mqmq/mq-server-rpm:0.1 # container
+    image: docker.io/simong5000/txmq-mq-adv-rpm:0.1
+    imagePoolPolicy: Always # container
+    resources: {} # container
+    debug: true # env
+    ini: {} # config map, mount as a volume
+    mqsc: {} # config map, mount as a volume
+    logFormat: {} # env
+    metrics: true # prometeus metrics env
+    route: {} # qmgr route, webconsole route
+    storage:
+      # dependency
+      pvcName: qm-sts-claim
+#      storageClass: managed-nfs-storage
+      storageClass: standard
+      accessMode: ReadWriteOnce
+      deleteClaim: false
+      size: 2Gi
 
 mq:
   qmgr:

@@ -1,7 +1,7 @@
 kind: StatefulSet
 apiVersion: apps/v1
 metadata:
-  name: {{ .Release.Name }}-{{ .Values.qmgr.name }}
+  name: {{ .Release.Name }}-{{ .Values.qmspec.qmconf.name }}
   finalizers: []
   labels:
     {{- include "mqchart.labels" . | nindent 4 }}
@@ -23,22 +23,34 @@ spec:
       labels:
         {{- include "mqchart.labels" . | nindent 8 }}
       annotations:
-        productVersion: {{ .Values.mqver }}
+        # inject, there could be more annotations
+        productVersion: {{ .Values.qmspec.version }}
         productName: IBM MQ Advanced
         productMetric: VIRTUAL_PROCESSOR_CORE
         checksum/config: {{ include (print $.Template.BasePath "/mqsc-config-map.yaml") . | sha256sum }}
     spec:
-      serviceAccount: {{.Release.Name}}-{{.Values.serviceAccount.name}}
-      serviceAccountName: {{.Release.Name}}-{{.Values.serviceAccount.name}}
+      # inject
+      {{- with .Values.qmspec.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccount: {{.Release.Name}}-{{.Values.qmspec.serviceAccount.name}}
+      serviceAccountName: {{.Release.Name}}-{{.Values.qmspec.serviceAccount.name}}
       restartPolicy: Always
       schedulerName: default-scheduler
-      # param: affinity
-      affinity: {}
       terminationGracePeriodSeconds: 30
       dnsPolicy: ClusterFirst
+      # inject
+      {{- with .Values.qmspec.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       containers:
         - name: mq-mq-qmgr
-          image: {{ .Values.image | squote }}
+          # inject
+          image: {{ .Values.qmspec.qmconf.image | squote }}
+          # inject
+          imagePullPolicy: {{ default "IfNotPresent" .Values.qmspec.qmconf.imagePullPolicy }}
 #          terminationMessagePolicy: File
 #          terminationMessagePath: /run/termination-log
           {{- if .Values.resources }}
@@ -71,7 +83,7 @@ spec:
           # environemnt variables
           env:
             - name: MQ_QMGR_NAME
-              value: {{ .Values.qmgr.name | quote }}
+              value: {{ .Values.qmspec.qmconf.name | quote }}
             - name: MQ_ENABLE_TLS
               value: "1"
           securityContext:
@@ -85,7 +97,6 @@ spec:
               protocol: TCP
             - containerPort: 9443
               protocol: TCP
-          imagePullPolicy: {{ default "IfNotPresent" .Values.imagePullPolicy }}
           volumeMounts:
             - mountPath: /mnt/mqm/data
               name: mqmdata
@@ -100,13 +111,13 @@ spec:
       volumes:
         - name: mqmdata
           persistentVolumeClaim:
-            claimName: {{ .Release.Name }}-qm-sts-claim
+            claimName: {{ .Release.Name }}-{{ .Values.qmspec.qmconf.storage.pvcName }}
         - name: mqsc-ini
           configMap:
             name: mqsc-ini-{{ .Release.Name }}
         - name: qm-tls
           secret:
-            secretName: qm-tls-{{ .Release.Name }}
+            secretName: {{ .Values.qmspec.pki.tlsSecretName }}
 #        - name: oidc-certificate
 #          secret:
 #            secretName: ibmcloud-cluster-ca-cert

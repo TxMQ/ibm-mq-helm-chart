@@ -2,18 +2,21 @@ kind: PersistentVolumeClaim
 apiVersion: v1
 metadata:
   annotations:
+#    {{- if not .Values.qmspec.qmconf.storage.deleteClaim }}
+#    "helm.sh/resource-policy": keep
+#    {{- end }}
   labels:
     {{- include "mqchart.labels" . | nindent 4 }}
-  name: {{ .Release.Name }}-qm-sts-claim
+  name: {{ .Release.Name }}-{{ .Values.qmspec.qmconf.storage.pvcName }}
   namespace: {{ .Release.Namespace }}
   finalizers:
     - kubernetes.io/pvc-protection
 spec:
   accessModes:
-    - ReadWriteMany
+    - {{ .Values.qmspec.qmconf.storage.accessMode }}
   resources:
     requests:
-      storage: 10Gi
-  storageClassName: managed-nfs-storage
+      storage: {{ .Values.qmspec.qmconf.storage.size }}
+  storageClassName: {{ .Values.qmspec.qmconf.storage.storageClass}}
   volumeMode: Filesystem
   
