@@ -15,6 +15,8 @@ type Chlauth struct {
 func (chlauth *Chlauth) Mqsc(chlname string) string {
 	var auths []string
 
+	mcauser := chlauth.Defaultuser
+
 	// range over blocked ips
 	for _, ip := range chlauth.Blockip {
 		t := "SET CHLAUTH(('%s') TYPE(addressmap) ADDRESS('%s') USERSRC(noaccess)"
@@ -31,8 +33,17 @@ func (chlauth *Chlauth) Mqsc(chlname string) string {
 
 	// range allowed ips
 	for _, ip := range chlauth.Allowip {
-		t := "set chlauth('%s') type(addressmap) address(%s) usersrc(channel)"
-		s := fmt.Sprintf(t, chlname, ip)
+
+		s := ""
+		if len(mcauser) > 0 {
+			t := "set chlauth('%s') type(addressmap) address('%s') mcauser('%s') usersrc(map)"
+			s = fmt.Sprintf(t, chlname, ip, mcauser)
+
+		} else {
+			t := "set chlauth('%s') type(addressmap) address('%s') usersrc(channel)"
+			s = fmt.Sprintf(t, chlname, ip)
+		}
+
 		auths = append(auths, s)
 	}
 

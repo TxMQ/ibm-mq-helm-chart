@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
+	"os"
 	"strings"
 )
 
@@ -19,17 +20,17 @@ func (mq *Mq) Mqsc() string {
 
 	var mqsc []string
 
-	comment := fmt.Sprintf("queue manager %s", mq.Qmgr.Name)
-	mqsc = append(mqsc, formatComment(comment))
-
-	qmgr := mq.Qmgr.Mqsc()
-	mqsc = append(mqsc, qmgr)
-
-	comment = fmt.Sprintf("%s", "ldap auth")
+	comment := fmt.Sprintf("%s", "ldap auth")
 	mqsc = append(mqsc, formatComment(comment))
 
 	ldap := mq.Auth.Ldap.Mqsc()
 	mqsc = append(mqsc, ldap)
+
+	comment = fmt.Sprintf("queue manager %s", mq.Qmgr.Name)
+	mqsc = append(mqsc, formatComment(comment))
+
+	qmgr := mq.Qmgr.Mqsc()
+	mqsc = append(mqsc, qmgr)
 
 	for _, svrconn := range mq.Svrconn {
 		comment = fmt.Sprintf("svrconn channel %s", svrconn.Name)
@@ -61,11 +62,15 @@ func formatComment(comment string) string {
 	return fmt.Sprintf("\n*\n* %s\n*\n", comment)
 }
 
-func Outputmqsc(mqscfile string) error {
+func Outputmqsc(configyaml, mqscfile string) error {
 
 	// read mq config yaml file
-	data, err := ioutil.ReadFile(mqscfile)
+	data, err := ioutil.ReadFile(configyaml)
 	if err != nil {
+		if os.IsNotExist(err) {
+			// nothing to do, return
+			return nil
+		}
 		return err
 	}
 
@@ -79,16 +84,22 @@ func Outputmqsc(mqscfile string) error {
 
 	// output mqsc
 	mqsc := mq.Mqsc()
-	Printmqsc(mqsc)
+
+	err = Printmqsc(mqsc, mqscfile)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
 
-func Printmqsc(mqsc string) {
-	fmt.Printf("%s\n", mqsc)
-}
+func Printmqsc(mqsc, mqscfile string) error {
+	//fmt.Printf("%s\n", mqsc)
 
-func Outputuserxml(userxmlfile string) error {
-	// todo
+	err := ioutil.WriteFile(mqscfile, []byte(mqsc), 0777)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }

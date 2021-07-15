@@ -91,73 +91,115 @@ type Localqueue struct {
 
 func (lq *Localqueue) Mqsc() string {
 
+	/*
+	DEFINE QLOCAL( q_name )
+	   [ ACCTQ( QMGR | ON | OFF ) ]            [ BOQNAME( string ) ]
+	   [ BOTHRESH( integer ) ]                 [ CLCHNAME( channel_name ) ]
+	   [ CLUSNL( namelist_name ) ]             [ CLUSTER( cluster_name ) ]
+	   [ CLWLPRTY( integer ) ]                 [ CLWLRANK( integer ) ]
+	   [ CLWLUSEQ( LOCAL | ANY | QMGR ) ]      [ CUSTOM( string ) ]
+	   [ DEFBIND( NOTFIXED | OPEN | GROUP ) ]  [ DEFPRESP( SYNC | ASYNC ) ]
+	   [ DEFPRTY( integer ) ]                  [ DEFPSIST( YES | NO ) ]
+	   [ DEFREADA( NO | YES | DISABLED ) ]     [ DEFSOPT( EXCL | SHARED ) ]
+	   [ DESCR( string ) ]                     [ DISTL( YES | NO ) ]
+	   [ GET( ENABLED | DISABLED ) ]           [ HARDENBO | NOHARDENBO ]
+	   [ IMGRCOVQ( YES | NO | QMGR ) ]         [ INITQ( string ) ]
+	   [ LIKE( qlocal_name ) ]                 [ MAXDEPTH( integer ) ]
+	   [ MAXFSIZE( DEFAULT | integer ) ]
+	   [ MAXMSGL( integer ) ]
+	   [ MONQ( OFF | QMGR | LOW | MEDIUM | HIGH ) ]
+	   [ MSGDLVSQ( PRIORITY | FIFO ) ]         [ NPMCLASS( NORMAL | HIGH ) ]
+	   [ PROCESS( string ) ]
+	   [ PROPCTL( COMPAT | NONE | ALL | FORCE | V6COMPAT ) ]
+	   [ PUT( ENABLED | DISABLED ) ]           [ QDEPTHHI( integer ) ]
+	   [ QDEPTHLO( integer ) ]                 [ QDPHIEV( ENABLED | DISABLED ) ]
+	   [ QDPLOEV( ENABLED | DISABLED ) ]       [ QDPMAXEV( ENABLED | DISABLED ) ]
+	   [ QSVCIEV( NONE | HIGH | OK ) ]         [ QSVCINT( integer ) ]
+	   [ REPLACE | NOREPLACE ]                 [ RETINTVL( integer ) ]
+	   [ SCOPE( QMGR | CELL ) ]                [ SHARE | NOSHARE ]
+	   [ STATQ( QMGR | ON | OFF ) ]            [ TRIGDATA( string ) ]
+	   [ TRIGDPTH( integer ) ]                 [ TRIGGER | NOTRIGGER ]
+	   [ TRIGMPRI( integer ) ]
+	   [ TRIGTYPE( FIRST | EVERY | DEPTH | NONE ) ]
+	   [ USAGE( NORMAL | XMITQ ) ]
+	 */
+
 	var mqsc []string
 
-	if len(lq.Like) > 0 {
+	//if len(lq.Like) > 0 {
+	//
+	//	t :=
+	//		"define qlocal(%s) replace" + cont + // qname
+	//		"descr(%s)" + cont + // descr
+	//		"like(%s)" // like
+	//
+	//	descr := fmt.Sprintf("local queue %s", lq.Name)
+	//	if len(lq.Descr) > 0 { descr = lq.Descr}
+	//
+	//	s := fmt.Sprintf(t, lq.Name, descr, lq.Like)
+	//
+	//	mqsc = append(mqsc, s)
+	//
 
-		t :=
-			"define qlocal(%s) replace" + cont + // qname
-			"descr(%s)" + cont + // descr
-			"like(%s)" // like
+	t :=
+		"define qlocal(%s) replace" + cont + // qname
+		"descr('%s')" + cont + // descr
+		"put(%s)" + cont + // put enabled/disabled
+		"get(%s)" + cont + // get enabled/disabled
+		"defprty(%d)" + cont + // defpriority
+		"defpsist(%s)" + cont + // default-persistence yes/no
+		"maxdepth(%d)" + cont + // maxdepth
+		"maxfsize(%d)" + cont + // maxfsize
+		"maxmsgl(%d)" + cont + // maxmsgl
+		"msgdlvsq(%s)" + cont + // msg-delivery-seq (PRIORITY|FIFO)
 
-		descr := fmt.Sprintf("local queue %s", lq.Name)
-		if len(lq.Descr) > 0 { descr = lq.Descr}
+		// monitoring unexported fields
+		"acctq(%s)" + cont + // acctq(qmgr)
+		"monq(%s)" + cont + // monq(qmgr)
+		"statq(%s)" + cont + // statq(qmgr)
 
-		s := fmt.Sprintf(t, lq.Name, descr, lq.Like)
+		"usage(%s)" + cont + // usage(normal)
+		"%s" + cont + // trigger/notrigger
+		"share" + endl
 
-		mqsc = append(mqsc, s)
+	descr := fmt.Sprintf("local queue %s", lq.Name)
+	if len(lq.Descr) > 0 { descr = lq.Descr}
 
-	} else {
+	put := "enabled"
+	if len(lq.Put) > 0 && strings.ToLower(lq.Put) == "disabled" {put = "disabled"}
 
-		t :=
-			"define qlocal(%s) replace" + cont + // qname
-			"descr('%s')" + cont + // descr
-			"put(%s)" + cont + // put enabled/disabled
-			"get(%s)" + cont + // get enabled/disabled
-			"defprty(%d)" + cont + // defpriority
-			"defpsist(%s)" + cont + // default-persistence yes/no
-			"maxdepth(%d)" + cont + // maxdepth
-			"maxfsize(%d)" + cont + // maxfsize
-			"maxmsgl(%d)" + cont + // maxmsgl
-			"msgdlvsq(%s)" + cont + // msg-delivery-seq
+	get := "enabled"
+	if len(lq.Get) > 0 && strings.ToLower(lq.Get) == "disabled" {get = "disabled"}
 
-			// monitoring unexported fields
-			"acctq(%s)" + cont + // acctq(qmgr)
-			"monq(%s)" + cont + // monq(qmgr)
-			"statq(%s)" + cont + // statq(qmgr)
+	defpersist := "yes"
+	if lq.DefaultPersistence == false { defpersist = "no" }
 
-			"usage(%s)" + cont + // usage(normal)
-			"%s" + cont + // trigger/notrigger
-			"share" + endl
+	msgdeliveryseq := "PRIORITY"
+	if strings.ToUpper(lq.MsgDeliverySeq) == "FIFO" {
+		msgdeliveryseq = "FIFO"
+	}
 
-		descr := fmt.Sprintf("local queue %s", lq.Name)
-		if len(lq.Descr) > 0 { descr = lq.Descr}
+	// monitoring
+	mon := "qmgr"
 
-		put := "enabled"
-		if len(lq.Put) > 0 && strings.ToLower(lq.Put) == "disabled" {put = "disabled"}
+	// local queue
+	lqnormal := "normal"
 
-		get := "enabled"
-		if len(lq.Get) > 0 && strings.ToLower(lq.Get) == "disabled" {get = "disabled"}
+	// trigger
+	trigger := "notrigger"
+	if lq.Qtrigger.Enabled {
+		// trigger params
+	}
 
-		defpersist := "yes"
-		if lq.DefaultPersistence == false { defpersist = "no" }
+	s := fmt.Sprintf(t, lq.Name, descr, put, get, lq.DefaultPriority, defpersist,
+		lq.Maxdepth, lq.Maxfsize, lq.Maxmsgl, msgdeliveryseq,
+		mon, mon, mon, lqnormal, trigger)
 
-		// monitoring
-		mon := "qmgr"
+	mqsc = append(mqsc, s)
 
-		// local queue
-		lqnormal := "normal"
-
-		// trigger
-		trigger := "notrigger"
-		if lq.Qtrigger.Enabled {
-			// trigger params
-		}
-
-		s := fmt.Sprintf(t, lq.Name, descr, put, get, lq.DefaultPriority, defpersist,
-			lq.Maxdepth, lq.Maxfsize, lq.Maxmsgl, lq.MsgDeliverySeq,
-			mon, mon, mon, lqnormal, trigger)
-
+	// authorities
+	for _, authrec := range lq.Authority {
+		s := authrec.Mqsc(lq.Name, "QUEUE")
 		mqsc = append(mqsc, s)
 	}
 
@@ -165,37 +207,3 @@ func (lq *Localqueue) Mqsc() string {
 
 	return strings.Join(mqsc, "\n")
 }
-
-/*
- * parameter list
- *
-boqname - backout reque name - alt
-bothresh - backout threshold - alt
-capexpry
-csusnl - list of clusters for the queue - cluster
-cluster - name of the cluster for the queue - cluster
-clwlprty - cluster workload distribution pri - cluster
-clwlrank - rank of the queue for workload distr - cluster
-clwluseq - cluster put behaviour - cluster
-custom - custom attribute for new features - alt
-defbind - binding for mqbind for the cluster queue - alt
-defpresp - put response - alt
-defreada - default read-ahead for non-persistent msgs - alt
-defsopt - default share option - alt
-hardenbo/nohardenbo - alt
-imgrcovq - recovery from media image - alt
-maxfsize - max size in gb that a queue file can grow (default) - alt
-monq - collect monitoring data for queue - qmgr - alt
-noreplace
-npmclass - reliability for non persistent messages normal/high - alter
-process - application to start if trigger is firing - alter
-propctl - message property read control - alt
-qdepthhi - threshhold for queue-depth-high event - alt
-qdepthlo - threshhold for queue-depth-low event - alt
-qdphiev - generate hi depth events - alt
-qdploev - generate lo depth events - alt
-qsvciev - service interval high event - alt
-qsvcint - service interval for serivce high events - alt
-retintvl - queue no longer needed - alt
-scope - queue def scope - alt
- */

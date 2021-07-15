@@ -106,6 +106,8 @@ spec:
               name: mqsc-ini
             - mountPath: /etc/mqm/pki/cert
               name: qm-tls
+            - mountPath: /etc/mqm/webuser
+              name: webuser
 #            - name: oidc-certificate
 #              mountPath: /etc/mqm/pki/trust/default
 #            - name: zen-ca-certificate
@@ -117,6 +119,9 @@ spec:
         - name: mqsc-ini
           configMap:
             name: mqsc-ini-{{ .Release.Name }}
+        - name: webuser
+          configMap:
+            name: webuser-{{ .Release.Name }}
         - name: qm-tls
           secret:
             secretName: {{ .Values.qmspec.pki.tlsSecretName }}

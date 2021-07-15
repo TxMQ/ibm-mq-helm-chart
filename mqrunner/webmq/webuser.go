@@ -29,7 +29,7 @@ type Userdef struct {
 	UsernameAttr string
 }
 
-type Ldapregistry struct {
+type Connect struct {
 	Realm string			// real name represents user registry
 	Host string
 	Port int
@@ -40,7 +40,10 @@ type Ldapregistry struct {
 	Basedn string			// start searching from this dn
 
 	SslEnabled bool			// if enabled, ssl ref is required
+}
 
+type Ldapregistry struct {
+	Connect Connect
 	Groupdef Groupdef
 	Userdef Userdef
 
@@ -73,25 +76,6 @@ type Clientauth struct {
 	Truststorepass string
 	Enabled bool
 }
-
-/*
-	mqconsoleroles:
-		mqwebadmin:
-			groups: []
-			users: []
-		mqwebadminro:
-			groups: []
-			users: []
-		mqwebuser:
-			groups: []
-			users: []
-		mftwebadmin:
-			groups: []
-			users: []
-		mftwebadminro:
-			groups: []
-			users: []
- */
 
 type Webuser struct {
 	Webroles []Approle
@@ -198,9 +182,9 @@ func (webuser Webuser) ldapregistry() string {
 	ldaptype := "custom"
 	filtersid := "custom_filters"
 
-	ldap := fmt.Sprintf(ldapf, "ldap", webuser.Ldapregistry.Realm, webuser.Ldapregistry.Host,
-		webuser.Ldapregistry.Port, webuser.Ldapregistry.Binddn, webuser.Ldapregistry.Bindpassword,
-		webuser.Ldapregistry.Basedn, ldaptype, filtersid)
+	ldap := fmt.Sprintf(ldapf, "ldap", webuser.Ldapregistry.Connect.Realm, webuser.Ldapregistry.Connect.Host,
+		webuser.Ldapregistry.Connect.Port, webuser.Ldapregistry.Connect.Binddn, webuser.Ldapregistry.Connect.Bindpassword,
+		webuser.Ldapregistry.Connect.Basedn, ldaptype, filtersid)
 
 	filtersf :=
 	"   <customLdapFilterProperties id=\"%s\"\n" +
@@ -284,18 +268,7 @@ func (webuser Webuser) Webuserxml(p12path, encpass string) string {
 	return server
 }
 
-func ConfigureWebconsole() error {
-
-	// import webconsole certs
-	p12path, encpass, err := ImportWebconsoleCerts()
-	if err != nil {
-		return err
-	}
-
-	// read webconfig
-	// assume that config is mounted at /etc/mqm/config/webconfig.yaml
-	// otherwise we can pass it as a parameter
-	const webconfigpath = "/etc/mqm/config/webconfig.yaml"
+func OutputWebuserxml(webconfigpath, webuserxmlpath, p12path, encpass string) error {
 
 	data, err := ioutil.ReadFile(webconfigpath)
 	if err != nil {
@@ -314,12 +287,30 @@ func ConfigureWebconsole() error {
 	// of static webconfig and are passed in as parameters
 	xml := webuser.Webuserxml(p12path, encpass)
 
-	// write xml into webuser.xml file
-	// this file is included by the webconsole server.xml
-	// todo: use env var for directory path
-	const mqwebuserxmlpath = "/var/mqm/web/installations/Installation1/servers/mqweb/mqwebuser.xml"
+	err = ioutil.WriteFile(webuserxmlpath, []byte(xml), 0777)
+	if err != nil {
+		return err
+	}
 
-	err = ioutil.WriteFile(mqwebuserxmlpath, []byte(xml), 0777)
+	return nil
+}
+
+func ConfigureWebconsole() error {
+
+	// import webconsole certs
+	p12path, encpass, err := ImportWebconsoleCerts()
+	if err != nil {
+		return err
+	}
+
+	// assume that web config is mounted at /etc/mqm/webuser/webuser.yaml
+	// otherwise we can pass it as a parameter
+	const webconfigpath = "/etc/mqm/webuser/webuser.yaml"
+
+	// todo: use env var for directory path
+	const webuserxmlpath = "/var/mqm/web/installations/Installation1/servers/mqweb/mqwebuser.xml"
+
+	err = OutputWebuserxml(webconfigpath, webuserxmlpath, p12path, encpass)
 	if err != nil {
 		return err
 	}

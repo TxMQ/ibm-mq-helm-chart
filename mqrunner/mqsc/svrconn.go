@@ -46,10 +46,10 @@ func (props *SvrconnProperties) mqsc() string {
 
 	// set exported defaults
 	if len(props.Descr) == 0 {
-		props.Descr = fmt.Sprintf("srvconn channel %s", props.Name)
+		props.Descr = fmt.Sprintf("srvconn channel %s", strings.ToUpper(props.Name))
 	}
 
-	t :=	"define channel(%s) replace" + cont + // name
+	t :=	"define channel('%s')" + cont + // name
 			"chltype(svrconn)" + cont +
 			"descr('%s')" + cont + // descr
 			"trptype(tcp)" + cont +
@@ -59,9 +59,10 @@ func (props *SvrconnProperties) mqsc() string {
 			"maxinst(%d)" + cont + // maxinst
 			"maxinstc(%d)" + cont + // maxinstc
 			"maxmsgl(%d)" + cont + // maxmsgl
-			"sharecnv(%d)" + endl // sharecnv
+			"sharecnv(%d)" + cont + // sharecnv
+			"replace" + endl
 
-	s := fmt.Sprintf(t, props.Name, props.Descr,
+	s := fmt.Sprintf(t, strings.ToUpper(props.Name), props.Descr,
 		props.discint, props.hbint, props.maxinst, props.maxinstc, props.Maxmsgl, props.sharecnv)
 
 	return s

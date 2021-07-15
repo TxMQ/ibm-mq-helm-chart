@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"szesto.com/mqrunner/mqsc"
 	"szesto.com/mqrunner/util"
 	"szesto.com/mqrunner/webmq"
 )
@@ -95,7 +96,23 @@ func Runmain() {
 
 	// set qmgr tls key repository and label
 
+	// transform mq config yaml into mqsc commands
+	mqconfigyaml := "/etc/mqm/mqsc/mqsc.yaml"
+	startupmqsc := "/etc/mqm/startup.mqsc"
+
+	log.Printf("transofrming mq config yaml '%s' into startup mqsc script '%s'\n", mqconfigyaml, startupmqsc)
+
+	err = mqsc.Outputmqsc(mqconfigyaml, startupmqsc)
+	if err != nil {
+		// log and exit
+		log.Fatalf("configure-webconsole: %v\n", err)
+	}
+
+	// apply mqsc commands
+
 	// configure webconsole
+	log.Printf("%s\n", "configuring webconsole")
+
 	err = webmq.ConfigureWebconsole()
 	if err != nil {
 		// log and exit

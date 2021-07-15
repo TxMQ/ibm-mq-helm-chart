@@ -44,14 +44,14 @@ func (ldap *LdapAuthinfo) Mqsc() string {
 		"alter qmgr connauth(use.ldap)" + endl +
 		star +
 		"define authinfo(use.ldap)" + cont +
-		"replace" + cont +
+		"authtype(IDPWLDAP)" + cont +
 		"adoptctx(yes)" + cont +
 		"authormd(searchgrp)" + cont +
 		"basedng('%s')" + cont + // groups.groupSearchBaseDn
 		"basednu('%s')" + cont + // users.userSearchBaseDn
 		"CLASSGRP(%s)" + cont + // {{ .groups.objectClass }})" +
 		"CLASSUSR(%s)" + cont + // {{ .users.objectClass }}) +
-		"CONNAME(%s(%d))" + cont + // {{ .connect.ldapHost }}({{ .connect.ldapPort }})') +
+		"CONNAME('%s(%d)')" + cont + // {{ .connect.ldapHost }}({{ .connect.ldapPort }})') +
 		"CHCKCLNT(required)" + cont +
 		"CHCKLOCL(optional)" + cont +
 		"DESCR('ldap authinfo')" + cont +
@@ -59,11 +59,12 @@ func (ldap *LdapAuthinfo) Mqsc() string {
 		"FINDGRP(%s)" + cont + // ({{ .groups.groupMembershipAttr }}) +
 		"GRPFIELD(%s)" + cont + // {{ .groups.groupNameAttr }}) +
 		"LDAPPWD('%s')" + cont + // {{ .connect.bindPasswordSecret | squote }}) +
-		"LDAPUSER(%s)" + cont + // {{ .connect.bindDn | squote }}) +
+		"LDAPUSER('%s')" + cont + // {{ .connect.bindDn | squote }}) +
 		"NESTGRP(yes)" + cont  +
 		"SECCOMM(no)" + cont + // todo: parameterize, ssl to ldap
 		"SHORTUSR(%s)" + cont + // {{ .users.shortUserNameAttr }}) +
 		"USRFIELD(%s)" + cont + // {{ .users.userNameAttr }});
+		"replace" + endl +
 		star +
 		"REFRESH SECURITY TYPE(CONNAUTH)" + endl
 

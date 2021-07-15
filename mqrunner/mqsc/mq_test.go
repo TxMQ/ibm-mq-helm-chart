@@ -59,8 +59,8 @@ func TestMq_Mqsc(t *testing.T) {
 				Name:               "",
 				Descr:              "",
 				Like:               "",
-				Put:                false,
-				Get:                false,
+				Put:                "enabled",
+				Get:                "enabled",
 				DefaultPriority:    0,
 				DefaultPersistence: false,
 				Maxdepth:           0,
@@ -235,14 +235,15 @@ alter: []
 	fmt.Printf("temp dir: %s\n", dir)
 
 	// mqsc file name
-	mqscfile := filepath.Join(dir, "mqsctest.yaml")
+	configyaml := filepath.Join(dir, "mqsctest.yaml")
 
-	err := os.WriteFile(mqscfile, []byte(data), 0777)
+	err := os.WriteFile(configyaml, []byte(data), 0777)
 	if err != nil {
 		log.Fatalf("%v\n", err)
 	}
 
-	err = Outputmqsc(mqscfile)
+	mqscfile := filepath.Join(dir, "startup.mqsc")
+	err = Outputmqsc(configyaml, mqscfile)
 	if err != nil {
 		log.Fatalf("%v\n", err)
 	}

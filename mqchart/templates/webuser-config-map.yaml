@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: webuser-{{ .Release.Name }}
+  labels:
+    {{- include "mqchart.labels" . | nindent 4 }}
+data:
+  webuser.yaml: |-
+    {{- toYaml .Values.webuser | nindent 4 }}

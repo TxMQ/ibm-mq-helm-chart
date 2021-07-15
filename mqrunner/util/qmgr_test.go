@@ -129,7 +129,7 @@ func TestIsSelfSigned(t *testing.T) {
 	u, _ := user.Current()
 	certpath := filepath.Join(u.HomeDir, "etc/mqm/pki/tls.crt")
 
-	ss, err := IsSelfSigned(certpath)
+	_, _, ss, err := IsSelfSigned(certpath)
 
 	if err != nil {
 		fmt.Printf("%v\n", err)
