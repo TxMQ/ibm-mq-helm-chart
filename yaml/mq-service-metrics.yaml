@@ -1,0 +1,44 @@
+kind: Service
+apiVersion: v1
+metadata:
+  annotations:
+    prometheus.io/port: '9157'
+    prometheus.io/scrape: 'true'
+  selfLink: /api/v1/namespaces/cp4i/services/simon1-ibm-mq-metrics
+  resourceVersion: '6637341'
+  name: simon1-ibm-mq-metrics
+  uid: 7fbcdf7a-d6ef-4b69-af55-783f47004fe6
+  creationTimestamp: '2021-06-11T00:15:18Z'
+  namespace: cp4i
+  ownerReferences:
+    - apiVersion: mq.ibm.com/v1beta1
+      kind: QueueManager
+      name: simon1
+      uid: 570c2d00-623f-44a1-8414-ed9e854844be
+      controller: true
+      blockOwnerDeletion: true
+  labels:
+    app.kubernetes.io/component: integration
+    app.kubernetes.io/instance: simon1
+    app.kubernetes.io/managed-by: operator
+    app.kubernetes.io/name: ibm-mq
+    app.kubernetes.io/version: 9.2.2.0
+spec:
+  ports:
+    - name: metrics
+      protocol: TCP
+      port: 9157
+      targetPort: 9157
+  selector:
+    app.kubernetes.io/component: integration
+    app.kubernetes.io/instance: simon1
+    app.kubernetes.io/managed-by: operator
+    app.kubernetes.io/name: ibm-mq
+  clusterIP: 172.30.82.90
+  clusterIPs:
+    - 172.30.82.90
+  type: ClusterIP
+  sessionAffinity: None
+status:
+  loadBalancer: {}
+

@@ -1,0 +1,45 @@
+kind: Service
+apiVersion: v1
+metadata:
+  selfLink: /api/v1/namespaces/cp4i/services/simon1-ibm-mq
+  resourceVersion: '6637336'
+  name: simon1-ibm-mq
+  uid: aaebf04e-e56e-4119-975b-1054f1b91b3b
+  creationTimestamp: '2021-06-11T00:15:18Z'
+  namespace: cp4i
+  ownerReferences:
+    - apiVersion: mq.ibm.com/v1beta1
+      kind: QueueManager
+      name: simon1
+      uid: 570c2d00-623f-44a1-8414-ed9e854844be
+      controller: true
+      blockOwnerDeletion: true
+  labels:
+    app.kubernetes.io/component: integration
+    app.kubernetes.io/instance: simon1
+    app.kubernetes.io/managed-by: operator
+    app.kubernetes.io/name: ibm-mq
+    app.kubernetes.io/version: 9.2.2.0
+spec:
+  ports:
+    - name: console-https
+      protocol: TCP
+      port: 9443
+      targetPort: 9443
+    - name: qmgr
+      protocol: TCP
+      port: 1414
+      targetPort: 1414
+  selector:
+    app.kubernetes.io/component: integration
+    app.kubernetes.io/instance: simon1
+    app.kubernetes.io/managed-by: operator
+    app.kubernetes.io/name: ibm-mq
+  clusterIP: 172.30.33.134
+  clusterIPs:
+    - 172.30.33.134
+  type: ClusterIP
+  sessionAffinity: None
+status:
+  loadBalancer: {}
+
