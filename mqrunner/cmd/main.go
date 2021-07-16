@@ -121,6 +121,8 @@ func Runmain() {
 
 	} else {
 		// apply mqsc commands
+		log.Printf("applying '%s' mqsc file", startupmqsc)
+
 		cout, err := util.RunmqscFromFile(qmgr, startupmqsc)
 		if err != nil {
 			cerr := string(cout)
@@ -134,6 +136,9 @@ func Runmain() {
 
 	// apply mqsc ini commands
 	mqscini := "/etc/mqm/mqsc/mqscini.mqsc"
+
+	log.Printf("applying '%s' mqsc file", mqscini)
+
 	cout, err := util.RunmqscFromFile(qmgr, mqscini)
 	if err != nil {
 		cerr := string(cout)
