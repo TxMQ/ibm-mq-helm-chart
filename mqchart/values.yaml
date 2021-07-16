@@ -54,17 +54,17 @@ qmspec:
 webuser:
   webroles:
   - name: MQWebAdmin
-    groups: []
+    groups: [devs]
   - name: MQWebAdminRO
-    groups: []
+    groups: [devs]
   - name: MQWebUser
-    groups: []
+    groups: [devs]
 
   apiroles:
   - name: MQWebAdmin
-    groups: []
+    groups: [devs]
   - name: MQWebAdminRO
-    groups: []
+    groups: [devs]
   - name: MQWebUser
     groups: ["devs"]
 
