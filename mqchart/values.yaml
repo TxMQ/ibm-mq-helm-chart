@@ -30,7 +30,7 @@ qmspec:
   qmconf:
     name: qm20 # (=> env, qmgr pod name)
 #    image: image-registry.openshift-image-registry.svc:5000/mqmq/mq-server-rpm:0.1 # container
-    image: docker.io/simong5000/txmq-mq-adv-rpm:0.13
+    image: docker.io/simong5000/txmq-mq-adv-rpm:0.17
     imagePoolPolicy: Always # container
 
     resources: {} # container

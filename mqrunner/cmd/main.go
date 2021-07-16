@@ -9,6 +9,14 @@ import (
 	"szesto.com/mqrunner/webmq"
 )
 
+func isApplyStartupConfig() bool {
+	return os.Getenv("TXMQ_APPLY_STARTUP_CONFIG") == "1"
+}
+
+func isStartMqweb() bool {
+	return os.Getenv("TXMQ_START_MQWEB") == "1"
+}
+
 func Runmain() {
 
 	// env variables set in the pod template
@@ -34,6 +42,28 @@ func Runmain() {
 			// log and exit
 			log.Fatalf("import-certificates: %v\n", err)
 		}
+	}
+
+	// transform mq config yaml into mqsc commands
+	mqconfigyaml := "/etc/mqm/mqsc/mqsc.yaml"
+	startupmqsc := "/etc/mqm/startup.mqsc"
+
+	startupMqscFileFound := false
+
+	log.Printf("transform mq config yaml '%s' into startup mqsc script '%s'\n",
+		mqconfigyaml, startupmqsc)
+
+	err = mqsc.Outputmqsc(mqconfigyaml, startupmqsc)
+	if err != nil && os.IsNotExist(err) {
+		// no mqconfig yaml file
+		log.Printf("mq conifg yaml file '%s' not found\n", mqconfigyaml)
+
+	} else if err != nil {
+		// log and exit
+		log.Fatalf("output-mqsc: %v\n", err)
+
+	} else {
+		startupMqscFileFound = true
 	}
 
 	// start runner
@@ -103,23 +133,7 @@ func Runmain() {
 		}
 	}
 
-	// transform mq config yaml into mqsc commands
-	mqconfigyaml := "/etc/mqm/mqsc/mqsc.yaml"
-	startupmqsc := "/etc/mqm/startup.mqsc"
-
-	log.Printf("transform mq config yaml '%s' into startup mqsc script '%s'\n",
-		mqconfigyaml, startupmqsc)
-
-	err = mqsc.Outputmqsc(mqconfigyaml, startupmqsc)
-	if err != nil && os.IsNotExist(err) {
-		// no mqconfig yaml file
-		log.Printf("mq conifg yaml file '%s' not found\n", mqconfigyaml)
-
-	} else if err != nil {
-		// log and exit
-		log.Fatalf("configure-webconsole: %v\n", err)
-
-	} else {
+	if startupMqscFileFound && isApplyStartupConfig() {
 		// apply mqsc commands
 		log.Printf("applying '%s' mqsc file", startupmqsc)
 
@@ -135,17 +149,19 @@ func Runmain() {
 	}
 
 	// apply mqsc ini commands
-	mqscini := "/etc/mqm/mqsc/mqscini.mqsc"
+	if isApplyStartupConfig() {
+		mqscini := "/etc/mqm/mqsc/mqscini.mqsc"
 
-	log.Printf("applying '%s' mqsc file", mqscini)
+		log.Printf("applying '%s' mqsc file", mqscini)
 
-	cout, err := util.RunmqscFromFile(qmgr, mqscini)
-	if err != nil {
-		cerr := string(cout)
-		if len(cerr) > 0 {
-			log.Printf("run-mqsc-from-file: %s\n", cerr)
-		} else {
-			log.Printf("run-mqsc-from-file: %v\n", err)
+		cout, err := util.RunmqscFromFile(qmgr, mqscini)
+		if err != nil {
+			cerr := string(cout)
+			if len(cerr) > 0 {
+				log.Printf("run-mqsc-from-file: %s\n", cerr)
+			} else {
+				log.Printf("run-mqsc-from-file: %v\n", err)
+			}
 		}
 	}
 
@@ -159,12 +175,14 @@ func Runmain() {
 	}
 
 	// start webconsole
-	log.Printf("%s\n", "starting mq web console")
+	if isStartMqweb() {
+		log.Printf("%s\n", "starting mq web console")
 
-	err = util.StartMqweb()
-	if err != nil {
-		// log and exit
-		log.Fatalf("start-mq-web: %v\n", err)
+		err = util.StartMqweb()
+		if err != nil {
+			// log and exit
+			log.Fatalf("start-mq-web: %v\n", err)
+		}
 	}
 
 	log.Printf("mq runner %s running...\n", qmgr)

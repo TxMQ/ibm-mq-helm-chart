@@ -34,6 +34,11 @@ func CreateDirectories() error {
 
 func CreateQmgr(qmgr string) error {
 
+	// qmgr parameters - may change
+	qmgrPort := "1414"
+	deadLetterQeueue := "SYSTEM.DEAD.LETTER.QUEUE"
+	startupMqsc := "/etc/mqm/startup.mqsc"
+
 	// create queue manager
 	//
 	// crtmqm -c "queue manager" -ic mqsi-file-path -ii ini-file-path -lc -p 1414 -q -u SYSTEM.DEAD.LETTER.QUEUE
@@ -42,8 +47,10 @@ func CreateQmgr(qmgr string) error {
 	// -ic argument is not passed yet
 	// -md - qmgr data path, /var/mqm/qmgrs
 	// -oa group - (default) authorization mode
+
 	out, err := exec.Command("/opt/mqm/bin/crtmqm", "-c", "queue manager", "-lc",
-		"-u", "SYSTEM.DEAD.LETTER.QUEUE", "-p", "1414", "-q", qmgr).CombinedOutput()
+		"-ic", startupMqsc,
+		"-u", deadLetterQeueue, "-p", qmgrPort, "-q", qmgr).CombinedOutput()
 
 	if err != nil {
 		if out != nil {
