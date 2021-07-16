@@ -20,6 +20,15 @@ const _cafile = "ca.crt"
 
 const _certlabel = "ibmwebspheremq"
 
+const _ssldir = "/etc/mqm/ssl"
+const _certdir = "/etc/mqm/pki/cert"
+const _trustdir = "/etc/mqm/pki/trust"
+
+func SetQmgrKeyRepoLocation(qmgr string) error {
+	sslkeyr := filepath.Join(_ssldir, _keyDatabaseStem)
+	return SetSslKeyRepo(qmgr, sslkeyr)
+}
+
 //
 // ImportCertificates from certdir into keyrepo in ssldir
 //
@@ -31,9 +40,9 @@ func ImportCertificates(qmgr string) error {
 	// /etc/mqm/ssl - qmgr key repo directory
 	//
 
-	certdir := "/etc/mqm/pki/cert"
-	trustdir := "/etc/mqm/pki/trust"
-	ssldir := "/etc/mqm/ssl"
+	certdir := _certdir
+	trustdir := _trustdir
+	ssldir := _ssldir
 
 	// certs are mounted into the container as secrets
 	// with keys tls.key, tls.crt, and ca.crt

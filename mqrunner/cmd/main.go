@@ -94,21 +94,36 @@ func Runmain() {
 
 	log.Printf("qmgr %s started", qmgr)
 
-	// set qmgr tls key repository and label
+	// set qmgr tls key repository
+	if enabletls == "true" || enabletls == "1" {
+		err = util.SetQmgrKeyRepoLocation(qmgr)
+		if err != nil {
+			// log and exit
+			log.Fatalf("set-qmgr-key-repo-location: %v\n", err)
+		}
+	}
 
 	// transform mq config yaml into mqsc commands
 	mqconfigyaml := "/etc/mqm/mqsc/mqsc.yaml"
 	startupmqsc := "/etc/mqm/startup.mqsc"
 
-	log.Printf("transofrming mq config yaml '%s' into startup mqsc script '%s'\n", mqconfigyaml, startupmqsc)
+	log.Printf("transform mq config yaml '%s' into startup mqsc script '%s'\n",
+		mqconfigyaml, startupmqsc)
 
 	err = mqsc.Outputmqsc(mqconfigyaml, startupmqsc)
-	if err != nil {
+	if err != nil && os.IsNotExist(err) {
+		// no mqconfig yaml file
+		log.Printf("mq conifg yaml file '%s' not found\n", mqconfigyaml)
+
+	} else if err != nil {
 		// log and exit
 		log.Fatalf("configure-webconsole: %v\n", err)
+
+	} else {
+		// apply mqsc commands
 	}
 
-	// apply mqsc commands
+	// apply mqsc ini commands
 
 	// configure webconsole
 	log.Printf("%s\n", "configuring webconsole")

@@ -141,60 +141,64 @@ func (lq *Localqueue) Mqsc() string {
 	//	mqsc = append(mqsc, s)
 	//
 
-	t :=
-		"define qlocal(%s) replace" + cont + // qname
-		"descr('%s')" + cont + // descr
-		"put(%s)" + cont + // put enabled/disabled
-		"get(%s)" + cont + // get enabled/disabled
-		"defprty(%d)" + cont + // defpriority
-		"defpsist(%s)" + cont + // default-persistence yes/no
-		"maxdepth(%d)" + cont + // maxdepth
-		"maxfsize(%d)" + cont + // maxfsize
-		"maxmsgl(%d)" + cont + // maxmsgl
-		"msgdlvsq(%s)" + cont + // msg-delivery-seq (PRIORITY|FIFO)
+	//t :=
+	//	"define qlocal(%s) replace" + cont + // qname
+	//	"descr('%s')" + cont + // descr
+	//	"put(%s)" + cont + // put enabled/disabled
+	//	"get(%s)" + cont + // get enabled/disabled
+	//	"defprty(%d)" + cont + // defpriority
+	//	"defpsist(%s)" + cont + // default-persistence yes/no
+	//	"maxdepth(%d)" + cont + // maxdepth
+	//	"maxfsize(%d)" + cont + // maxfsize
+	//	"maxmsgl(%d)" + cont + // maxmsgl
+	//	"msgdlvsq(%s)" + cont + // msg-delivery-seq (PRIORITY|FIFO)
+	//
+	//	// monitoring unexported fields
+	//	"acctq(%s)" + cont + // acctq(qmgr)
+	//	"monq(%s)" + cont + // monq(qmgr)
+	//	"statq(%s)" + cont + // statq(qmgr)
+	//
+	//	"usage(%s)" + cont + // usage(normal)
+	//	"%s" + cont + // trigger/notrigger
+	//	"share" + endl
+	//
+	//descr := fmt.Sprintf("local queue %s", lq.Name)
+	//if len(lq.Descr) > 0 { descr = lq.Descr}
+	//
+	//put := "enabled"
+	//if len(lq.Put) > 0 && strings.ToLower(lq.Put) == "disabled" {put = "disabled"}
+	//
+	//get := "enabled"
+	//if len(lq.Get) > 0 && strings.ToLower(lq.Get) == "disabled" {get = "disabled"}
+	//
+	//defpersist := "yes"
+	//if lq.DefaultPersistence == false { defpersist = "no" }
+	//
+	//msgdeliveryseq := "PRIORITY"
+	//if strings.ToUpper(lq.MsgDeliverySeq) == "FIFO" {
+	//	msgdeliveryseq = "FIFO"
+	//}
+	//
+	//// monitoring
+	//mon := "qmgr"
+	//
+	//// local queue
+	//lqnormal := "normal"
+	//
+	//// trigger
+	//trigger := "notrigger"
+	//if lq.Qtrigger.Enabled {
+	//	// trigger params
+	//}
+	//
+	//s := fmt.Sprintf(t, lq.Name, descr, put, get, lq.DefaultPriority, defpersist,
+	//	lq.Maxdepth, lq.Maxfsize, lq.Maxmsgl, msgdeliveryseq,
+	//	mon, mon, mon, lqnormal, trigger)
+	//
+	//mqsc = append(mqsc, s)
 
-		// monitoring unexported fields
-		"acctq(%s)" + cont + // acctq(qmgr)
-		"monq(%s)" + cont + // monq(qmgr)
-		"statq(%s)" + cont + // statq(qmgr)
-
-		"usage(%s)" + cont + // usage(normal)
-		"%s" + cont + // trigger/notrigger
-		"share" + endl
-
-	descr := fmt.Sprintf("local queue %s", lq.Name)
-	if len(lq.Descr) > 0 { descr = lq.Descr}
-
-	put := "enabled"
-	if len(lq.Put) > 0 && strings.ToLower(lq.Put) == "disabled" {put = "disabled"}
-
-	get := "enabled"
-	if len(lq.Get) > 0 && strings.ToLower(lq.Get) == "disabled" {get = "disabled"}
-
-	defpersist := "yes"
-	if lq.DefaultPersistence == false { defpersist = "no" }
-
-	msgdeliveryseq := "PRIORITY"
-	if strings.ToUpper(lq.MsgDeliverySeq) == "FIFO" {
-		msgdeliveryseq = "FIFO"
-	}
-
-	// monitoring
-	mon := "qmgr"
-
-	// local queue
-	lqnormal := "normal"
-
-	// trigger
-	trigger := "notrigger"
-	if lq.Qtrigger.Enabled {
-		// trigger params
-	}
-
-	s := fmt.Sprintf(t, lq.Name, descr, put, get, lq.DefaultPriority, defpersist,
-		lq.Maxdepth, lq.Maxfsize, lq.Maxmsgl, msgdeliveryseq,
-		mon, mon, mon, lqnormal, trigger)
-
+	t := "define qlocal(%s) replace" + endl // qname
+	s := fmt.Sprintf(t, lq.Name)
 	mqsc = append(mqsc, s)
 
 	// authorities

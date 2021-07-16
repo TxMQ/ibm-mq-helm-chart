@@ -21,6 +21,7 @@ qmspec:
   pki:
     # dependency
     tlsSecretName: qm-tls
+    enableTls: 1
 
   terminationGracePeriodSeconds: 10
   version: 9.2.2.0
@@ -29,14 +30,18 @@ qmspec:
   qmconf:
     name: qm20 # (=> env, qmgr pod name)
 #    image: image-registry.openshift-image-registry.svc:5000/mqmq/mq-server-rpm:0.1 # container
-    image: docker.io/simong5000/txmq-mq-adv-rpm:0.11
+    image: docker.io/simong5000/txmq-mq-adv-rpm:0.13
     imagePoolPolicy: Always # container
+
     resources: {} # container
     debug: true # env
+
     ini: {} # config map, mount as a volume
     mqsc: {} # config map, mount as a volume
+
     logFormat: {} # env
     metrics: true # prometeus metrics env
+
     storage:
       # dependency
       pvcName: qm-sts-claim

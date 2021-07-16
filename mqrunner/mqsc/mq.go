@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
-	"os"
 	"strings"
 )
 
@@ -67,10 +66,10 @@ func Outputmqsc(configyaml, mqscfile string) error {
 	// read mq config yaml file
 	data, err := ioutil.ReadFile(configyaml)
 	if err != nil {
-		if os.IsNotExist(err) {
-			// nothing to do, return
-			return nil
-		}
+		//if os.IsNotExist(err) {
+		//	// nothing to do, return
+		//	return nil
+		//}
 		return err
 	}
 

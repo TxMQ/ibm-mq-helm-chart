@@ -55,14 +55,9 @@ spec:
           imagePullPolicy: {{ default "IfNotPresent" .Values.qmspec.qmconf.imagePullPolicy }}
 #          terminationMessagePolicy: File
 #          terminationMessagePath: /run/termination-log
-          {{- if .Values.resources }}
+          {{- with .Values.qmspec.qmconf.resources }}
           resources:
-            limits:
-              cpu: {{ .Values.resources.limits.cpu }}
-              memory: {{ .Values.resources.limits.memory }}
-            requests:
-              cpu: {{ .Values.resources.requests.cpu }}
-              memory: {{ .Values.resources.requests.memory }}
+            {{ toYaml . | nindent 12 }}
           {{- end }}
           readinessProbe:
             httpGet:
@@ -87,7 +82,7 @@ spec:
             - name: MQ_QMGR_NAME
               value: {{ .Values.qmspec.qmconf.name | quote }}
             - name: MQ_ENABLE_TLS
-              value: "1"
+              value: {{ .Values.qmspec.pki.enableTls | quote }}
           securityContext:
             readOnlyRootFilesystem: false
             runAsUser: 1001
@@ -108,10 +103,6 @@ spec:
               name: qm-tls
             - mountPath: /etc/mqm/webuser
               name: webuser
-#            - name: oidc-certificate
-#              mountPath: /etc/mqm/pki/trust/default
-#            - name: zen-ca-certificate
-#              mountPath: /etc/mqm/pki/trust/zenca
       volumes:
         - name: mqmdata
           persistentVolumeClaim:
@@ -125,17 +116,3 @@ spec:
         - name: qm-tls
           secret:
             secretName: {{ .Values.qmspec.pki.tlsSecretName }}
-#        - name: oidc-certificate
-#          secret:
-#            secretName: ibmcloud-cluster-ca-cert
-#            items:
-#              - key: ca.crt
-#                path: OIDC_CERTIFICATE.crt
-#            defaultMode: 420
-#        - name: zen-ca-certificate
-#          secret:
-#            secretName: internal-nginx-svc-tls
-#            items:
-#              - key: tls.crt
-#                path: ZEN_CERTIFICATE.crt
-#            defaultMode: 420

@@ -11,22 +11,31 @@ type Probe struct {
 	srv *http.Server
 }
 
+var _showready = 5
+var _showhealthy = 5
+
 func (p *Probe) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	if r.RequestURI == "/ready" {
 		// todo
-		fmt.Println("ready probe called... return 200")
+		if  _showready > 0 {
+			_showready--
+			fmt.Println("ready probe called... return 200")
+		}
 
 	} else if r.RequestURI == "/healthy" {
 		// todo
-		fmt.Println("healthy probe called... return 200")
+		if _showhealthy > 0 {
+			_showhealthy--
+			fmt.Println("healthy probe called... return 200")
+		}
 
 	} else {
 		fmt.Println("probe called... return 200")
 	}
 
 	w.WriteHeader(200)
-	w.Write([]byte("ok"))
+	_, _ = w.Write([]byte("ok"))
 }
 
 func (p* Probe) Shutdown() error {
