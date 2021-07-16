@@ -3,7 +3,9 @@ package util
 import (
 	"fmt"
 	"io/ioutil"
+	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 )
 
@@ -161,9 +163,28 @@ func QmgrStatus(qmgr string) (string, error) {
 }
 
 func Runmqsc(qmgr, command string) (string, error) {
-	var cmdfile = "/tmp/cmd.mqsc"
+	var cmdfile = filepath.Join(os.TempDir(), "cmd.mqsc")
 
 	err := ioutil.WriteFile(cmdfile, []byte(command), 0777)
+	if err != nil {
+		return "", err
+	}
+
+	return RunmqscFromFile(qmgr, cmdfile)
+}
+
+func RunmqscFromFile(qmgr, cmdfile string) (string, error) {
+
+	//var cmdfile = "/tmp/cmd.mqsc"
+	//var cmdfile = filepath.Join(os.TempDir(), "cmd.mqsc")
+	//
+	//err := ioutil.WriteFile(cmdfile, []byte(command), 0777)
+	//if err != nil {
+	//	return "", err
+	//}
+
+	// see if command file exists
+	_, err := os.Stat(cmdfile)
 	if err != nil {
 		return "", err
 	}

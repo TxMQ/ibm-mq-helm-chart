@@ -121,9 +121,28 @@ func Runmain() {
 
 	} else {
 		// apply mqsc commands
+		cout, err := util.RunmqscFromFile(qmgr, startupmqsc)
+		if err != nil {
+			cerr := string(cout)
+			if len(cerr) > 0 {
+				log.Printf("run-mqsc-from-file: %s\n", cerr)
+			} else {
+				log.Printf("run-mqsc-from-file: %v\n", err)
+			}
+		}
 	}
 
 	// apply mqsc ini commands
+	mqscini := "/etc/mqm/mqsc/mqscini.mqsc"
+	cout, err := util.RunmqscFromFile(qmgr, mqscini)
+	if err != nil {
+		cerr := string(cout)
+		if len(cerr) > 0 {
+			log.Printf("run-mqsc-from-file: %s\n", cerr)
+		} else {
+			log.Printf("run-mqsc-from-file: %v\n", err)
+		}
+	}
 
 	// configure webconsole
 	log.Printf("%s\n", "configuring webconsole")
