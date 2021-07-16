@@ -56,6 +56,24 @@ func CreateQmgr(qmgr string) error {
 	return nil
 }
 
+func StartMqweb() error {
+
+	// start mq web console
+	out, err := exec.Command("/opt/mqm/bin/strmqweb").CombinedOutput()
+
+	if err != nil {
+		if out != nil {
+			cerr := string(out)
+			return fmt.Errorf("%v\n", cerr)
+		} else {
+			return err
+		}
+	}
+
+	return nil
+
+}
+
 func StartQmgr(qmgr string) error {
 
 	// start queue manager

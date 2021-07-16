@@ -317,7 +317,3 @@ func ConfigureWebconsole() error {
 
 	return nil
 }
-
-func StartWebconsole() error {
-	return nil
-}

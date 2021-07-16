@@ -159,10 +159,12 @@ func Runmain() {
 	}
 
 	// start webconsole
-	err = webmq.StartWebconsole()
+	log.Printf("%s\n", "starting mq web console")
+
+	err = util.StartMqweb()
 	if err != nil {
 		// log and exit
-		log.Fatalf("configure-webconsole: %v\n", err)
+		log.Fatalf("start-mq-web: %v\n", err)
 	}
 
 	log.Printf("mq runner %s running...\n", qmgr)
