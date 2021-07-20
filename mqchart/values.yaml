@@ -26,7 +26,6 @@ qmspec:
     enableTls: 0
 
   terminationGracePeriodSeconds: 10
-  web: enabled
 
   qmconf:
 #    name: qm20 # (=> env, qmgr pod name, required)

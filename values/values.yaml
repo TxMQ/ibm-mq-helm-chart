@@ -13,12 +13,14 @@ qmspec:
     tlsSecretName: qm-tls
     enableTls: 1
 
-  web: enabled
-
   qmconf:
     name: qm20
-    image: docker.io/simong5000/txmq-mq-adv-rpm:103
+    image: docker.io/simong5000/txmq-mq-adv-rpm:104
     imagePoolPolicy: Always
+
+    env:
+    - name: MQ_START_MQWEB
+      value: "1"
 
     resources: {}
 

@@ -8,12 +8,12 @@ import (
 	"szesto.com/mqrunner/webmq"
 )
 
-func isApplyStartupConfig() bool {
-	return os.Getenv("TXMQ_APPLY_STARTUP_CONFIG") == "1"
+func isStartMqweb() bool {
+	return os.Getenv("MQ_START_MQWEB") == "1"
 }
 
-func isStartMqweb() bool {
-	return os.Getenv("TXMQ_START_MQWEB") == "1"
+func isConfigureMqweb() bool {
+	return os.Getenv("MQ_CONFIGURE_MQWEB") == "1"
 }
 
 func Runmain() {
@@ -117,7 +117,7 @@ func Runmain() {
 	}
 
 	// configure webconsole
-	if isStartMqweb() {
+	if isStartMqweb() || isConfigureMqweb() {
 		log.Printf("%s\n", "configuring webconsole")
 
 		err = webmq.ConfigureWebconsole()
@@ -128,10 +128,12 @@ func Runmain() {
 
 		log.Printf("%s\n", "starting mq web console")
 
-		err = util.StartMqweb()
-		if err != nil {
-			// log and exit
-			log.Fatalf("start-mq-web: %v\n", err)
+		if isStartMqweb() {
+			err = util.StartMqweb()
+			if err != nil {
+				// log and exit
+				log.Fatalf("start-mq-web: %v\n", err)
+			}
 		}
 
 	} else {

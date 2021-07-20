@@ -83,6 +83,9 @@ spec:
               value: {{ .Values.qmspec.qmconf.name | quote }}
             - name: MQ_ENABLE_TLS
               value: {{ .Values.qmspec.pki.enableTls | quote }}
+            {{- with .Values.qmspec.qmconf.env }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
           securityContext:
             readOnlyRootFilesystem: false
             runAsUser: 1001
