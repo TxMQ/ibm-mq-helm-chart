@@ -43,6 +43,29 @@ func CreateWebmqKeystore(ssldir, certdir string, deleteExistingKeystore bool) (s
 		return "", "", err
 	}
 
+	// we expect to find key, cert and [ca] files in certdir
+	keypath := filepath.Join(certdir, _keyfile)
+
+	_, err = os.Stat(keypath)
+	if err != nil {
+		return "", "", err
+	}
+
+	certpath := filepath.Join(certdir, _certfile)
+
+	_, err = os.Stat(certpath)
+	if err != nil {
+		return "", "", err
+	}
+
+	iscapath := true
+	capath := filepath.Join(certdir, _cafile)
+
+	_, err = os.Stat(capath)
+	if err != nil {
+		iscapath = false
+	}
+
 	p12path := filepath.Join(ssldir, "webmq.p12")
 
 	if deleteExistingKeystore {
@@ -77,20 +100,33 @@ func CreateWebmqKeystore(ssldir, certdir string, deleteExistingKeystore bool) (s
 	encpass := strings.TrimSuffix(string(encbytes), "\n")
 
 	// we expect to find key, cert and [ca] files in certdir
-	keypath := filepath.Join(certdir, _keyfile)
-
-	certpath := filepath.Join(certdir, _certfile)
-
-	//capath := filepath.Join(certdir, _cafile)
 
 	// openssl pkcs12 -export -name name -out p12path -inkey tls.key -in tls.crt [-certfile ca.crt] -password pass:password
-	out, err := exec.Command("/usr/bin/openssl", "pkcs12", "-export", "-name", _certlabel, "-out", p12path,
-		"-inkey", keypath, "-in", certpath, "-password", "pass:" + string(password)).CombinedOutput()
-	if err != nil {
-		if out != nil {
-			return "","", fmt.Errorf("%s\n", string(out))
-		} else {
-			return "","", err
+
+	if iscapath {
+
+		out, err := exec.Command("/usr/bin/openssl", "pkcs12", "-export", "-name", _certlabel, "-out", p12path,
+			"-inkey", keypath, "-in", certpath, "-certfile", capath, "-password", "pass:" + string(password)).CombinedOutput()
+
+		if err != nil {
+			if out != nil {
+				return "","", fmt.Errorf("%s\n", string(out))
+			} else {
+				return "","", err
+			}
+		}
+
+	} else {
+
+		out, err := exec.Command("/usr/bin/openssl", "pkcs12", "-export", "-name", _certlabel, "-out", p12path,
+			"-inkey", keypath, "-in", certpath, "-password", "pass:" + string(password)).CombinedOutput()
+
+		if err != nil {
+			if out != nil {
+				return "","", fmt.Errorf("%s\n", string(out))
+			} else {
+				return "","", err
+			}
 		}
 	}
 
