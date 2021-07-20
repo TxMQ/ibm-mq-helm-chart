@@ -131,7 +131,7 @@ spec:
           configMap:
             name: mqscic-{{ .Release.Name }}
         {{- end }}
-        {{- if .Values.mqini }}
+        {{- if .Values.qmini }}
         - name: qmini
           configMap:
             name: qmini-{{ .Release.Name }}

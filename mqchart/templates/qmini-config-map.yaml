@@ -7,5 +7,5 @@ metadata:
 data:
   qmini.ini: |+
     {{- if .Values.qmini }}
-    {{- .Values.mqini | nindent 4 }}
+    {{- .Values.qmini | nindent 4 }}
     {{- end }}
