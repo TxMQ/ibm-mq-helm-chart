@@ -11,6 +11,7 @@ const _mqyaml = "/etc/mqm/mqyaml/mq.yaml"
 const _mqyamlout = "/etc/mqm/mqyamlout.mqsc"
 const _mqscini = "/etc/mqm/mqsc/mqscini.mqsc"
 const _mqscic = "/etc/mqm/mqscic.mqsc"
+const _qmini = "/etc/mqm/qmini/qmini.ini"
 
 func MergeMqscFiles() error {
 

@@ -1,6 +1,6 @@
 #!/bin/bash -x
 
-tag="102"
+tag="103"
 
 sudo podman build -t mq-adv-rpm .
 

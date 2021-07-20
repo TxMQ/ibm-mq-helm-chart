@@ -38,6 +38,20 @@ func CreateQmgr(qmgr string) error {
 	qmgrPort := "1414"
 	deadLetterQeueue := "SYSTEM.DEAD.LETTER.QUEUE"
 	mqscic := _mqscic
+	qmini := _qmini
+
+	ismqscic := true
+	isqmini := true
+
+	_, err := os.Stat(mqscic)
+	if err != nil {
+		ismqscic = false
+	}
+
+	_, err = os.Stat(qmini)
+	if err != nil {
+		isqmini = false
+	}
 
 	// create queue manager
 	//
@@ -48,9 +62,29 @@ func CreateQmgr(qmgr string) error {
 	// -md - qmgr data path, /var/mqm/qmgrs
 	// -oa group - (default) authorization mode
 
-	out, err := exec.Command("/opt/mqm/bin/crtmqm", "-c", "queue manager", "-lc",
-		"-ic", mqscic,
-		"-u", deadLetterQeueue, "-p", qmgrPort, "-q", qmgr).CombinedOutput()
+	args := []string {"-c", "queue manager"}
+
+	args = append(args, "-lc")
+
+	if ismqscic {
+		args = append(args, "-ic", mqscic)
+	}
+
+	if isqmini {
+		args = append(args, "-ii", qmini)
+	}
+
+	args = append(args, "-u", deadLetterQeueue)
+	args = append(args, "-p", qmgrPort)
+	args = append(args, "-q")
+
+	args = append(args, qmgr)
+
+	//out, err := exec.Command("/opt/mqm/bin/crtmqm", "-c", "queue manager", "-lc",
+	//	"-ic", mqscic,
+	//	"-u", deadLetterQeueue, "-p", qmgrPort, "-q", qmgr).CombinedOutput()
+
+	out, err := exec.Command("/opt/mqm/bin/crtmqm", args...).CombinedOutput()
 
 	if err != nil {
 		if out != nil {
