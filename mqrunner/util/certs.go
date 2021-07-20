@@ -263,7 +263,11 @@ func ImportTrustChains(keydbpath, certdir, trustdir string) error {
 		// add ca certificate:
 		// runmqckm -cert -add -db filename -stashed -label label -file filename -format ascii
 
-		label := "ca1"
+		label := "ca"
+
+		log.Printf("import-trust-chains-4: importing ca cert %s into key db %s, label %s\n",
+			capath, keydbpath, label)
+
 		out, err := exec.Command("/opt/mqm/bin/runmqckm", "-cert", "-add", "-db", keydbpath, "-stashed",
 			"-label", label, "-file", capath, "-format", "ascii").CombinedOutput()
 
