@@ -1,4 +1,6 @@
 qmspec:
+  version: 9.2.2.0
+
   annotations: {} # podTemplateSpec
   licenseAnnotations: {}
   labels: {} # podTemplateSpec
@@ -10,34 +12,29 @@ qmspec:
 
   serviceAccount:
     create: true
-    name: sa3
+    name: mqdeployer
 
-  # dependency
-  imagePullSecrets: # podSpec
-    - name: image-pull-secret
+  # dependency (required)
+#  imagePullSecrets: # podSpec
+#    - name: image-pull-secret
 
   license: {} # -> env
 
   pki:
-    # dependency
-    tlsSecretName: qm-tls
-    enableTls: 1
+#    # dependency
+#    tlsSecretName: qm-tls
+    enableTls: 0
 
   terminationGracePeriodSeconds: 10
-  version: 9.2.2.0
   web: enabled
 
   qmconf:
-    name: qm20 # (=> env, qmgr pod name)
-#    image: image-registry.openshift-image-registry.svc:5000/mqmq/mq-server-rpm:0.1 # container
-    image: docker.io/simong5000/txmq-mq-adv-rpm:0.17
-    imagePoolPolicy: Always # container
+#    name: qm20 # (=> env, qmgr pod name, required)
+    image: docker.io/simong5000/txmq-mq-adv-rpm:0.19
+    imagePoolPolicy: IfNotPresent # container
 
     resources: {} # container
-    debug: true # env
-
-    ini: {} # config map, mount as a volume
-    mqsc: {} # config map, mount as a volume
+    debug: false # env
 
     logFormat: {} # env
     metrics: true # prometeus metrics env
@@ -45,7 +42,6 @@ qmspec:
     storage:
       # dependency
       pvcName: qm-sts-claim
-#      storageClass: managed-nfs-storage
       storageClass: standard
       accessMode: ReadWriteOnce
       deleteClaim: false
@@ -54,29 +50,29 @@ qmspec:
 webuser:
   webroles:
   - name: MQWebAdmin
-    groups: [devs]
+    groups: []
   - name: MQWebAdminRO
-    groups: [devs]
+    groups: []
   - name: MQWebUser
-    groups: [devs]
+    groups: []
 
   apiroles:
   - name: MQWebAdmin
-    groups: [devs]
+    groups: []
   - name: MQWebAdminRO
-    groups: [devs]
+    groups: []
   - name: MQWebUser
-    groups: ["devs"]
+    groups: []
 
   ldapregistry:
     connect:
-      realm: openldap
-      host: openldap.default.svc.cluster.local
+#      realm: openldap
+#      host: openldap.default.svc.cluster.local
       port: 389
       ldaptype: Custom
-      binddn: cn=admin,dc=szesto,dc=com
-      bindpassword: admin
-      basedn: dc=szesto,dc=com
+#      binddn: cn=admin,dc=szesto,dc=com
+#      bindpassword: admin
+#      basedn: dc=szesto,dc=com
       sslenabled: false
 
     groupdef:
@@ -88,93 +84,93 @@ webuser:
       objectclass: inetOrgPerson
       usernameattr: uid
 
-  allowedhosts: []
+#  allowedhosts: []
 
   clientauth:
     keystorepass: ""
     truststorepass: ""
     enabled: false
 
-  variables:
-  - name: httpsPort
-    value: "9443"
-  - name: httpHost
-    value: '*'
-  - name: mqRestCorsAllowedOrigints
-    value: '*'
+#  variables:
+#  - name: httpsPort
+#    value: "9443"
+#  - name: httpHost
+#    value: '*'
+#  - name: mqRestCorsAllowedOrigints
+#    value: '*'
 
-mq:
-  qmgr:
-    name: qm20
-    access:
-      allowip: ["*"]
-    authority:
-    - group: [devs]
-      grant: [connect, inq]
-    - group: [devs]
-      grant: [alladm]
-    alter: []
+#mq:
+#  qmgr:
+#    name: qm20
+#    access:
+#      allowip: ["*"]
+#    authority:
+#    - group: [devs]
+#      grant: [connect, inq]
+#    - group: [devs]
+#      grant: [alladm]
+#    alter: []
 
-  auth:
-    ldap:
-      connect:
-        ldaphost: "openldap.default.svc.cluster.local"
-        ldapport: 389
-        binddn: "cn=admin,dc=szesto,dc=com"
-        bindpasswordsecret: "admin"
-        tls: false
-      groups:
-        groupsearchbasedn: "ou=groups,dc=szesto,dc=com"
-        objectclass: "groupOfNames"
-        groupnameattr: "cn"
-        groupmembershipattr: "member"
-      users:
-        usersearchbasedn: "ou=users,dc=szesto,dc=com"
-        objectclass: "inetOrgPerson"
-        usernameattr: "uid"
-        shortusernameattr: "cn"
+#  auth:
+#    ldap:
+#      connect:
+#        ldaphost: "openldap.default.svc.cluster.local"
+#        ldapport: 389
+#        binddn: "cn=admin,dc=szesto,dc=com"
+#        bindpasswordsecret: "admin"
+#        tls: false
+#      groups:
+#        groupsearchbasedn: "ou=groups,dc=szesto,dc=com"
+#        objectclass: "groupOfNames"
+#        groupnameattr: "cn"
+#        groupmembershipattr: "member"
+#      users:
+#        usersearchbasedn: "ou=users,dc=szesto,dc=com"
+#        objectclass: "inetOrgPerson"
+#        usernameattr: "uid"
+#        shortusernameattr: "cn"
 
-  svrconn:
-  - svrconnproperties:
-      name: epn.svrconn
-      maxmsgl: 4096
-    tls:
-      enabled: false
-      clientauth: false
-      ciphers: []
-    access:
-      allowip: ['vm-glwinx-037.*']
-    authority:
-      - group: [devs]
-        grant: [chg, crt, dlt, dsp, ctrl, ctrlx]
-      - group: [devs]
-        grant: [alladm]
-    alter: []
+#  svrconn:
+#  - svrconnproperties:
+#      name: epn.svrconn
+#      maxmsgl: 4096
+#    tls:
+#      enabled: false
+#      clientauth: false
+#      ciphers: []
+#    access:
+#      allowip: ['vm-glwinx-037.*']
+#    authority:
+#      - group: [devs]
+#        grant: [chg, crt, dlt, dsp, ctrl, ctrlx]
+#      - group: [devs]
+#        grant: [alladm]
+#    alter: []
 
-  - svrconnproperties:
-      name: epn.autorun.svrcon
-    tls:
-      enabled: false
-    access:
-      allowip: ['vm-glwinx-038.*']
-    authority:
-      - group: [devs]
-        grant: [alladm]
-        revoke: [dlt]
-    alter: []
+#  - svrconnproperties:
+#      name: epn.autorun.svrcon
+#    tls:
+#      enabled: false
+#    access:
+#      allowip: ['vm-glwinx-038.*']
+#    authority:
+#      - group: [devs]
+#        grant: [alladm]
+#        revoke: [dlt]
+#    alter: []
 
-  localqueue:
-  - name: q.a
+#  localqueue:
+#  - name: q.a
 
-    defaultprioprity: 2
-    defaultpersistence: true
+#    defaultprioprity: 2
+#    defaultpersistence: true
 
-    maxmsgl: 4096
-    maxdepth: 1000
+#    maxmsgl: 4096
+#    maxdepth: 1000
 
-    authority:
-    - group: [devs]
-      grant: [put, get, dsp]
-    - group: [devs]
-      grant: [alladm]
-      revoke: [dlt]
+#    authority:
+#    - group: [devs]
+#      grant: [put, get, dsp]
+#    - group: [devs]
+#      grant: [alladm]
+#      revoke: [dlt]

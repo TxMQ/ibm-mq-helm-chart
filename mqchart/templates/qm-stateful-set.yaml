@@ -95,24 +95,54 @@ spec:
             - containerPort: 9443
               protocol: TCP
           volumeMounts:
-            - mountPath: /mnt/mqm/data
-              name: mqmdata
-            - mountPath: /etc/mqm/mqsc
-              name: mqsc-ini
-            - mountPath: /etc/mqm/pki/cert
-              name: qm-tls
-            - mountPath: /etc/mqm/webuser
-              name: webuser
+            - name: mqmdata
+              mountPath: /mnt/mqm/data
+            {{- if .Values.mq }}
+            - name: mqsc-yaml
+              mountPath: /etc/mqm/mqyaml
+            {{- end }}
+            {{- if .Values.mqscic }}
+            - name: mqscic
+              mountPath: /etc/mqm/mqsc
+            {{- end }}
+            {{- if .Values.qmini }}
+            - name: qmini
+              mountPath: /etc/mqm/qmini
+            {{- end }}
+            {{- if .Values.webuser }}
+            - name: webuser
+              mountPath: /etc/mqm/webuser
+            {{- end }}
+            {{- if .Values.qmspec.pki.enableTls }}
+            - name: qm-tls
+              mountPath: /etc/mqm/pki/cert
+            {{- end }}  
       volumes:
         - name: mqmdata
           persistentVolumeClaim:
             claimName: {{ .Release.Name }}-{{ .Values.qmspec.qmconf.storage.pvcName }}
-        - name: mqsc-ini
+        {{- if .Values.mq }}
+        - name: mqsc-yaml
           configMap:
-            name: mqsc-ini-{{ .Release.Name }}
+            name: mqsc-yaml-{{ .Release.Name }}
+        {{- end }}
+        {{- if .Values.mqscic }}
+        - name: mqscic
+          configMap:
+            name: mqscic-{{ .Release.Name }}
+        {{- end }}
+        {{- if .Values.mqini }}
+        - name: qmini
+          configMap:
+            name: qmini-{{ .Release.Name }}
+        {{- end }}
+        {{- if .Values.webuser }}
         - name: webuser
           configMap:
             name: webuser-{{ .Release.Name }}
+        {{- end }}
+        {{- if .Values.qmspec.pki.enableTls }}
         - name: qm-tls
           secret:
             secretName: {{ .Values.qmspec.pki.tlsSecretName }}
+        {{- end }}

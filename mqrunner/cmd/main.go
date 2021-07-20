@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"szesto.com/mqrunner/mqsc"
 	"szesto.com/mqrunner/util"
 	"szesto.com/mqrunner/webmq"
 )
@@ -44,26 +43,10 @@ func Runmain() {
 		}
 	}
 
-	// transform mq config yaml into mqsc commands
-	mqconfigyaml := "/etc/mqm/mqsc/mqsc.yaml"
-	startupmqsc := "/etc/mqm/startup.mqsc"
-
-	startupMqscFileFound := false
-
-	log.Printf("transform mq config yaml '%s' into startup mqsc script '%s'\n",
-		mqconfigyaml, startupmqsc)
-
-	err = mqsc.Outputmqsc(mqconfigyaml, startupmqsc)
-	if err != nil && os.IsNotExist(err) {
-		// no mqconfig yaml file
-		log.Printf("mq conifg yaml file '%s' not found\n", mqconfigyaml)
-
-	} else if err != nil {
-		// log and exit
-		log.Fatalf("output-mqsc: %v\n", err)
-
-	} else {
-		startupMqscFileFound = true
+	// merge mqsc startup files
+	err = util.MergeMqscFiles()
+	if err != nil {
+		log.Fatalf("merge-mqsc-files: %v\n", err)
 	}
 
 	// start runner
@@ -130,38 +113,6 @@ func Runmain() {
 		if err != nil {
 			// log and exit
 			log.Fatalf("set-qmgr-key-repo-location: %v\n", err)
-		}
-	}
-
-	if startupMqscFileFound && isApplyStartupConfig() {
-		// apply mqsc commands
-		log.Printf("applying '%s' mqsc file", startupmqsc)
-
-		cout, err := util.RunmqscFromFile(qmgr, startupmqsc)
-		if err != nil {
-			cerr := string(cout)
-			if len(cerr) > 0 {
-				log.Printf("run-mqsc-from-file: %s\n", cerr)
-			} else {
-				log.Printf("run-mqsc-from-file: %v\n", err)
-			}
-		}
-	}
-
-	// apply mqsc ini commands
-	if isApplyStartupConfig() {
-		mqscini := "/etc/mqm/mqsc/mqscini.mqsc"
-
-		log.Printf("applying '%s' mqsc file", mqscini)
-
-		cout, err := util.RunmqscFromFile(qmgr, mqscini)
-		if err != nil {
-			cerr := string(cout)
-			if len(cerr) > 0 {
-				log.Printf("run-mqsc-from-file: %s\n", cerr)
-			} else {
-				log.Printf("run-mqsc-from-file: %v\n", err)
-			}
 		}
 	}
 

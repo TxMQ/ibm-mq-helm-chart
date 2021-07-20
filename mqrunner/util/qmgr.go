@@ -37,11 +37,11 @@ func CreateQmgr(qmgr string) error {
 	// qmgr parameters - may change
 	qmgrPort := "1414"
 	deadLetterQeueue := "SYSTEM.DEAD.LETTER.QUEUE"
-	startupMqsc := "/etc/mqm/startup.mqsc"
+	mqscic := _mqscic
 
 	// create queue manager
 	//
-	// crtmqm -c "queue manager" -ic mqsi-file-path -ii ini-file-path -lc -p 1414 -q -u SYSTEM.DEAD.LETTER.QUEUE
+	// crtmqm -c "queue manager" -ic mqsc-file-path -ii ini-file-path -lc -p 1414 -q -u SYSTEM.DEAD.LETTER.QUEUE
 	// -lc - circular logging
 	// -ii argument is not passed yet
 	// -ic argument is not passed yet
@@ -49,7 +49,7 @@ func CreateQmgr(qmgr string) error {
 	// -oa group - (default) authorization mode
 
 	out, err := exec.Command("/opt/mqm/bin/crtmqm", "-c", "queue manager", "-lc",
-		"-ic", startupMqsc,
+		"-ic", mqscic,
 		"-u", deadLetterQeueue, "-p", qmgrPort, "-q", qmgr).CombinedOutput()
 
 	if err != nil {
@@ -60,6 +60,7 @@ func CreateQmgr(qmgr string) error {
 			return err
 		}
 	}
+
 	return nil
 }
 

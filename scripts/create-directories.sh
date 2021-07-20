@@ -17,6 +17,7 @@ install -d -m 0775 -o $uid -g root /etc/mqm
 install -d -m 0777 -o $uid -g root /etc/mqm/sockets
 install -d -m 0775 -o $uid -g root /etc/mqm/qmini
 install -d -m 0775 -o $uid -g root /etc/mqm/mqsc
+install -d -m 0775 -o $uid -g root /etc/mqm/mqyaml
 install -d -m 0775 -o $uid -g root /etc/mqm/bin
 install -d -m 0775 -o $uid -g root /etc/mqm/ssl
 install -d -m 0775 -o $uid -g root /etc/mqm/pki/cert

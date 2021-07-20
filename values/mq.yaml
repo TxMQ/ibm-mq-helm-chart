@@ -1,0 +1,75 @@
+mq:
+  qmgr:
+    name: qm20
+    access:
+      allowip: ["*"]
+    authority:
+    - group: [devs]
+      grant: [connect, inq]
+    - group: [devs]
+      grant: [alladm]
+    alter: []
+
+  auth:
+    ldap:
+      connect:
+        ldaphost: "openldap.default.svc.cluster.local"
+        ldapport: 389
+        binddn: "cn=admin,dc=szesto,dc=com"
+        bindpasswordsecret: "admin"
+        tls: false
+      groups:
+        groupsearchbasedn: "ou=groups,dc=szesto,dc=com"
+        objectclass: "groupOfNames"
+        groupnameattr: "cn"
+        groupmembershipattr: "member"
+      users:
+        usersearchbasedn: "ou=users,dc=szesto,dc=com"
+        objectclass: "inetOrgPerson"
+        usernameattr: "uid"
+        shortusernameattr: "cn"
+
+  svrconn:
+  - svrconnproperties:
+      name: epn.svrconn
+      maxmsgl: 4096
+    tls:
+      enabled: false
+      clientauth: false
+      ciphers: []
+    access:
+      allowip: ['vm-glwinx-037.*']
+    authority:
+      - group: [devs]
+        grant: [chg, crt, dlt, dsp, ctrl, ctrlx]
+      - group: [devs]
+        grant: [alladm]
+    alter: []
+
+  - svrconnproperties:
+      name: epn.autorun.svrcon
+    tls:
+      enabled: false
+    access:
+      allowip: ['vm-glwinx-038.*']
+    authority:
+      - group: [devs]
+        grant: [alladm]
+        revoke: [dlt]
+    alter: []
+
+  localqueue:
+  - name: q.a
+
+    defaultprioprity: 2
+    defaultpersistence: true
+
+    maxmsgl: 4096
+    maxdepth: 1000
+
+    authority:
+    - group: [devs]
+      grant: [put, get, dsp]
+    - group: [devs]
+      grant: [alladm]
+      revoke: [dlt]
