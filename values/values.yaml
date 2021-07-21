@@ -1,12 +1,9 @@
 qmspec:
 
-  version: 9.2.2.0
-  license: {}
-  licenseAnnotations: {}
+  license:
+    accept: true
 
-  annotations: {}
-
-  imagePullSecrets:
+  imagePullSecrets: 
     - name: image-pull-secret
 
   pki:
@@ -15,18 +12,23 @@ qmspec:
 
   qmconf:
     name: qm20
-    image: docker.io/simong5000/txmq-mq-adv-rpm:104
+    image: docker.io/simong5000/txmq-mq-base-rpm-9.2.2.0:100
     imagePoolPolicy: Always
 
     env:
     - name: MQ_START_MQWEB
       value: "1"
 
-    resources: {}
+    resources:
+      limits:
+        cpu: '1'
+        memory: 1Gi
+      requests:
+        cpu: '1'
+        memory: 1Gi
 
     storage:
       pvcName: qm-sts-claim
-#      storageClass: managed-nfs-storage
       storageClass: standard
       accessMode: ReadWriteOnce
       deleteClaim: false

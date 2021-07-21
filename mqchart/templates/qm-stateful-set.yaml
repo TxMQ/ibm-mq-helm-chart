@@ -5,6 +5,9 @@ metadata:
   finalizers: []
   labels:
     {{- include "mqchart.labels" . | nindent 4 }}
+    {{- if .Values.qmspec.labels }}
+    {{- toYaml .Values.qmspec.labels | nindent 4 }}
+    {{- end }}
 spec:
   replicas: 1
   serviceName: qmgr
@@ -23,12 +26,30 @@ spec:
       labels:
         {{- include "mqchart.labels" . | nindent 8 }}
       annotations:
-        # inject, there could be more annotations
-        productVersion: {{ .Values.qmspec.version }}
+        productVersion: {{ .Chart.AppVersion }}
+
+        {{- if eq .Values.qmspec.capabilities "mqbase" }}
+        productName: "IBM MQ"
+        productID: "c661609261d5471fb4ff8970a36bccea"
+        productChargedContainers: "qmgr"
+        productMetric: "VIRTUAL_PROCESSOR_CORE"
+        {{- end }}
+
+        {{- if eq .Values.qmspec.capabilities "mqadvanced" }}
         productName: "IBM MQ Advanced"
         productID: "208423bb063c43288328b1d788745b0c"
-        productChargedContainers: {{ .Release.Name }}-{{ .Values.qmspec.qmconf.name }}-0
-        productMetric: VIRTUAL_PROCESSOR_CORE 
+        productChargedContainers: "qmgr"
+        productMetric: "VIRTUAL_PROCESSOR_CORE" 
+        {{- end }}
+
+        {{- if eq .Values.qmspec.capabilities "mqcustom"}}
+        {{- toYaml .Values.qmspec.licenseAnnotations | nindent 8 }}
+        {{- end }}
+
+        {{- if .Values.annotations }}
+        {{- toYaml .Values.qmspec.annotations | nindent 8 }}
+        {{- end }}
+
         checksum/config: {{ include (print $.Template.BasePath "/mqsc-config-map.yaml") . | sha256sum }}
     spec:
       # inject
@@ -48,7 +69,7 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       containers:
-        - name: mq-mq-qmgr
+        - name: qmgr
           # inject
           image: {{ .Values.qmspec.qmconf.image | squote }}
           # inject

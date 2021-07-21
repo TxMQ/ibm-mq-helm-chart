@@ -19,6 +19,7 @@ RUN mkdir -p /etc/security && echo "mqm hard nofile 10240" >> /etc/security/limi
 
 # copy rpm files
 ARG RPMDIR=MQServer
+ARG MQVER
 RUN mkdir -p /tmp/MQServer
 COPY $RPMDIR /tmp/MQServer
 
@@ -28,7 +29,8 @@ RUN rpm -Uvh /tmp/MQServer/MQSeriesRuntime*.rpm \
     /tmp/MQServer/MQSeriesGSKit*.rpm \
     /tmp/MQServer/MQSeriesJRE*.rpm \
     /tmp/MQServer/MQSeriesWeb*.rpm \
-    /tmp/MQServer/MQSeriesJava*.rpm 
+    /tmp/MQServer/MQSeriesJava*.rpm \
+    /tmp/MQServer/MQSeriesMsg*.rpm
 
 RUN microdnf clean all && rm -fr /tmp/MQServer 
 

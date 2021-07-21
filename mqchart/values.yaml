@@ -1,9 +1,14 @@
 qmspec:
-  version: 9.2.2.0
+  labels: {} # podTemplateSpec
 
   annotations: {} # podTemplateSpec
+
+  # base, advanced, custom
+  capabilities: mqbase
+
+  # if capabilities is set to "custom"
+  # define license annotations
   licenseAnnotations: {}
-  labels: {} # podTemplateSpec
 
   affinity: # podSpec
     nodeAffinity: {}
@@ -14,32 +19,32 @@ qmspec:
     create: true
     name: mqdeployer
 
-  # dependency (required)
-#  imagePullSecrets: # podSpec
-#    - name: image-pull-secret
+  imagePullSecrets: # podSpec
+    - name: ""
 
-  license: {} # -> env
+  license:
+    accept: false
 
   pki:
-#    # dependency
-#    tlsSecretName: qm-tls
+    tlsSecretName: ""
     enableTls: 0
 
   terminationGracePeriodSeconds: 10
 
   qmconf:
-#    name: qm20 # (=> env, qmgr pod name, required)
-    image: docker.io/simong5000/txmq-mq-adv-rpm:0.19
+    name: ""
+    image: ""
     imagePoolPolicy: IfNotPresent # container
 
     resources: {} # container
+
     debug: false # env
 
     logFormat: {} # env
+
     metrics: true # prometeus metrics env
 
     storage:
-      # dependency
       pvcName: qm-sts-claim
       storageClass: standard
       accessMode: ReadWriteOnce
@@ -65,13 +70,13 @@ webuser:
 
   ldapregistry:
     connect:
-#      realm: openldap
-#      host: openldap.default.svc.cluster.local
+      realm: ""
+      host: ""
       port: 389
       ldaptype: Custom
-#      binddn: cn=admin,dc=szesto,dc=com
-#      bindpassword: admin
-#      basedn: dc=szesto,dc=com
+      binddn: ""
+      bindpassword: ""
+      basedn: ""
       sslenabled: false
 
     groupdef:
@@ -83,93 +88,17 @@ webuser:
       objectclass: inetOrgPerson
       usernameattr: uid
 
-#  allowedhosts: []
+  allowedhosts: []
 
   clientauth:
     keystorepass: ""
     truststorepass: ""
     enabled: false
 
-#  variables:
-#  - name: httpsPort
-#    value: "9443"
-#  - name: httpHost
-#    value: '*'
-#  - name: mqRestCorsAllowedOrigints
-#    value: '*'
-
-#mq:
-#  qmgr:
-#    name: qm20
-#    access:
-#      allowip: ["*"]
-#    authority:
-#    - group: [devs]
-#      grant: [connect, inq]
-#    - group: [devs]
-#      grant: [alladm]
-#    alter: []
-
-#  auth:
-#    ldap:
-#      connect:
-#        ldaphost: "openldap.default.svc.cluster.local"
-#        ldapport: 389
-#        binddn: "cn=admin,dc=szesto,dc=com"
-#        bindpasswordsecret: "admin"
-#        tls: false
-#      groups:
-#        groupsearchbasedn: "ou=groups,dc=szesto,dc=com"
-#        objectclass: "groupOfNames"
-#        groupnameattr: "cn"
-#        groupmembershipattr: "member"
-#      users:
-#        usersearchbasedn: "ou=users,dc=szesto,dc=com"
-#        objectclass: "inetOrgPerson"
-#        usernameattr: "uid"
-#        shortusernameattr: "cn"
-
-#  svrconn:
-#  - svrconnproperties:
-#      name: epn.svrconn
-#      maxmsgl: 4096
-#    tls:
-#      enabled: false
-#      clientauth: false
-#      ciphers: []
-#    access:
-#      allowip: ['vm-glwinx-037.*']
-#    authority:
-#      - group: [devs]
-#        grant: [chg, crt, dlt, dsp, ctrl, ctrlx]
-#      - group: [devs]
-#        grant: [alladm]
-#    alter: []
-
-#  - svrconnproperties:
-#      name: epn.autorun.svrcon
-#    tls:
-#      enabled: false
-#    access:
-#      allowip: ['vm-glwinx-038.*']
-#    authority:
-#      - group: [devs]
-#        grant: [alladm]
-#        revoke: [dlt]
-#    alter: []
-
-#  localqueue:
-#  - name: q.a
-
-#    defaultprioprity: 2
-#    defaultpersistence: true
-
-#    maxmsgl: 4096
-#    maxdepth: 1000
-
-#    authority:
-#    - group: [devs]
-#      grant: [put, get, dsp]
-#    - group: [devs]
-#      grant: [alladm]
-#      revoke: [dlt]
+  variables:
+  - name: httpsPort
+    value: "9443"
+  - name: httpHost
+    value: '*'
+  - name: mqRestCorsAllowedOrigints
+    value: '*'

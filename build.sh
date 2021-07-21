@@ -1,10 +1,16 @@
 #!/bin/bash -x
 
-tag="104"
+registry=$1
 
-sudo podman build -t mq-adv-rpm .
+# derive version from the rpm directory
+mqver="9.2.2.0"
 
-sudo podman tag "localhost/mq-adv-rpm:latest" "docker.io/simong5000/txmq-mq-adv-rpm:$tag"
+tag="100"
 
-sudo podman push docker.io/simong5000/txmq-mq-adv-rpm:$tag
+image=txmq-mq-base-rpm-$mqver
 
+sudo podman build --build-arg RPMDIR="rpm/MQServer" --build-arg MQVER=$mqver -t $image:$tag .
+
+sudo podman tag "localhost/$image:$tag" "$registry/$image:$tag"
+
+sudo podman push $registry/$image:$tag
