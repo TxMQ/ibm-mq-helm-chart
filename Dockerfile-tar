@@ -1,8 +1,0 @@
-FROM registry.access.redhat.com/ubi8/ubi-minimal:8.4
-
-USER 0
-
-RUN microdnf install -y wget tar gzip
-
-COPY download-mq-adv-dev-noi-tar.sh .
-RUN if [ ! -d /tmp/MQServer-noi ]; then mkdir -p /tmp/MQServer-noi; fi && ./download-mq-adv-dev-noi-tar.sh /tmp/MQServer-noi
