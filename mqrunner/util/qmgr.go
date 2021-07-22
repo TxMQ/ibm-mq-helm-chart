@@ -7,6 +7,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"szesto.com/mqrunner/mqsc"
 )
 
 const _qmgrrunning = "running"
@@ -316,4 +317,9 @@ func SetCertLabel(qmgr, certlabel string) error {
 
 func GetCertLabel(qmgr string) (string, error) {
 	return GetQmgrParam(qmgr, "CERTLABL")
+}
+
+func ClearEnvSecrets() bool {
+	_ = mqsc.ClearLdapBindPasswordEnv()
+	return true
 }

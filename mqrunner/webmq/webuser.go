@@ -5,6 +5,7 @@ import (
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"strings"
+	"szesto.com/mqrunner/mqsc"
 )
 
 type Approle struct {
@@ -182,8 +183,14 @@ func (webuser Webuser) ldapregistry() string {
 	ldaptype := "custom"
 	filtersid := "custom_filters"
 
+	bindPassword := mqsc.GetLdapBindPasswordEnv()
+
+	if len(bindPassword) == 0 {
+		bindPassword = webuser.Ldapregistry.Connect.Bindpassword
+	}
+
 	ldap := fmt.Sprintf(ldapf, "ldap", webuser.Ldapregistry.Connect.Realm, webuser.Ldapregistry.Connect.Host,
-		webuser.Ldapregistry.Connect.Port, webuser.Ldapregistry.Connect.Binddn, webuser.Ldapregistry.Connect.Bindpassword,
+		webuser.Ldapregistry.Connect.Port, webuser.Ldapregistry.Connect.Binddn, bindPassword,
 		webuser.Ldapregistry.Connect.Basedn, ldaptype, filtersid)
 
 	filtersf :=

@@ -29,6 +29,8 @@ qmspec:
     tlsSecretName: ""
     enableTls: 0
 
+  ldapCredsSecret: {}
+
   terminationGracePeriodSeconds: 10
 
   qmconf:

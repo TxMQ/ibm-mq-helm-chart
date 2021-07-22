@@ -10,22 +10,26 @@ qmspec:
     tlsSecretName: qm-tls
     enableTls: 1
 
+  ldapCredsSecret:
+    name: ldapcreds
+    passwordkey: password # optional, default is "password"
+
   qmconf:
     name: qm20
-    image: docker.io/simong5000/txmq-mq-base-rpm-9.2.2.0:100
+    image: docker.io/simong5000/txmq-mq-base-rpm-9.2.2.0:102
     imagePoolPolicy: Always
 
     env:
     - name: MQ_START_MQWEB
       value: "1"
 
-    resources:
-      limits:
-        cpu: '1'
-        memory: 1Gi
-      requests:
-        cpu: '1'
-        memory: 1Gi
+#    resources:
+#      limits:
+#        cpu: '1'
+#        memory: 1Gi
+#      requests:
+#        cpu: '1'
+#        memory: 1Gi
 
     storage:
       pvcName: qm-sts-claim
@@ -58,7 +62,7 @@ webuser:
       port: 389
       ldaptype: Custom
       binddn: cn=admin,dc=szesto,dc=com
-      bindpassword: admin
+      bindpassword: ""
       basedn: dc=szesto,dc=com
       sslenabled: false
 

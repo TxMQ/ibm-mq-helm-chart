@@ -1,6 +1,9 @@
 package mqsc
 
-import "fmt"
+import (
+	"fmt"
+	"os"
+)
 
 type Auth struct {
 	Ldap LdapAuthinfo
@@ -16,7 +19,7 @@ type LdapConnect struct {
 	LdapHost string
 	LdapPort int
 	BindDn string
-	BindPasswordSecret string
+	BindPassword string
 	Tls bool
 }
 
@@ -37,6 +40,14 @@ type LdapUsers struct {
 const endl = "\n"
 const cont = " + \n"
 const star = "*\n"
+
+func GetLdapBindPasswordEnv() string {
+	return os.Getenv("LDAP_BIND_PASSWORD")
+}
+
+func ClearLdapBindPasswordEnv() error {
+	return os.Setenv("LDAP_BIND_PASSWORD", "")
+}
 
 func (ldap *LdapAuthinfo) Mqsc() string {
 
@@ -68,11 +79,17 @@ func (ldap *LdapAuthinfo) Mqsc() string {
 		star +
 		"REFRESH SECURITY TYPE(CONNAUTH)" + endl
 
+	bindPassword := GetLdapBindPasswordEnv()
+
+	if len(bindPassword) == 0 {
+		bindPassword = ldap.Connect.BindPassword
+	}
+
 	mqsc := fmt.Sprintf(t, ldap.Groups.GroupSearchBaseDn, ldap.Users.UserSearchBaseDn,
 		ldap.Groups.ObjectClass, ldap.Users.ObjectClass,
 		ldap.Connect.LdapHost, ldap.Connect.LdapPort,
 		ldap.Groups.GroupMembershipAttr, ldap.Groups.GroupNameAttr,
-		ldap.Connect.BindPasswordSecret, ldap.Connect.BindDn,
+		bindPassword, ldap.Connect.BindDn,
 		ldap.Users.ShortUserNameAttr, ldap.Users.UserNameAttr)
 
 	return mqsc

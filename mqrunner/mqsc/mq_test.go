@@ -187,7 +187,7 @@ auth:
       ldaphost: "openldap.mqmq.svc.cluster.local"
       ldapport: 389
       binddn: "cn=admin,dc=szesto,dc=com"
-      bindpasswordsecret: "admin"
+      bindpassword: "admin"
       tls: false
     groups:
       groupsearchbasedn: "ou=groups,dc=szesto.dc=com"

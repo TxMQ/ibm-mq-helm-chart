@@ -52,7 +52,6 @@ spec:
 
         checksum/config: {{ include (print $.Template.BasePath "/mqsc-config-map.yaml") . | sha256sum }}
     spec:
-      # inject
       {{- with .Values.qmspec.affinity }}
       affinity:
         {{- toYaml . | nindent 8 }}
@@ -63,7 +62,6 @@ spec:
       schedulerName: default-scheduler
       terminationGracePeriodSeconds: 30
       dnsPolicy: ClusterFirst
-      # inject
       {{- with .Values.qmspec.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
@@ -78,7 +76,7 @@ spec:
 #          terminationMessagePath: /run/termination-log
           {{- with .Values.qmspec.qmconf.resources }}
           resources:
-            {{ toYaml . | nindent 12 }}
+            {{- toYaml . | nindent 12 }}
           {{- end }}
           readinessProbe:
             httpGet:
@@ -104,6 +102,17 @@ spec:
               value: {{ .Values.qmspec.qmconf.name | quote }}
             - name: MQ_ENABLE_TLS
               value: {{ .Values.qmspec.pki.enableTls | quote }}
+
+            {{- with .Values.qmspec.ldapCredsSecret }}
+            {{- if .name }}
+            - name: LDAP_BIND_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .name }}
+                  key: {{ default "password" .passwordKey }}
+            {{- end }}
+            {{- end }}
+
             {{- with .Values.qmspec.qmconf.env }}
             {{- toYaml . | nindent 12 }}
             {{- end }}

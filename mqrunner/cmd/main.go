@@ -140,6 +140,9 @@ func Runmain() {
 		log.Printf("%s\n", "webconsole is off")
 	}
 
+	// clear env var secrets
+	util.ClearEnvSecrets()
+
 	log.Printf("mq runner %s running...\n", qmgr)
 
 	<-ctl

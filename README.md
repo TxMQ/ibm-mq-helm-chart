@@ -47,12 +47,6 @@ To install txmq mq chart use helm:
 
 The only required file is `values.yaml`.
 
-## Values.yaml file
-
-There are a number of parameters that are required in values.yaml file.
-Values.yaml file defines `.qmspec` and `.qmspec.qmconf` objects to configure queue manager.
-`.webuser` object configures mq web console service.
-
 ### Configuring queue manager kubernetes parameters.
 
 `
@@ -60,9 +54,9 @@ qmspec:
   license:
     accept: true # required to accept license
 
-  capabilities: mqbase # mq image capabilities, mqbase
+  capabilities: mqbase # mq image capabilities
 
-  imagePullSecret: # docker registry secret to pull queue manager image
+  imagePullSecrets: # docker registry secret to pull queue manager image
   - name: image-pull-secret
 
   pki:
@@ -93,7 +87,7 @@ qmspec:
       size: 2Gi
 `
 
-Configuring mq web console.
+# Configuring mq web console.
 
 Mq web console requires definition of a number of predefined roles,
 authentication, and key store.
@@ -185,3 +179,43 @@ mq:
         usernameattr: "uid"
         shortusernameattr: "cn"
 `
+
+## ldap password
+
+injecting ldap password secret as environment variable.
+
+oc create secret generic ldapcreds --from-literal=password=password
+
+set secret name:
+`
+qmspec:
+  ldapCredsSecret:
+    name: ldapcreds
+    passwordkey: password # optional, default password key is "password"
+`
+
+# tls key pair
+
+We assume that key pair and all certs are availabe.
+
+Private key, cert, and ca cert can be created as generic k8s secret. Secret is then mounted on the volume path /secrets/pki
+Secret name is set as environment variable
+
+Tls secret can be written into the hashicorp vault. Secret is then injected by the vault agent into the pod.
+Secret path is set as environment variable.
+
+## integration with hashicorp vault.
+
+There are a number of secrets: tls secret, ldap authentication secret, image pull secret, etc.
+
+deploy and configure hashicorp vault, define secret paths, define secrets, define roles for reading secrets
+and grant this role to the service account for the chart. Append chart release name to the service account.
+Inject secrets into qmgr container and mount secrets to the /secrets path.
+
+For tls secrets, set environment variable to point to the tls secret path. If cert path environment variable is set
+it overrides default cert path directory.
+
+For ldap secrets, set env variable to point to secret files. At tranformation time if secret path environment variable
+is set read secret file and set password.
+
+## integration with persistent storage

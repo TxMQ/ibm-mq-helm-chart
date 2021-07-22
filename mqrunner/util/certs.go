@@ -29,20 +29,35 @@ func SetQmgrKeyRepoLocation(qmgr string) error {
 	return SetSslKeyRepo(qmgr, sslkeyr)
 }
 
+func getCertdir() string {
+	// if tls secret is injected then env variable VAULT_SECRET_CERTDIR is set
+	 if vaultdir := os.Getenv("VAULT_SECRET_CERTDIR"); len(vaultdir) > 0 {
+	 	return vaultdir
+	 }
+	 return _certdir
+}
+
+func getTrustdir() string {
+	return _trustdir
+}
+
+func getSsldir() string {
+	return _ssldir
+}
+
 //
 // ImportCertificates from certdir into keyrepo in ssldir
 //
 func ImportCertificates(qmgr string) error {
 
-	//
-	// /etc/mqm/pki/cert - pki keys and certs
-	// /etc/mqm/pki/trust - pki trust roots
-	// /etc/mqm/ssl - qmgr key repo directory
-	//
+	// cert dir with key, cert, ca cert
+	certdir := getCertdir()
 
-	certdir := _certdir
-	trustdir := _trustdir
-	ssldir := _ssldir
+	// trusted certs
+	trustdir := getTrustdir()
+
+	// key store directory
+	ssldir := getSsldir()
 
 	// certs are mounted into the container as secrets
 	// with keys tls.key, tls.crt, and ca.crt

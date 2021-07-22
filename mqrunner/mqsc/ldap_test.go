@@ -14,7 +14,7 @@ connect:
   ldaphost: openldap.mqmq.svc.cluster.local
   ldapport: 389
   binddn: cn=admin,dc=szesto,dc=com
-  bindpasswordsecret: admin
+  bindpassword: admin
   tls: false
 groups:
   groupsearchbasedn: ou=groups,dc=szesto,dc=com
@@ -44,7 +44,7 @@ users:
 			LdapHost:           "openldap.mqmq.svc.cluster.local",
 			LdapPort:           389,
 			BindDn:             "cn=admin,dc=szesto,dc=com",
-			BindPasswordSecret: "admin",
+			BindPassword: 		"admin",
 			Tls:                false,
 		},
 		Groups:  LdapGroups{
