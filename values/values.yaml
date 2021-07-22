@@ -77,11 +77,3 @@ webuser:
     keystorepass: ""
     truststorepass: ""
     enabled: false
-
-  variables:
-  - name: httpsPort
-    value: "9443"
-  - name: httpHost
-    value: '*'
-  - name: mqRestCorsAllowedOrigints
-    value: '*'

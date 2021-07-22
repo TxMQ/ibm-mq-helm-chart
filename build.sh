@@ -2,7 +2,7 @@
 
 registry=$1
 
-# derive version from the rpm directory
+# Chart.AppVersion value must match this value.
 mqver="9.2.2.0"
 
 tag="100"
