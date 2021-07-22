@@ -20,6 +20,7 @@ spec:
   selector:
     matchLabels:
       {{- include "mqchart.selectorLabels" . | nindent 6 }}
+
   template:
     metadata:
       finalizers: []
@@ -46,31 +47,33 @@ spec:
         {{- toYaml .Values.qmspec.licenseAnnotations | nindent 8 }}
         {{- end }}
 
-        {{- if .Values.annotations }}
+        {{- if .Values.qmspec.annotations }}
         {{- toYaml .Values.qmspec.annotations | nindent 8 }}
         {{- end }}
 
         checksum/config: {{ include (print $.Template.BasePath "/mqsc-config-map.yaml") . | sha256sum }}
+
     spec:
       {{- with .Values.qmspec.affinity }}
       affinity:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+
       serviceAccount: {{.Release.Name}}-{{.Values.qmspec.serviceAccount.name}}
       serviceAccountName: {{.Release.Name}}-{{.Values.qmspec.serviceAccount.name}}
       restartPolicy: Always
       schedulerName: default-scheduler
       terminationGracePeriodSeconds: 30
       dnsPolicy: ClusterFirst
+
       {{- with .Values.qmspec.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+
       containers:
         - name: qmgr
-          # inject
           image: {{ .Values.qmspec.qmconf.image | squote }}
-          # inject
           imagePullPolicy: {{ default "IfNotPresent" .Values.qmspec.qmconf.imagePullPolicy }}
 #          terminationMessagePolicy: File
 #          terminationMessagePath: /run/termination-log
@@ -96,6 +99,7 @@ spec:
             periodSeconds: 10
             successThreshold: 1
             failureThreshold: 1
+
           # environemnt variables
           env:
             - name: MQ_QMGR_NAME
@@ -150,6 +154,7 @@ spec:
             - name: qm-tls
               mountPath: /etc/mqm/pki/cert
             {{- end }}  
+
       volumes:
         - name: mqmdata
           persistentVolumeClaim:

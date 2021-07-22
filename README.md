@@ -184,9 +184,10 @@ mq:
 
 injecting ldap password secret as environment variable.
 
+Create generic secret:
 oc create secret generic ldapcreds --from-literal=password=password
 
-set secret name:
+set ldap secret name in ldapCredsSecret:
 `
 qmspec:
   ldapCredsSecret:
@@ -194,28 +195,86 @@ qmspec:
     passwordkey: password # optional, default password key is "password"
 `
 
-# tls key pair
+## tls key pair
 
-We assume that key pair and all certs are availabe.
-
-Private key, cert, and ca cert can be created as generic k8s secret. Secret is then mounted on the volume path /secrets/pki
-Secret name is set as environment variable
-
-Tls secret can be written into the hashicorp vault. Secret is then injected by the vault agent into the pod.
-Secret path is set as environment variable.
 
 ## integration with hashicorp vault.
 
-There are a number of secrets: tls secret, ldap authentication secret, image pull secret, etc.
+install hashicorp vault helm chart.
 
-deploy and configure hashicorp vault, define secret paths, define secrets, define roles for reading secrets
-and grant this role to the service account for the chart. Append chart release name to the service account.
-Inject secrets into qmgr container and mount secrets to the /secrets path.
+Configure kubernetes authentication:
+`
+oc exec -it vault-0 -- /bin/sh
+/ $ vault auth enable kubernetes
+Success! Enabled kubernetes auth method at: kubernetes/
+`
 
-For tls secrets, set environment variable to point to the tls secret path. If cert path environment variable is set
-it overrides default cert path directory.
+Configure kubernetes auth to use service account token.
+`
+/ $ vault write auth/kubernetes/config \
+> token=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token) \
+> kubernetes_host="https://$KUBERNETES_PORT_443_TCP_ADDR:443" \
+> kubernetes_ca_cert=@/var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+Success! Data written to: auth/kubernetes/config
+`
 
-For ldap secrets, set env variable to point to secret files. At tranformation time if secret path environment variable
-is set read secret file and set password.
+Vault authorizes specific service account to connet and get secret token.
+In our case service account is created at chart startup time and is prefixed with the name of the release.
+
+Create vault secret:
+`
+/ $ vault kv put secret/mq/ldapcreds password="password"
+Key              Value
+---              -----
+created_time     2021-07-22T21:12:41.138756172Z
+deletion_time    n/a
+destroyed        false
+version          1
+`
+
+Define read policy for the secret:
+Note that path changed to `secret/data/mq/ldapcreds`
+`
+/ $ vault policy write mq/ldapcreds - <<EOF
+> path "secret/data/mq/ldapcreds" {
+>   capabilities = ["read"]
+> }
+> EOF
+Success! Uploaded policy: mq/ldapcreds
+`
+
+Create kubernetes authentication role by binding policy to service account
+Note ttl, make sure it is forever.
+`
+/ $ vault write auth/kubernetes/role/mq-ldapcreds \
+> bound_service_account_names=zorro-mqdeployer \
+> bound_service_account_namespaces=default \
+> policies=mq/ldapcreds \
+> ttl=24h
+Success! Data written to: auth/kubernetes/role/mq-ldapcreds
+`
+
+Set annotations:
+`
+qmspec:
+  annotations:
+    vault.hashicorp.com/agent-inject: 'true'
+    vault.hashicorp.com/role: 'mq-ldapcreds'
+    vault.hashicorp.com/agent-inject-secret-mq-ldapcreds.txt: 'secret/data/mq/ldapcreds'
+    vault.hashicorp.com/agent-inject-template-mq-ldapcreds.txt: |          
+      {{- with secret "secret/data/mq/ldapcreds" -}}
+      {{ .Data.data.password }}
+      {{- end -}}
+`
+
+Enable vault:
+`
+qmspec:
+  vault:
+    ldapCreds:
+      enable: 'true'
+      injectpath: '/vault/secrets/mq-ldapcreds.txt'
+`
 
 ## integration with persistent storage
+
