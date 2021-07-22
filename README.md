@@ -201,6 +201,9 @@ qmspec:
 ## integration with hashicorp vault.
 
 install hashicorp vault helm chart.
+helm repo add hashicorp https://helm.releases.hashicorp.com
+helm repo update
+helm install vault hashicorp/vault --set "global.openshift=true" --set "server.dev.enabled=true"
 
 Configure kubernetes authentication:
 `

@@ -117,6 +117,13 @@ spec:
             {{- end }}
             {{- end }}
 
+            {{- with .Values.qmspec.vault }}
+            {{- if eq .ldapCreds.enable "true" }}
+            - name: VAULT_LDAP_CREDS_INJECT_PATH
+              value: {{ .ldapCreds.injectpath }}
+            {{- end }}
+            {{- end }}
+
             {{- with .Values.qmspec.qmconf.env }}
             {{- toYaml . | nindent 12 }}
             {{- end }}
