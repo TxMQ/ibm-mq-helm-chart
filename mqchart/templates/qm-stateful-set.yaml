@@ -124,6 +124,17 @@ spec:
             {{- end }}
             {{- end }}
 
+            {{- with .Values.qmspec.vault }}
+            {{- if eq .tls.enable "true" }}
+            - name: VAULT_TLS_KEY_INJECT_PATH
+              value: {{ .tls.keyinjectpath }}
+            - name: VAULT_TLS_CERT_INJECT_PATH
+              value: {{ .tls.certinjectpath }}
+            - name: VAULT_TLS_CA_INJECT_PATH
+              value: {{ .tls.cainjectpath }}              
+            {{- end }}
+            {{- end }}
+
             {{- with .Values.qmspec.qmconf.env }}
             {{- toYaml . | nindent 12 }}
             {{- end }}

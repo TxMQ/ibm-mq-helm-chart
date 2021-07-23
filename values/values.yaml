@@ -16,21 +16,26 @@ qmspec:
 
   vault:
     ldapCreds:
-      enable: 'true'
+      enable: 'false'
       injectpath: '/vault/secrets/mq-ldapcreds.txt'
+    tls:
+      enable: 'false'
+      keyinjectpath: '/vault/secrets/key.pem'
+      certinjectpath: '/vault/secrets/cert.pem'
+      cainjectpath: '/vault/secrets/ca.pem'
 
-  annotations:
-    vault.hashicorp.com/agent-inject: 'true'
-    vault.hashicorp.com/role: 'mq-ldapcreds'
-    vault.hashicorp.com/agent-inject-secret-mq-ldapcreds.txt: 'secret/data/mq/ldapcreds'
-    vault.hashicorp.com/agent-inject-template-mq-ldapcreds.txt: |          
-      {{- with secret "secret/data/mq/ldapcreds" -}}
-      {{ .Data.data.password }}
-      {{- end -}}
+  # annotations:
+  #   vault.hashicorp.com/agent-inject: 'true'
+  #   vault.hashicorp.com/role: 'mq-ldapcreds'
+  #   vault.hashicorp.com/agent-inject-secret-mq-ldapcreds.txt: 'secret/data/mq/ldapcreds'
+  #   vault.hashicorp.com/agent-inject-template-mq-ldapcreds.txt: |          
+  #     {{- with secret "secret/data/mq/ldapcreds" -}}
+  #     {{ .Data.data.password }}
+  #     {{- end -}}
 
   qmconf:
     name: qm20
-    image: docker.io/simong5000/txmq-mq-base-rpm-9.2.2.0:103
+    image: docker.io/simong5000/txmq-mq-base-rpm-9.2.2.0:104
     imagePoolPolicy: Always
 
     env:

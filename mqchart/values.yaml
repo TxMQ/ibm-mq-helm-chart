@@ -35,6 +35,11 @@ qmspec:
     ldapCreds:
       enable: 'false'
       injectpath: ''
+    tls:
+      enable: 'false'
+      keyinjectpath: ''
+      certinjectpath: ''
+      cainjectpath: ''
 
   terminationGracePeriodSeconds: 10
 

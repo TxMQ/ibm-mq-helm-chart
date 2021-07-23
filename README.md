@@ -180,7 +180,7 @@ mq:
         shortusernameattr: "cn"
 `
 
-## ldap password
+## ldap password secret
 
 injecting ldap password secret as environment variable.
 
@@ -195,10 +195,10 @@ qmspec:
     passwordkey: password # optional, default password key is "password"
 `
 
-## tls key pair
+## tls key pair secret
 
 
-## integration with hashicorp vault.
+## ldap creds integration with hashicorp vault.
 
 install hashicorp vault helm chart.
 helm repo add hashicorp https://helm.releases.hashicorp.com
@@ -277,6 +277,54 @@ qmspec:
     ldapCreds:
       enable: 'true'
       injectpath: '/vault/secrets/mq-ldapcreds.txt'
+`
+
+## tls key pair integration with hashicorp vault
+
+For tls we create a secret path with 3 key/value pairs:
+private key (key.pem), cert (cert.pem), and ca chain (ca.pem)
+
+Each key/value will be injected into separate path.
+
+Copy key.pem, cert.pem, and ca.pem files to the vault container
+
+Create tls secret
+`
+vault kv put secret/mq/tls key=@key.pem cert=@cert.pem ca=@ca.pem
+`
+
+set annotations:
+
+`
+qmspec:
+  annotations:
+    vault.hashicorp.com/agent-inject-secret-key.pem: 'secret/data/mq/tls'
+    vault.hashicorp.com/agent-inject-template-key.pem : |
+      {{- with secret "secret/data/mq/tls" -}}
+      {{ .Data.data.key }}
+      {{- end -}}
+    vault.hashicorp.com/agent-inject-secret-cert.pem: 'secret/data/mq/tls'
+    vault.hashicorp.com/agent-inject-template-cert.pem : |
+      {{- with secret "secret/data/mq/tls" -}}
+      {{ .Data.data.cert }}
+      {{- end -}}
+    vault.hashicorp.com/agent-inject-secret-ca.pem: 'secret/data/mq/tls'
+    vault.hashicorp.com/agent-inject-template-ca.pem : |
+      {{- with secret "secret/data/mq/tls" -}}
+      {{ .Data.data.ca }}
+      {{- end -}}
+`
+
+Enable vault:
+
+`
+qmspec:
+  vault:
+    tls:
+      enable: 'true'
+      keyinjectpath: '/vault/secrets/key.pem'
+      certinjectpath: '/vault/secrets/cert.pem'
+      cainjectpath: '/vault/secrets/ca.pem'
 `
 
 ## integration with persistent storage

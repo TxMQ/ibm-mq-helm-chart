@@ -6,6 +6,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"szesto.com/mqrunner/util"
 )
 
 const _keyfile = "tls.key"
@@ -16,20 +17,20 @@ const _certlabel = "default"
 
 func ImportWebconsoleCerts() (string, string, error) {
 
-	// we assume ssl and cert directories
-	// if not, we can pass these values as agruments
+	keypath := util.GetTlsKeyPath()
+	certpath := util.GetTlsCertPath()
+	capath := util.GetTlsCaPath()
 
-	const ssldir = "/etc/mqm/ssl"
-	const certdir = "/etc/mqm/pki/cert"
+	ssldir := util.GetSsldir()
 
-	return RecreateWebmqKeystore(ssldir, certdir)
+	return RecreateWebmqKeystore(ssldir, keypath, certpath, capath)
 }
 
-func RecreateWebmqKeystore(ssldir, certdir string) (string, string, error) {
-	return CreateWebmqKeystore(ssldir, certdir, true)
+func RecreateWebmqKeystore(ssldir, keypath, certpath, capath string) (string, string, error) {
+	return CreateWebmqKeystore(ssldir, keypath, certpath, capath, true)
 }
 
-func CreateWebmqKeystore(ssldir, certdir string, deleteExistingKeystore bool) (string, string, error) {
+func CreateWebmqKeystore(ssldir, keypath, certpath, capath string, deleteExistingKeystore bool) (string, string, error) {
 
 	// check if ssldir exists
 	_, err := os.Stat(ssldir)
@@ -37,21 +38,12 @@ func CreateWebmqKeystore(ssldir, certdir string, deleteExistingKeystore bool) (s
 		return "", "", err
 	}
 
-	// check if certdir exists
-	_, err = os.Stat(ssldir)
-	if err != nil {
-		return "", "", err
-	}
-
-	// we expect to find key, cert and [ca] files in certdir
-	keypath := filepath.Join(certdir, _keyfile)
+	// we expect to find key, cert and [ca] files
 
 	_, err = os.Stat(keypath)
 	if err != nil {
 		return "", "", err
 	}
-
-	certpath := filepath.Join(certdir, _certfile)
 
 	_, err = os.Stat(certpath)
 	if err != nil {
@@ -59,7 +51,6 @@ func CreateWebmqKeystore(ssldir, certdir string, deleteExistingKeystore bool) (s
 	}
 
 	iscapath := true
-	capath := filepath.Join(certdir, _cafile)
 
 	_, err = os.Stat(capath)
 	if err != nil {

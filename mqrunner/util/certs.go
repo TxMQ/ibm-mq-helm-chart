@@ -29,20 +29,36 @@ func SetQmgrKeyRepoLocation(qmgr string) error {
 	return SetSslKeyRepo(qmgr, sslkeyr)
 }
 
-func getCertdir() string {
-	// if tls secret is injected then env variable VAULT_SECRET_CERTDIR is set
-	 if vaultdir := os.Getenv("VAULT_SECRET_CERTDIR"); len(vaultdir) > 0 {
-	 	return vaultdir
-	 }
-	 return _certdir
-}
-
 func getTrustdir() string {
 	return _trustdir
 }
 
-func getSsldir() string {
+func GetSsldir() string {
 	return _ssldir
+}
+
+func GetTlsKeyPath() string {
+	if keypath := os.Getenv("VAULT_TLS_KEY_INJECT_PATH"); len(keypath) > 0 {
+		return keypath
+	} else {
+		return filepath.Join(_certdir, _keyfile)
+	}
+}
+
+func GetTlsCertPath() string {
+	if certpath := os.Getenv("VAULT_TLS_CERT_INJECT_PATH"); len(certpath) > 0 {
+		return certpath
+	} else {
+		return filepath.Join(_certdir, _certfile)
+	}
+}
+
+func GetTlsCaPath() string {
+	if capath := os.Getenv("VAULT_TLS_CA_INJECT_PATH"); len(capath) > 0 {
+		return capath
+	} else {
+		return filepath.Join(_certdir, _cafile)
+	}
 }
 
 //
@@ -51,13 +67,17 @@ func getSsldir() string {
 func ImportCertificates(qmgr string) error {
 
 	// cert dir with key, cert, ca cert
-	certdir := getCertdir()
+	//certdir := getCertdir()
+
+	keypath := GetTlsKeyPath()
+	certpath := GetTlsCertPath()
+	capath := GetTlsCaPath()
 
 	// trusted certs
 	trustdir := getTrustdir()
 
 	// key store directory
-	ssldir := getSsldir()
+	ssldir := GetSsldir()
 
 	// certs are mounted into the container as secrets
 	// with keys tls.key, tls.crt, and ca.crt
@@ -73,7 +93,7 @@ func ImportCertificates(qmgr string) error {
 	}
 
 	// import ca chains into the keystore. ca-chains include self-signed certs.
-	err = ImportTrustChains(kdbpath, certdir, trustdir)
+	err = ImportTrustChains(kdbpath, certpath, capath, trustdir)
 	if err != nil {
 		return err
 	}
@@ -82,7 +102,7 @@ func ImportCertificates(qmgr string) error {
 	certlabel := formatCertLabel(qmgr)
 
 	// convert pem key and cert files into p12 format
-	p12path, err := PemToP12(certdir, ssldir, certlabel)
+	p12path, err := PemToP12(keypath, certpath, ssldir, certlabel)
 	if err != nil {
 		return err
 	}
@@ -212,24 +232,16 @@ func IsSelfSigned(certpath string) (string, string, bool, error) {
 	return subject, issuer,  issuer == subject, nil
 }
 
-func ImportTrustChains(keydbpath, certdir, trustdir string) error {
+func ImportTrustChains(keydbpath, certpath, capath, trustdir string) error {
 
-	// in the certdir we expect:
-	// tls.key, tls.crt, [ca.crt]
-
-	// if certdir is mounted from the certificate-manger secret then
-	// tls.cert may contain cert chain, terminating before root ca.
-	// root ca will be in the ca.crt file.
-	// trustdir may conain additional trust chains
-
-	// check if cert directory exists
-	_, err := os.Stat(certdir)
+	// check if cert path exists
+	_, err := os.Stat(certpath)
 	if err != nil {
 		return err
 	}
 
 	// check if tls.crt exists
-	certpath := filepath.Join(certdir, _certfile)
+	//certpath := filepath.Join(certdir, _certfile)
 
 	log.Printf("import-trust-chains-1: expecting certificate %s\n", certpath)
 
@@ -270,7 +282,7 @@ func ImportTrustChains(keydbpath, certdir, trustdir string) error {
 	//
 	// certdir 'may' contain ca.crt
 	//
-	capath := filepath.Join(certdir, _cafile)
+	//capath := filepath.Join(certdir, _cafile)
 
 	_, err = os.Stat(capath)
 	if err == nil {
@@ -305,15 +317,15 @@ func ImportTrustChains(keydbpath, certdir, trustdir string) error {
 	return nil
 }
 
-func PemToP12(certdir, ssldir, certlabel string) (string, error) {
+func PemToP12(keypath, certpath, ssldir, certlabel string) (string, error) {
 
-	keypath := filepath.Join(certdir, _keyfile)
+	//keypath := filepath.Join(certdir, _keyfile)
 	_, err := os.Stat(keypath)
 	if err != nil {
 		return "", err
 	}
 
-	certpath := filepath.Join(certdir, _certfile)
+	//certpath := filepath.Join(certdir, _certfile)
 	_, err = os.Stat(certpath)
 	if err != nil {
 		return "", err
