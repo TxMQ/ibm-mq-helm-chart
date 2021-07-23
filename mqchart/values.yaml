@@ -31,6 +31,11 @@ qmspec:
 
   ldapCredsSecret: {}
 
+  vault:
+    ldapCreds:
+      enable: 'false'
+      injectpath: ''
+
   terminationGracePeriodSeconds: 10
 
   qmconf:

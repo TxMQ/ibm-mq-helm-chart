@@ -183,11 +183,7 @@ func (webuser Webuser) ldapregistry() string {
 	ldaptype := "custom"
 	filtersid := "custom_filters"
 
-	bindPassword := mqsc.GetLdapBindPasswordEnv()
-
-	if len(bindPassword) == 0 {
-		bindPassword = webuser.Ldapregistry.Connect.Bindpassword
-	}
+	bindPassword := mqsc.GetLdapBindPassword(webuser.Ldapregistry.Connect.Bindpassword)
 
 	ldap := fmt.Sprintf(ldapf, "ldap", webuser.Ldapregistry.Connect.Realm, webuser.Ldapregistry.Connect.Host,
 		webuser.Ldapregistry.Connect.Port, webuser.Ldapregistry.Connect.Binddn, bindPassword,

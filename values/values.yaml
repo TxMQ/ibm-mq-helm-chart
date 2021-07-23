@@ -30,7 +30,7 @@ qmspec:
 
   qmconf:
     name: qm20
-    image: docker.io/simong5000/txmq-mq-base-rpm-9.2.2.0:102
+    image: docker.io/simong5000/txmq-mq-base-rpm-9.2.2.0:103
     imagePoolPolicy: Always
 
     env:

@@ -2,7 +2,9 @@ package mqsc
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
+	"strings"
 )
 
 type Auth struct {
@@ -49,6 +51,42 @@ func ClearLdapBindPasswordEnv() error {
 	return os.Setenv("LDAP_BIND_PASSWORD", "")
 }
 
+func GetVaultLdapCredsInjectPathEnv() string {
+	return os.Getenv("VAULT_LDAP_CREDS_INJECT_PATH")
+}
+
+func GetVaultLdapCreds() string {
+
+	if path := GetVaultLdapCredsInjectPathEnv(); len(path) > 0 {
+		fb, err := ioutil.ReadFile(path)
+		if err != nil {
+			return ""
+		}
+		return strings.TrimSpace(string(fb))
+
+	} else {
+		return ""
+	}
+}
+
+func GetLdapBindPassword(plaintext string) string {
+
+	// first check vault
+	bindPassword := GetVaultLdapCreds()
+
+	// then check secret
+	if len(bindPassword) == 0 {
+		bindPassword = GetLdapBindPasswordEnv()
+	}
+
+	// plain text password
+	if len(bindPassword) == 0 {
+		bindPassword = plaintext
+	}
+
+	return bindPassword
+}
+
 func (ldap *LdapAuthinfo) Mqsc() string {
 
 	t :=
@@ -79,11 +117,7 @@ func (ldap *LdapAuthinfo) Mqsc() string {
 		star +
 		"REFRESH SECURITY TYPE(CONNAUTH)" + endl
 
-	bindPassword := GetLdapBindPasswordEnv()
-
-	if len(bindPassword) == 0 {
-		bindPassword = ldap.Connect.BindPassword
-	}
+	bindPassword := GetLdapBindPassword(ldap.Connect.BindPassword)
 
 	mqsc := fmt.Sprintf(t, ldap.Groups.GroupSearchBaseDn, ldap.Users.UserSearchBaseDn,
 		ldap.Groups.ObjectClass, ldap.Users.ObjectClass,
