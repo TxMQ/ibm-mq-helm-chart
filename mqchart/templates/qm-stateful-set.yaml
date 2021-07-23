@@ -106,6 +106,8 @@ spec:
               value: {{ .Values.qmspec.qmconf.name | quote }}
             - name: MQ_ENABLE_TLS
               value: {{ .Values.qmspec.pki.enableTls | quote }}
+            - name: VAULT_ENABLE_TLS
+              value: {{ .Values.qmspec.vault.tls.enable | quote }}
 
             {{- with .Values.qmspec.ldapCredsSecret }}
             {{- if .name }}
@@ -197,7 +199,8 @@ spec:
           configMap:
             name: webuser-{{ .Release.Name }}
         {{- end }}
-        {{- if .Values.qmspec.pki.enableTls }}
+        # mount tls secret if tls is enabled and vault tls is disabled
+        {{- if and (eq .Values.qmspec.pki.enableTls "true") (not (eq .Values.qmspec.vault.tls.enable "true")) }}
         - name: qm-tls
           secret:
             secretName: {{ .Values.qmspec.pki.tlsSecretName }}

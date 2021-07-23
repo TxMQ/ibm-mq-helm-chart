@@ -8,7 +8,7 @@ qmspec:
 
   pki:
     tlsSecretName: qm-tls
-    enableTls: 1
+    enableTls: "true"
 
   ldapCredsSecret:
     name: ldapcreds
@@ -35,7 +35,7 @@ qmspec:
 
   qmconf:
     name: qm20
-    image: docker.io/simong5000/txmq-mq-base-rpm-9.2.2.0:104
+    image: docker.io/simong5000/txmq-mq-base-rpm-9.2.2.0:105
     imagePoolPolicy: Always
 
     env:
