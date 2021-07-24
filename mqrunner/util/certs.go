@@ -24,6 +24,23 @@ const _ssldir = "/etc/mqm/ssl"
 const _certdir = "/etc/mqm/pki/cert"
 const _trustdir = "/etc/mqm/pki/trust"
 
+func IsEnableTls() bool {
+
+	if vaultTls := os.Getenv("VAULT_ENABLE_TLS"); len(vaultTls) > 0 {
+		if vaultTls == "true" || vaultTls == "1" {
+			return true
+		}
+	}
+
+	if mqTls := os.Getenv("MQ_ENABLE_TLS"); len(mqTls) > 0 {
+		if mqTls == "true" || mqTls == "1" {
+			return true
+		}
+	}
+
+	return false
+}
+
 func SetQmgrKeyRepoLocation(qmgr string) error {
 	sslkeyr := filepath.Join(_ssldir, _keyDatabaseStem)
 	return SetSslKeyRepo(qmgr, sslkeyr)

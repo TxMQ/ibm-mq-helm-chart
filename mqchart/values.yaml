@@ -43,6 +43,10 @@ qmspec:
 
   terminationGracePeriodSeconds: 10
 
+  storage:
+    usepvc: 'true'
+    pvcname: '' # external pvc name
+
   qmconf:
     name: ""
     image: ""

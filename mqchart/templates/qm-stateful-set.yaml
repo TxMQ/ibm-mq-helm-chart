@@ -152,8 +152,10 @@ spec:
             - containerPort: 9443
               protocol: TCP
           volumeMounts:
+            {{- if eq .Values.qmspec.storage.usepvc "true" }}
             - name: mqmdata
               mountPath: /mnt/mqm/data
+            {{- end }}
             {{- if .Values.mq }}
             - name: mqsc-yaml
               mountPath: /etc/mqm/mqyaml
@@ -170,15 +172,21 @@ spec:
             - name: webuser
               mountPath: /etc/mqm/webuser
             {{- end }}
-            {{- if .Values.qmspec.pki.enableTls }}
+            # tls enabled
+            {{- if eq .Values.qmspec.pki.enableTls "true"}}
+            # and vault tls disabled
+            {{- if not (eq .Values.qmspec.vault.tls.enable "true") }}
             - name: qm-tls
               mountPath: /etc/mqm/pki/cert
-            {{- end }}  
+            {{- end }}
+            {{- end }}
 
       volumes:
+        {{- if eq .Values.qmspec.storage.usepvc "true" }}
         - name: mqmdata
           persistentVolumeClaim:
             claimName: {{ .Release.Name }}-{{ .Values.qmspec.qmconf.storage.pvcName }}
+        {{- end }}
         {{- if .Values.mq }}
         - name: mqsc-yaml
           configMap:

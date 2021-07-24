@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"strings"
 	"szesto.com/mqrunner/mqsc"
+	"szesto.com/mqrunner/util"
 )
 
 type Approle struct {
@@ -257,8 +258,10 @@ func (webuser Webuser) Webuserxml(p12path, encpass string) string {
 	server += ldap + nl + nl
 
 	// tls config
-	tls := webuser.tls(p12path, encpass)
-	server += tls + nl + nl
+	if len(p12path) > 0 {
+		tls := webuser.tls(p12path, encpass)
+		server += tls + nl + nl
+	}
 
 	// client auth
 
@@ -300,10 +303,16 @@ func OutputWebuserxml(webconfigpath, webuserxmlpath, p12path, encpass string) er
 
 func ConfigureWebconsole() error {
 
-	// import webconsole certs
-	p12path, encpass, err := ImportWebconsoleCerts()
-	if err != nil {
-		return err
+	p12path := ""
+	encpass := ""
+	var err error = nil
+
+	if util.IsEnableTls() {
+		// import webconsole certs
+		p12path, encpass, err = ImportWebconsoleCerts()
+		if err != nil {
+			return err
+		}
 	}
 
 	// assume that web config is mounted at /etc/mqm/webuser/webuser.yaml

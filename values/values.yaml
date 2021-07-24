@@ -8,11 +8,11 @@ qmspec:
 
   pki:
     tlsSecretName: qm-tls
-    enableTls: "true"
+    enableTls: "false"
 
-  ldapCredsSecret:
-    name: ldapcreds
-    passwordkey: password # optional, default is "password"
+#  ldapCredsSecret:
+#    name: ldapcreds
+#    passwordkey: password # optional, default is "password"
 
   vault:
     ldapCreds:
@@ -33,9 +33,12 @@ qmspec:
   #     {{ .Data.data.password }}
   #     {{- end -}}
 
+#  storage:
+#    usepvc: 'false'
+
   qmconf:
     name: qm20
-    image: docker.io/simong5000/txmq-mq-base-rpm-9.2.2.0:105
+    image: docker.io/simong5000/txmq-mq-base-rpm-9.2.2.0:106
     imagePoolPolicy: Always
 
     env:

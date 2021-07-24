@@ -16,23 +16,6 @@ func isConfigureMqweb() bool {
 	return os.Getenv("MQ_CONFIGURE_MQWEB") == "1"
 }
 
-func isEnableTls() bool {
-
-	if vaultTls := os.Getenv("VAULT_ENABLE_TLS"); len(vaultTls) > 0 {
-		if vaultTls == "true" || vaultTls == "1" {
-			return true
-		}
-	}
-
-	if mqTls := os.Getenv("MQ_ENABLE_TLS"); len(mqTls) > 0 {
-		if mqTls == "true" || mqTls == "1" {
-			return true
-		}
-	}
-
-	return false
-}
-
 func Runmain() {
 
 	// env variables set in the pod template
@@ -50,7 +33,7 @@ func Runmain() {
 	// import certs into the keystore
 	qmgr := os.Getenv("MQ_QMGR_NAME")
 
-	if isEnableTls() {
+	if util.IsEnableTls() {
 
 		err = util.ImportCertificates(qmgr)
 		if err != nil {
@@ -124,7 +107,7 @@ func Runmain() {
 	log.Printf("qmgr %s started", qmgr)
 
 	// set qmgr tls key repository
-	if isEnableTls() {
+	if util.IsEnableTls() {
 		err = util.SetQmgrKeyRepoLocation(qmgr)
 		if err != nil {
 			// log and exit

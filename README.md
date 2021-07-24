@@ -22,7 +22,10 @@ Build custom image.
 After 'base' custom image is built it is possible to build
 other custom images from that.
 
-# Txmq mq helm chart.
+## Create image pull secret
+oc create secret docker-registry image-pull-secret --docker-username=<u> --docker-password=<p> --docker-email=<e>
+
+## Txmq mq helm chart.
 
 At present, TxMQ mq chart deploys standalone queue manager.
 
