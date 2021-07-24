@@ -25,6 +25,12 @@ other custom images from that.
 ## Create image pull secret
 oc create secret docker-registry image-pull-secret --docker-username=<u> --docker-password=<p> --docker-email=<e>
 
+## deploy vault and configure secrets
+see vault integration.
+
+## deploy openldap
+if there is no external ldap server, deploy open ldap
+
 ## Txmq mq helm chart.
 
 At present, TxMQ mq chart deploys standalone queue manager.
@@ -218,9 +224,9 @@ Success! Enabled kubernetes auth method at: kubernetes/
 Configure kubernetes auth to use service account token.
 `
 / $ vault write auth/kubernetes/config \
-> token=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token) \
-> kubernetes_host="https://$KUBERNETES_PORT_443_TCP_ADDR:443" \
-> kubernetes_ca_cert=@/var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+token=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token) \
+kubernetes_host="https://$KUBERNETES_PORT_443_TCP_ADDR:443" \
+kubernetes_ca_cert=@/var/run/secrets/kubernetes.io/serviceaccount/ca.crt
 Success! Data written to: auth/kubernetes/config
 `
 
@@ -229,7 +235,7 @@ In our case service account is created at chart startup time and is prefixed wit
 
 Create vault secret:
 `
-/ $ vault kv put secret/mq/ldapcreds password="password"
+/ $ vault kv put secret/mq/ldapcreds password="admin"
 Key              Value
 ---              -----
 created_time     2021-07-22T21:12:41.138756172Z
@@ -241,22 +247,21 @@ version          1
 Define read policy for the secret:
 Note that path changed to `secret/data/mq/ldapcreds`
 `
-/ $ vault policy write mq/ldapcreds - <<EOF
-> path "secret/data/mq/ldapcreds" {
->   capabilities = ["read"]
-> }
-> EOF
+/ $ vault policy write mq-ldapcreds - <<EOF
+path "secret/data/mq/ldapcreds" {
+    capabilities = ["read"]
+}
+EOF
 Success! Uploaded policy: mq/ldapcreds
 `
 
 Create kubernetes authentication role by binding policy to service account
-Note ttl, make sure it is forever.
+Note ttl, make sure it is forever. Also note namespace.
 `
 / $ vault write auth/kubernetes/role/mq-ldapcreds \
-> bound_service_account_names=zorro-mqdeployer \
-> bound_service_account_namespaces=default \
-> policies=mq/ldapcreds \
-> ttl=24h
+bound_service_account_names=zorro-mqdeployer \
+bound_service_account_namespaces=default \
+policies=mq-ldapcreds
 Success! Data written to: auth/kubernetes/role/mq-ldapcreds
 `
 
@@ -291,9 +296,41 @@ Each key/value will be injected into separate path.
 
 Copy key.pem, cert.pem, and ca.pem files to the vault container
 
+oc cp ./tls.key vault-0:/home/vault
+oc cp ./tls.crt vault-0:/home/vaul
+
 Create tls secret
 `
-vault kv put secret/mq/tls key=@key.pem cert=@cert.pem ca=@ca.pem
+vault kv put secret/mq/tls key=@tls.key cert=@lts.crt ca=@ca.crt
+`
+
+Define read policy for the secet:
+`
+vault policy write mq-tls - <<EOF
+path "secret/data/mq/tls" {
+    capabilities = ["read"]
+}
+EOF
+`
+
+`
+vault policy write mq - <<EOF
+path "secret/data/mq/ldapcreds" {
+    capabilities = ["read"]
+}
+
+path "secret/data/mq/tls" {
+    capabilities = ["read"]
+}
+EOF
+`
+
+Define role:
+`
+vault write auth/kubernetes/role/mq \
+bound_service_account_names=zorro-mqdeployer \
+bound_service_account_namespaces=default \
+policies=mq
 `
 
 set annotations:
@@ -301,13 +338,13 @@ set annotations:
 `
 qmspec:
   annotations:
-    vault.hashicorp.com/agent-inject-secret-key.pem: 'secret/data/mq/tls'
-    vault.hashicorp.com/agent-inject-template-key.pem : |
+    vault.hashicorp.com/agent-inject-secret-tls.key: 'secret/data/mq/tls'
+    vault.hashicorp.com/agent-inject-template-tls.key : |
       {{- with secret "secret/data/mq/tls" -}}
       {{ .Data.data.key }}
       {{- end -}}
-    vault.hashicorp.com/agent-inject-secret-cert.pem: 'secret/data/mq/tls'
-    vault.hashicorp.com/agent-inject-template-cert.pem : |
+    vault.hashicorp.com/agent-inject-secret-tls.crt: 'secret/data/mq/tls'
+    vault.hashicorp.com/agent-inject-template-tls.crt : |
       {{- with secret "secret/data/mq/tls" -}}
       {{ .Data.data.cert }}
       {{- end -}}
@@ -325,9 +362,9 @@ qmspec:
   vault:
     tls:
       enable: 'true'
-      keyinjectpath: '/vault/secrets/key.pem'
-      certinjectpath: '/vault/secrets/cert.pem'
-      cainjectpath: '/vault/secrets/ca.pem'
+      keyinjectpath: '/vault/secrets/tls.key'
+      certinjectpath: '/vault/secrets/tls.crt'
+      cainjectpath: '/vault/secrets/ca.crt'
 `
 
 ## integration with persistent storage
