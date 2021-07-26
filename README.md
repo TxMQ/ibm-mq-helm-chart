@@ -69,7 +69,7 @@ When secret vault is not used create generic kubernetes secret with the *passwor
 
 `oc create secret generic qm-ldap-creds --from-literal=password=ldappassword`
 
-Set ldap secret name in yaml configuration:
+Set LDAP secret name in yaml configuration:
 
 ```
 qmspec:
@@ -118,9 +118,10 @@ kubernetes_ca_cert=@/var/run/secrets/kubernetes.io/serviceaccount/ca.crt
 Success! Data written to: auth/kubernetes/config
 ```
 
-## Vault secrets and access policies.
+### Vault Secrets and Access Policies.
 
-**Create ldap credentials vault secret.**
+**Create LDAP vault secret.**
+
 For ldap we create a secret path with one key-value pair: password=value
 
 ```
@@ -133,7 +134,7 @@ destroyed        false
 version          1
 ```
 
-**Create tls vault secret.**
+**Create TLS vault secret.**
 
 For tls we create a secret path with 3 key/value pairs:
 private key (key.pem), cert (cert.pem), and ca chain (ca.pem)
@@ -147,11 +148,12 @@ oc cp ./tls.key vault-0:/home/vault
 oc cp ./tls.crt vault-0:/home/vaul
 ```
 
-**Create tls secret with 3 key-value pairs: key, cert, and ca**
+**Create TLS secret with 3 key-value pairs: key, cert, and ca**
 
 `vault kv put secret/mq/tls key=@tls.key cert=@lts.crt ca=@ca.crt`
 
-**vault access control.**
+**Vault Access Control.**
+
 Define policy to allow read access to ldap creds and tls secrets.
 
 Path values in the policy are derived from the secret paths but not the same.
