@@ -57,14 +57,14 @@ To install txmq mq chart use helm:
 
 The only required file is `values.yaml`.
 
-### Secrets.
-Secrets are used for ldap authentication and tls keys and certificates.
+**Secrets.**<br>
+Secrets are used for LDAP authentication and TLS keys and certificates.
 
 You can configure secrets with or without a vault.
 
 Vault configuration takes precedence over kubernetes secrets.
 
-#### Kubernetes ldap secrets.
+**Kubernetes LDAP secrets.**<br>
 If secret vault is not used create generic kubernetes secret with the *password* key.
 
 `oc create secret generic qm-ldap-creds --from-literal=password=ldappassword`
@@ -82,7 +82,7 @@ If secret vault is not used create generic kubernetes secret with keys *tls.key*
 
 `oc create secret generic qm-tls --from-file=tls.key=/path/to/tls.key --from-file=tls.crt=/path/to/tls.crt --from-file=ca.crt=/path/to/ca.crt`
 
-Set tls secret name in yaml configuration:
+Set TLS secret name in yaml configuration:
 ```
 qmspec:
   pki:
