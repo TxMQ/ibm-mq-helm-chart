@@ -65,7 +65,7 @@ You can configure secrets with or without a vault.
 Vault configuration takes precedence over kubernetes secrets.
 
 **Kubernetes LDAP secrets.**<br>
-If secret vault is not used create generic kubernetes secret with the *password* key.
+When secret vault is not used create generic kubernetes secret with the *password* key.
 
 `oc create secret generic qm-ldap-creds --from-literal=password=ldappassword`
 
@@ -78,7 +78,7 @@ qmspec:
 ```
 
 #### Kubernetes TLS secrets.
-If secret vault is not used create generic kubernetes secret with keys *tls.key*, *tls.crt*, and *ca.crt*.
+When secret vault is not used create generic kubernetes secret with the *tls.key*, *tls.crt*, and *ca.crt* keys.
 
 `oc create secret generic qm-tls --from-file=tls.key=/path/to/tls.key --from-file=tls.crt=/path/to/tls.crt --from-file=ca.crt=/path/to/ca.crt`
 
