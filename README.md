@@ -410,5 +410,12 @@ mq:
         shortusernameattr: "cn"
 ```
 
-## integration with persistent storage
+### integration with persistent storage
 
+### TxMQ Chart Reference.
+
+qmspec<br>
+
+| Path                 | Description| Value    |
+| :---:                | :---:      | :---:    |
+|qmspec.license.accept | string     | 'true'   |
