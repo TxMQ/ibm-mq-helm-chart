@@ -1,4 +1,4 @@
-## Builiding custom IBM MQ image
+### Builiding custom IBM MQ container image.
 
 Custom image is build from the rpm distribution of IBM MQ.
 
@@ -21,9 +21,11 @@ build.sh docker-repo`
 ```
 
 **Create image pull secret**
+
 `oc create secret docker-registry image-pull-secret --docker-username=<u> --docker-password=<p> --docker-email=<e>`
 
 **deploy hashicorp vault and configure secrets**
+
 see vault integration.
 
 ### deploy openldap
