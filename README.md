@@ -1,4 +1,4 @@
-# Builiding custom IBM MQ image
+## Builiding custom IBM MQ image
 
 Custom image is build from the rpm distribution of IBM MQ.
 
@@ -7,30 +7,29 @@ from IBM Passport Advantage to the local directory.<br>
 
 Clone build git repository to your local machine.<br>
 
-Each release is based on specific mq version.
-Mq version is compiled into chart release.
+Each release is based on specific MQ version. MQ version is compiled into the chart release.<br>
 
-Build custom image.
+**Build custom image.**
 
 ```
-git clone ...`
-cd mq-operator && mkdir rpm`
-tar xvf ... -C rpm`
+git clone ...
+cd mq-operator && mkdir rpm
+tar xvf ... -C rpm
 
-sudo podman login docker.io`
+sudo podman login docker.io
 build.sh docker-repo`
 ```
 
-## Create image pull secret
+**Create image pull secret**
 `oc create secret docker-registry image-pull-secret --docker-username=<u> --docker-password=<p> --docker-email=<e>`
 
-## deploy hashicorp vault and configure secrets
+**deploy hashicorp vault and configure secrets**
 see vault integration.
 
-## deploy openldap
+### deploy openldap
 if there is no external ldap server, deploy open ldap
 
-## TxMQ mq helm chart.
+### TxMQ mq helm chart.
 
 Helm chart is configured with a number of yaml objects. These yaml objects
 can be grouped together in one or more files.
