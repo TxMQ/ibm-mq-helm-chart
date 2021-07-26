@@ -24,38 +24,32 @@ build.sh docker-repo`
 
 `oc create secret docker-registry image-pull-secret --docker-username=<u> --docker-password=<p> --docker-email=<e>`
 
-**deploy hashicorp vault and configure secrets**
+### TxMQ MQ helm chart.
 
-see vault integration.
+To make it easier to work with the TxMQ chart configuration, yaml objects are grouped
+into a number of files and are available in the `values` directory.<br>
 
-### deploy openldap
-if there is no external ldap server, deploy open ldap
+- qmgr.yaml
+- vault.yaml
+- qmini.yaml
+- mqscic.yaml
+- mq.yaml
 
-### TxMQ mq helm chart.
+*qmgr.yaml* defines basic kubernetes and queue manager configuration.<br>
 
-Helm chart is configured with a number of yaml objects. These yaml objects
-can be grouped together in one or more files.
+All other files are optional.<br>
 
-There are a number of files that are passed as input to the helm chart:
-values.yaml, mqscic.yaml, qmini.yaml, and mq.yaml.
+Use `helm` command to install TxMQ chart.<br>
 
-values.yaml file specifies basic kubernetes settings for the queue manager under `.Values.qmspec object.`
-It also contains `.Values.webuser` object to configure mq web console service.
+`helm install -f qmgr.yaml [-f vault.yaml] [-f mqscic.yaml] [-f qmini.yaml] [-f mq.yaml] release mqchart/`
 
-You can pass mqsc commands to be executed at queue manager startup by placing it 
-in the `mqscic.yaml` file under `.Values.mqscic` object.
+**Dependencies**<br>
+Ldap server is required.<br>
+You can either use existing LDAP server or deploy openldap chart.<br>
 
-You can pass qmini parameters to configure queue manager in the qmini.yaml file
-by configuring `.Values.qmini` object.
+Hashicorp vault is recommended. You can either use existing vault, or deploy hashicorp vault chart.<br>
 
-Txmq chart defines an abstraction over mq configuration that you can place in mq.yaml
-file under `.Values.mq` object.
-
-To install txmq mq chart use helm:
-
-`helm install -f values.yaml [-f mqscic.yaml] [-f qmini.yaml] [-f mq.yaml] release mqchart/`
-
-The only required file is `values.yaml`.
+**Examples and Reference**<br>
 
 **Secrets.**<br>
 Secrets are used for LDAP authentication and TLS keys and certificates.
@@ -87,7 +81,6 @@ Set TLS secret name in yaml configuration:
 qmspec:
   pki:
     tlsSecretName: qm-tls
-    enableTls: 'true'
 ```
 
 ### Integration with Hashicorp vault.
