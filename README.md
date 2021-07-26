@@ -12,28 +12,28 @@ Mq version is compiled into chart release.
 
 Build custom image.
 
-`git clone ...`
-`cd mq-operator && mkdir rpm`
-`tar xvf ... -C rpm`
+```
+git clone ...`
+cd mq-operator && mkdir rpm`
+tar xvf ... -C rpm`
 
-`sudo podman login docker.io`
-`build.sh docker-repo`
-
-After 'base' custom image is built it is possible to build
-other custom images from that.
+sudo podman login docker.io`
+build.sh docker-repo`
+```
 
 ## Create image pull secret
-oc create secret docker-registry image-pull-secret --docker-username=<u> --docker-password=<p> --docker-email=<e>
+`oc create secret docker-registry image-pull-secret --docker-username=<u> --docker-password=<p> --docker-email=<e>`
 
-## deploy vault and configure secrets
+## deploy hashicorp vault and configure secrets
 see vault integration.
 
 ## deploy openldap
 if there is no external ldap server, deploy open ldap
 
-## Txmq mq helm chart.
+## TxMQ mq helm chart.
 
-At present, TxMQ mq chart deploys standalone queue manager.
+Helm chart is configured with a number of yaml objects. These yaml objects
+can be grouped together in one or more files.
 
 There are a number of files that are passed as input to the helm chart:
 values.yaml, mqscic.yaml, qmini.yaml, and mq.yaml.
@@ -56,9 +56,234 @@ To install txmq mq chart use helm:
 
 The only required file is `values.yaml`.
 
+## Secrets.
+Secrets are used for ldap authentication and tls keys and certificates.
+
+You can configure secrets with or without a vault.
+
+Vault configuration takes precedence over kubernetes secrets.
+
+**Ldap secrets.**
+If secret vault is not used create generic kubernetes secret with the *password* key.
+
+`oc create secret generic qm-ldap-creds --from-literal=password=ldappassword`
+
+Set ldap secret name in yaml configuration:
+
+```
+qmspec:
+  ldapCredsSecret:
+    name: qm-ldap-creds
+```
+
+**Tls secrets.**
+If secret vault is not used create generic kubernetes secret with keys *tls.key*, *tls.crt*, and *ca.crt*.
+
+`oc create secret generic qm-tls --from-file=tls.key=/path/to/tls.key --from-file=tls.crt=/path/to/tls.crt --from-file=ca.crt=/path/to/ca.crt`
+
+Set tls secret name in yaml configuration:
+```
+qmspec:
+  pki:
+    tlsSecretName: qm-tls
+    enableTls: 'true'
+```
+
+## Integration with Hashicorp vault.
+
+### Vault prerequisites.
+
+**Install hashicorp vault helm chart.**
+
+```
+helm repo add hashicorp https://helm.releases.hashicorp.com
+helm repo update
+helm install vault hashicorp/vault [--set "global.openshift=true"] --set "server.dev.enabled=true"
+```
+
+**Configure kubernetes authentication for the vault:**
+```
+oc exec -it vault-0 -- /bin/sh
+/ $ vault auth enable kubernetes
+Success! Enabled kubernetes auth method at: kubernetes/
+```
+
+**Configure kubernetes auth to use service account token.**
+```
+/ $ vault write auth/kubernetes/config \
+token=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token) \
+kubernetes_host="https://$KUBERNETES_PORT_443_TCP_ADDR:443" \
+kubernetes_ca_cert=@/var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+Success! Data written to: auth/kubernetes/config
+```
+
+## Vault secrets and access policies.
+
+**Create ldap credentials vault secret.**
+For ldap we create a secret path with one key-value pair: password=value
+
+```
+/ $ vault kv put secret/mq/ldapcreds password="admin"
+Key              Value
+---              -----
+created_time     2021-07-22T21:12:41.138756172Z
+deletion_time    n/a
+destroyed        false
+version          1
+```
+
+**Create tls vault secret.**
+
+For tls we create a secret path with 3 key/value pairs:
+private key (key.pem), cert (cert.pem), and ca chain (ca.pem)
+
+Each key/value will be injected into separate path.
+
+Copy key.pem, cert.pem, and ca.pem files to the vault container:
+
+```
+oc cp ./tls.key vault-0:/home/vault
+oc cp ./tls.crt vault-0:/home/vaul
+```
+
+**Create tls secret with 3 key-value pairs: key, cert, and ca**
+
+`vault kv put secret/mq/tls key=@tls.key cert=@lts.crt ca=@ca.crt`
+
+**vault access control.**
+Define policy to allow read access to ldap creds and tls secrets.
+
+Path values in the policy are derived from the secret paths but not the same.
+Note that 'data' segment is injected into the secret path.
+
+```
+vault policy write mq - <<EOF
+path "secret/data/mq/ldapcreds" {
+    capabilities = ["read"]
+}
+
+path "secret/data/mq/tls" {
+    capabilities = ["read"]
+}
+EOF
+```
+
+**Bind service account and namespace to a policy to create a role:**
+
+Vault authorizes specific service account to connet and get secret token.
+Service account is created at chart startup time and is prefixed with the name of the helm release.
+
+Suppose that chart release `bar` is deployed in namespace `foo`.
+Then service account name is `foo-mqdeployer`
+
+Create kubernetes authentication role by binding policy to service account and namespace.
+
+```
+vault write auth/kubernetes/role/mq \
+bound_service_account_names=foo-mqdeployer \
+bound_service_account_namespaces=bar \
+policies=mq
+```
+
+### Vault secret injection annotations.
+
+Secrets from the vault are injected by the vault agent injector that is deployed by the vault helm chart.
+
+Injection is driven by annotations applied to the queue manager pod.
+
+Annotation explanation.
+
+Enable secret injection:
+`vault.hashicorp.com/agent-inject: "true"`
+
+Vault authentication role:
+`vault.hashicorp.com/role: mq`
+
+Inject ldap vault secret into /vault/secrets/mq-ldapcreds.txt file
+`vault.hashicorp.com/agent-inject-secret-[mq-ldapcreds.txt]: secret/data/mq/ldapcreds`
+
+Set Ldap vault secret file template.
+```
+vault.hashicorp.com/agent-inject-template-[mq-ldapcreds.txt]: |
+  {{- with secret "secret/data/mq/ldapcreds" -}}
+  {{ .Data.data.password }}
+  {{- end -}}
+```
+
+Inject tls vault secret into /vault/secrets/tls.key
+`vault.hashicorp.com/agent-inject-secret-[tls.key]: secret/data/mq/tls`
+
+Tls key secret template:
+```
+vault.hashicorp.com/agent-inject-template-[tls.key]: |
+  {{- with secret "secret/data/mq/tls" -}}
+  {{ .Data.data.key }}
+  {{- end -}}
+```
+
+Inject tls vault secret into /vault/secrets/tls.crt
+`vault.hashicorp.com/agent-inject-secret-[tls.crt]: secret/data/mq/tls`
+
+Tls cert secret template:
+```
+vault.hashicorp.com/agent-inject-template-[tls.crt]: |
+  {{- with secret "secret/data/mq/tls" -}}
+  {{ .Data.data.cert }}
+  {{- end -}}
+```  
+
+**vault injection annotations example**
+```
+qmspec:
+  annotations:
+    vault.hashicorp.com/agent-inject: 'true'
+
+    # role for ldap creds and tls key pair
+    vault.hashicorp.com/role: 'mq'
+
+    # ldap creds
+    vault.hashicorp.com/agent-inject-secret-mq-ldapcreds.txt: 'secret/data/mq/ldapcreds'
+    vault.hashicorp.com/agent-inject-template-mq-ldapcreds.txt: |          
+      {{- with secret "secret/data/mq/ldapcreds" -}}
+      {{ .Data.data.password }}
+      {{- end -}}
+
+    # tls key pair
+    vault.hashicorp.com/agent-inject-secret-tls.key: 'secret/data/mq/tls'
+    vault.hashicorp.com/agent-inject-template-tls.key : |
+      {{- with secret "secret/data/mq/tls" -}}
+      {{ .Data.data.key }}
+      {{- end -}}
+    vault.hashicorp.com/agent-inject-secret-tls.crt: 'secret/data/mq/tls'
+    vault.hashicorp.com/agent-inject-template-tls.crt : |
+      {{- with secret "secret/data/mq/tls" -}}
+      {{ .Data.data.cert }}
+      {{- end -}}
+    vault.hashicorp.com/agent-inject-secret-ca.crt: 'secret/data/mq/tls'
+    vault.hashicorp.com/agent-inject-template-ca.crt : |
+      {{- with secret "secret/data/mq/tls" -}}
+      {{ .Data.data.ca }}
+      {{- end -}}
+```
+
+**Enable vaut in mq chart.**
+
+```
+qmspec:
+  vault:
+    ldapCreds:
+      enable: 'true'
+      injectpath: '/vault/secrets/ldapcreds.txt'
+    tls:
+      enable: 'true'
+      keyinjectpath: '/vault/secrets/tls.key'
+      certinjectpath: '/vault/secrets/tls.crt'
+      cainjectpath: '/vault/secrets/ca.pem'
+```
+
 ### Configuring queue manager kubernetes parameters.
 
-`
+```
 qmspec:
   license:
     accept: true # required to accept license
@@ -94,7 +319,7 @@ qmspec:
       accessMode: ReadWriteOnce
       deleteClaim: false
       size: 2Gi
-`
+```
 
 # Configuring mq web console.
 
@@ -108,7 +333,7 @@ authenticate against the same ldap server as queue manager.
 
 ## Configuring mq web console authentication.
 
-`
+```
 webuser:
 
   ldapregistry:
@@ -130,11 +355,11 @@ webuser:
     userdef:
       objectclass: inetOrgPerson
       usernameattr: uid
-`
+```
 
 ## Configuring mq web console roles.
 
-`
+```
 webuser:
 
   webroles:
@@ -152,7 +377,7 @@ webuser:
     groups: []
   - name: MQWebUser
     groups: []
-`
+```
 
 ## Configuring queue manager authentication.
 
@@ -167,7 +392,7 @@ and merged with other native mqsc startup commands.
 
 Here we show high-level yaml configuration for ldap server.
 
-`
+```
 mq:
   auth:
     ldap:
@@ -187,185 +412,7 @@ mq:
         objectclass: "inetOrgPerson"
         usernameattr: "uid"
         shortusernameattr: "cn"
-`
-
-## ldap password secret
-
-injecting ldap password secret as environment variable.
-
-Create generic secret:
-oc create secret generic ldapcreds --from-literal=password=password
-
-set ldap secret name in ldapCredsSecret:
-`
-qmspec:
-  ldapCredsSecret:
-    name: ldapcreds
-    passwordkey: password # optional, default password key is "password"
-`
-
-## tls key pair secret
-
-
-## ldap creds integration with hashicorp vault.
-
-install hashicorp vault helm chart.
-helm repo add hashicorp https://helm.releases.hashicorp.com
-helm repo update
-helm install vault hashicorp/vault --set "global.openshift=true" --set "server.dev.enabled=true"
-
-Configure kubernetes authentication:
-`
-oc exec -it vault-0 -- /bin/sh
-/ $ vault auth enable kubernetes
-Success! Enabled kubernetes auth method at: kubernetes/
-`
-
-Configure kubernetes auth to use service account token.
-`
-/ $ vault write auth/kubernetes/config \
-token=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token) \
-kubernetes_host="https://$KUBERNETES_PORT_443_TCP_ADDR:443" \
-kubernetes_ca_cert=@/var/run/secrets/kubernetes.io/serviceaccount/ca.crt
-Success! Data written to: auth/kubernetes/config
-`
-
-Vault authorizes specific service account to connet and get secret token.
-In our case service account is created at chart startup time and is prefixed with the name of the release.
-
-Create vault secret:
-`
-/ $ vault kv put secret/mq/ldapcreds password="admin"
-Key              Value
----              -----
-created_time     2021-07-22T21:12:41.138756172Z
-deletion_time    n/a
-destroyed        false
-version          1
-`
-
-Define read policy for the secret:
-Note that path changed to `secret/data/mq/ldapcreds`
-`
-/ $ vault policy write mq-ldapcreds - <<EOF
-path "secret/data/mq/ldapcreds" {
-    capabilities = ["read"]
-}
-EOF
-Success! Uploaded policy: mq/ldapcreds
-`
-
-Create kubernetes authentication role by binding policy to service account
-Note ttl, make sure it is forever. Also note namespace.
-`
-/ $ vault write auth/kubernetes/role/mq-ldapcreds \
-bound_service_account_names=zorro-mqdeployer \
-bound_service_account_namespaces=default \
-policies=mq-ldapcreds
-Success! Data written to: auth/kubernetes/role/mq-ldapcreds
-`
-
-Set annotations:
-`
-qmspec:
-  annotations:
-    vault.hashicorp.com/agent-inject: 'true'
-    vault.hashicorp.com/role: 'mq-ldapcreds'
-    vault.hashicorp.com/agent-inject-secret-mq-ldapcreds.txt: 'secret/data/mq/ldapcreds'
-    vault.hashicorp.com/agent-inject-template-mq-ldapcreds.txt: |          
-      {{- with secret "secret/data/mq/ldapcreds" -}}
-      {{ .Data.data.password }}
-      {{- end -}}
-`
-
-Enable vault:
-`
-qmspec:
-  vault:
-    ldapCreds:
-      enable: 'true'
-      injectpath: '/vault/secrets/mq-ldapcreds.txt'
-`
-
-## tls key pair integration with hashicorp vault
-
-For tls we create a secret path with 3 key/value pairs:
-private key (key.pem), cert (cert.pem), and ca chain (ca.pem)
-
-Each key/value will be injected into separate path.
-
-Copy key.pem, cert.pem, and ca.pem files to the vault container
-
-oc cp ./tls.key vault-0:/home/vault
-oc cp ./tls.crt vault-0:/home/vaul
-
-Create tls secret
-`
-vault kv put secret/mq/tls key=@tls.key cert=@lts.crt ca=@ca.crt
-`
-
-Define read policy for the secet:
-`
-vault policy write mq-tls - <<EOF
-path "secret/data/mq/tls" {
-    capabilities = ["read"]
-}
-EOF
-`
-
-`
-vault policy write mq - <<EOF
-path "secret/data/mq/ldapcreds" {
-    capabilities = ["read"]
-}
-
-path "secret/data/mq/tls" {
-    capabilities = ["read"]
-}
-EOF
-`
-
-Define role:
-`
-vault write auth/kubernetes/role/mq \
-bound_service_account_names=zorro-mqdeployer \
-bound_service_account_namespaces=default \
-policies=mq
-`
-
-set annotations:
-
-`
-qmspec:
-  annotations:
-    vault.hashicorp.com/agent-inject-secret-tls.key: 'secret/data/mq/tls'
-    vault.hashicorp.com/agent-inject-template-tls.key : |
-      {{- with secret "secret/data/mq/tls" -}}
-      {{ .Data.data.key }}
-      {{- end -}}
-    vault.hashicorp.com/agent-inject-secret-tls.crt: 'secret/data/mq/tls'
-    vault.hashicorp.com/agent-inject-template-tls.crt : |
-      {{- with secret "secret/data/mq/tls" -}}
-      {{ .Data.data.cert }}
-      {{- end -}}
-    vault.hashicorp.com/agent-inject-secret-ca.pem: 'secret/data/mq/tls'
-    vault.hashicorp.com/agent-inject-template-ca.pem : |
-      {{- with secret "secret/data/mq/tls" -}}
-      {{ .Data.data.ca }}
-      {{- end -}}
-`
-
-Enable vault:
-
-`
-qmspec:
-  vault:
-    tls:
-      enable: 'true'
-      keyinjectpath: '/vault/secrets/tls.key'
-      certinjectpath: '/vault/secrets/tls.crt'
-      cainjectpath: '/vault/secrets/ca.crt'
-`
+```
 
 ## integration with persistent storage
 
