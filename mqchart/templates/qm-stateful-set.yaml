@@ -209,7 +209,7 @@ spec:
             name: webuser-{{ .Release.Name }}
         {{- end }}
         # mount tls secret if tls is enabled and vault tls is disabled
-        {{- if and (Values.qmspec.pki.tlsSecretName) (not (eq .Values.qmspec.vault.tls.enable "true")) }}
+        {{- if and (.Values.qmspec.pki.tlsSecretName) (not (eq .Values.qmspec.vault.tls.enable "true")) }}
         - name: qm-tls
           secret:
             secretName: {{ .Values.qmspec.pki.tlsSecretName }}

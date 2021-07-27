@@ -27,16 +27,12 @@ qmspec:
   ldapCredsSecret:
     name: ldapcreds
 
-  # @todo: refactor
-  storage:
-    usepvc: 'false'
-
   qmconf:
     # queue manager name - required
     name: qm20
 
     # custom docker image - required
-    image: docker.io/simong5000/txmq-mq-base-rpm-9.2.2.0:106
+    image: docker.io/simong5000/txmq-mq-base-rpm-9.2.2.0:107
 
     # image pull policy IfNotPresent|Always
     imagePoolPolicy: Always
@@ -58,9 +54,11 @@ qmspec:
 #        memory: 1Gi
 
     storage:
+      usePvc: 'false'
       pvcName: qm-sts-claim
       storageClass: standard
       accessMode: ReadWriteOnce
+      # @todo
       deleteClaim: false
       size: 2Gi
 
