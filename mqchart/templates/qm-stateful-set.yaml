@@ -1,7 +1,7 @@
 kind: StatefulSet
 apiVersion: apps/v1
 metadata:
-  name: {{ .Release.Name }}-{{ .Values.qmspec.qmconf.name }}
+  name: {{ .Release.Name }}-{{ .Values.qmspec.name }}
   finalizers: []
   labels:
     {{- include "mqchart.labels" . | nindent 4 }}
@@ -73,11 +73,11 @@ spec:
 
       containers:
         - name: qmgr
-          image: {{ .Values.qmspec.qmconf.image | squote }}
-          imagePullPolicy: {{ default "IfNotPresent" .Values.qmspec.qmconf.imagePullPolicy }}
+          image: {{ .Values.qmspec.image | squote }}
+          imagePullPolicy: {{ default "IfNotPresent" .Values.qmspec.imagePullPolicy }}
 #          terminationMessagePolicy: File
 #          terminationMessagePath: /run/termination-log
-          {{- with .Values.qmspec.qmconf.resources }}
+          {{- with .Values.qmspec.resources }}
           resources:
             {{- toYaml . | nindent 12 }}
           {{- end }}
@@ -103,7 +103,7 @@ spec:
           # environemnt variables
           env:
             - name: MQ_QMGR_NAME
-              value: {{ .Values.qmspec.qmconf.name | quote }}
+              value: {{ .Values.qmspec.name | quote }}
             {{- if .Values.qmspec.pki.tlsSecretName }}
             - name: MQ_ENABLE_TLS_NO_VAULT
               value: 'true'
@@ -138,7 +138,7 @@ spec:
             {{- end }}
             {{- end }}
 
-            {{- with .Values.qmspec.qmconf.env }}
+            {{- with .Values.qmspec.env }}
             {{- toYaml . | nindent 12 }}
             {{- end }}
           securityContext:
@@ -153,7 +153,7 @@ spec:
             - containerPort: 9443
               protocol: TCP
           volumeMounts:
-            {{- if eq .Values.qmspec.qmconf.storage.usePvc "true" }}
+            {{- if eq .Values.qmspec.storage.usePvc "true" }}
             - name: mqmdata
               mountPath: /mnt/mqm/data
             {{- end }}
@@ -183,10 +183,10 @@ spec:
             {{- end }}
 
       volumes:
-        {{- if eq .Values.qmspec.qmconf.storage.usePvc "true" }}
+        {{- if eq .Values.qmspec.storage.usePvc "true" }}
         - name: mqmdata
           persistentVolumeClaim:
-            claimName: {{ .Release.Name }}-{{ .Values.qmspec.qmconf.storage.pvcName }}
+            claimName: {{ .Release.Name }}-{{ .Values.qmspec.storage.pvcName }}
         {{- end }}
         {{- if .Values.mq }}
         - name: mqsc-yaml

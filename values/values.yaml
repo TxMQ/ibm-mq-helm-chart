@@ -18,32 +18,31 @@ qmspec:
   # oc create secret generic qm-tls --from-file=tls.key=</path/to/tls.key> --from-file=tls.crt=</path/to/tls.crt> --from-file=ca.crt=</path/to/ca.crt>
   #
   pki:
-    tlsSecretName: 'qm-tls'
+    tlsSecretName: '' # qm-tls
 
   #
   # create ldap secret
   # oc create secret generic ldapcreds --from-literal=password=<ldappassword>
   #
   ldapCredsSecret:
-    name: ldapcreds
+    name: '' # ldapcreds
 
-  qmconf:
-    # queue manager name - required
-    name: qm20
+  # queue manager name - required
+  name: qm20
 
-    # custom docker image - required
-    image: docker.io/simong5000/txmq-mq-base-rpm-9.2.2.0:107
+  # custom docker image - required
+  image: docker.io/simong5000/txmq-mq-base-rpm-9.2.2.0:107
 
-    # image pull policy IfNotPresent|Always
-    imagePoolPolicy: Always
+  # image pull policy IfNotPresent|Always
+  imagePoolPolicy: Always
 
-    #
-    # set environment variables
-    #
-    env:
-      # start mq web console
-    - name: MQ_START_MQWEB
-      value: "1"
+  #
+  # set environment variables
+  #
+  env:
+    # start mq web console
+  - name: MQ_START_MQWEB
+    value: "1"
 
 #    resources:
 #      limits:
@@ -53,14 +52,14 @@ qmspec:
 #        cpu: '1'
 #        memory: 1Gi
 
-    storage:
-      usePvc: 'false'
-      pvcName: qm-sts-claim
-      storageClass: standard
-      accessMode: ReadWriteOnce
-      # @todo
-      deleteClaim: false
-      size: 2Gi
+  storage:
+    usePvc: 'false'
+    pvcName: qm-sts-claim
+    storageClass: standard
+    accessMode: ReadWriteOnce
+    # @todo
+    deleteClaim: false
+    size: 2Gi
 
 #
 # mq web console configuration

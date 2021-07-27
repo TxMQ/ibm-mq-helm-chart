@@ -113,54 +113,56 @@ qmspec:
   # @todo: describe
   terminationGracePeriodSeconds: 10
 
-  qmconf:
-    name: ""
-    image: ""
+  # queue manager name
+  name: ""
 
-    # defined in: container
-    imagePoolPolicy: IfNotPresent
+  # queue manager custom image
+  image: ""
 
-    # standard kubernetes resources
-    # limits and requests for cpu and memory
-    # defined in: container
-    # resources:
-    #   limits:
-    #     cpu: ...
-    #     memory: ...
-    #   requests:
-    #     cpu: ...
-    #     memory: ...
+  # defined in: container
+  imagePoolPolicy: IfNotPresent
 
-    resources: {} 
+  # standard kubernetes resources
+  # limits and requests for cpu and memory
+  # defined in: container
+  # resources:
+  #   limits:
+  #     cpu: ...
+  #     memory: ...
+  #   requests:
+  #     cpu: ...
+  #     memory: ...
+
+  resources: {} 
+
+  # @todo
+  debug: false # env
+  logFormat: {} # env
+  metrics: true # prometeus metrics env
+
+  # queue manager storage
+  storage:
+
+    # if this value is set to 'true'
+    # pvc volume will be injected into
+    # queue manager pod.
+    usePvc: 'true'
+
+    # pvc name is formed by appending this
+    # value to the release name: {release}-{pvcname}
+    pvcName: 'qm-sts-pvc'
+
+    # pvc storage class
+    storageClass: ''
+
+    # queue manager volume access mode ReadWriteOnce|ReadWriteMany
+    accessMode: ReadWriteOnce
 
     # @todo
-    debug: false # env
-    logFormat: {} # env
-    metrics: true # prometeus metrics env
+    deleteClaim: false
 
-    # queue manager storage
-    storage:
-
-      # if this value is set to 'true'
-      # pvc volume will be injected into
-      # queue manager pod.
-      usePvc: 'true'
-
-      # pvc name is formed by appending this
-      # value to the release name: {release}-{pvcname}
-      pvcName: 'qm-sts-pvc'
-
-      # pvc storage class
-      storageClass: ''
-
-      # queue manager volume access mode ReadWriteOnce|ReadWriteMany
-      accessMode: ReadWriteOnce
-
-      # @todo
-      deleteClaim: false
-
-      # queue manager volume size
-      size: 2Gi
+    # queue manager volume size
+    size: 2Gi
 
 #
 # mq web console
