@@ -434,11 +434,11 @@ mq:
 |ldapCredsSecret              |            | queue manager LDAP credentials object
 |ldapCredsSecret.name         |string      | generic TLS secret name. Not recommended, use vault instead |
 |ldapCredsSecret.passwordKey  |string      | secret key, default: password
-|vault                        | hashicorp vault object|
-|vault.ldapCreds              | vault LDAP credentials object |
+|vault                        | object     |hashicorp vault object|
+|vault.ldapCreds              | object     |vault LDAP credentials object |
 |vault.ldapCreds.enable       | string      | 'true' - inject queue manager LDAP credentials from the vault, defaults to 'false' |
 |vault.ldapCreds.injectpath   | string      | vault credentials injection path. Prefix with /vault/secrets/
-|vault.tls                    | vault TLS credentials object|
+|vault.tls                    | object      |vault TLS credentials object|
 |vault.tls.enable             | string      | 'true' - inject queue manager TLS credentials from the vault, defaults to 'false' |
 |vault.tls.keyinjectpath      | string      | TLS key injection path, prefix with /vault/secret |
 |vault.tls.certinjectpath     | string      | TLS cert injection path, prefix with /vault/secret |
@@ -447,3 +447,20 @@ mq:
 |storage                       | object     | storage object. @todo |
 |storage.usepvc                | string     | 'true' - use pvc for persistent storage |
 |pvcname                       | string     | chart external pvc name |
+
+**qmspec.qmconf** object:<br>
+| Path                        | Type       | Value    |
+| :---                        | :---:      | :---     |
+| name                        | string     | queue manager name (required field) |
+| image                       | string     | queue manager custom image |
+| imagePullPolicy             | string     | default: IfNotPresent |
+| resources                   | object     | limits and requests for cpu and memory @todo |
+| debug                       | string     | 'true'|'false' @todo |
+| logFormat                   | object     | @todo |
+| metrics                     | string     | 'true'|'false' @todo |
+| storage                     | object     | queue manager storage object |
+| storage.pvcName             | string     | chart external pvc name @todo |
+| storageClass                | string     | storage class |
+| accessMode                  | string     | storage class access mode |
+| deleteClaim                 | string     | 'false' @todo |
+| size                        | string     | storage claim size, default 2Gi |
