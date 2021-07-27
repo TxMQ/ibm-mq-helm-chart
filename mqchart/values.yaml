@@ -27,9 +27,10 @@ qmspec:
 
   pki:
     tlsSecretName: ""
-    enableTls: 0
 
-  ldapCredsSecret: {}
+  ldapCredsSecret:
+    name: ''
+    passwordkey: password 
 
   vault:
     ldapCreds:
