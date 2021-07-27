@@ -32,7 +32,7 @@ func IsEnableTls() bool {
 		}
 	}
 
-	if mqTls := os.Getenv("MQ_ENABLE_TLS"); len(mqTls) > 0 {
+	if mqTls := os.Getenv("MQ_ENABLE_TLS_NO_VAULT"); len(mqTls) > 0 {
 		if mqTls == "true" || mqTls == "1" {
 			return true
 		}

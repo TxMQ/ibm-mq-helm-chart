@@ -12,6 +12,7 @@ metadata:
   finalizers:
     - kubernetes.io/pvc-protection
 spec:
+  {{- if not (eq .Values.qmspec.qmconf.storage.usePvc 'false') }}
   accessModes:
     - {{ .Values.qmspec.qmconf.storage.accessMode }}
   resources:
@@ -19,4 +20,5 @@ spec:
       storage: {{ .Values.qmspec.qmconf.storage.size }}
   storageClassName: {{ .Values.qmspec.qmconf.storage.storageClass}}
   volumeMode: Filesystem
+  {{-end }}
   

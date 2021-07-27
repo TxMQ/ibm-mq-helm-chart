@@ -1,0 +1,41 @@
+qmspec:
+
+  vault:
+    ldapCreds:
+      enable: 'true'
+      injectpath: '/vault/secrets/mq-ldapcreds.txt'
+    tls:
+      enable: 'true'
+      keyinjectpath: '/vault/secrets/tls.key'
+      certinjectpath: '/vault/secrets/tls.crt'
+#      cainjectpath: '/vault/secrets/ca.pem'
+
+  annotations:
+    vault.hashicorp.com/agent-inject: 'true'
+
+    # role for ldap creds and tls key pair
+    vault.hashicorp.com/role: 'mq'
+
+    # ldap creds
+    vault.hashicorp.com/agent-inject-secret-mq-ldapcreds.txt: 'secret/data/mq/ldapcreds'
+    vault.hashicorp.com/agent-inject-template-mq-ldapcreds.txt: |          
+      {{- with secret "secret/data/mq/ldapcreds" -}}
+      {{ .Data.data.password }}
+      {{- end -}}
+
+    # tls key pair
+    vault.hashicorp.com/agent-inject-secret-tls.key: 'secret/data/mq/tls'
+    vault.hashicorp.com/agent-inject-template-tls.key : |
+      {{- with secret "secret/data/mq/tls" -}}
+      {{ .Data.data.key }}
+      {{- end -}}
+    vault.hashicorp.com/agent-inject-secret-tls.crt: 'secret/data/mq/tls'
+    vault.hashicorp.com/agent-inject-template-tls.crt : |
+      {{- with secret "secret/data/mq/tls" -}}
+      {{ .Data.data.cert }}
+      {{- end -}}
+#    vault.hashicorp.com/agent-inject-secret-ca.crt: 'secret/data/mq/tls'
+#    vault.hashicorp.com/agent-inject-template-ca.crt : |
+#      {{- with secret "secret/data/mq/tls" -}}
+#      {{ .Data.data.ca }}
+#      {{- end -}}

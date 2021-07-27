@@ -104,11 +104,12 @@ spec:
           env:
             - name: MQ_QMGR_NAME
               value: {{ .Values.qmspec.qmconf.name | quote }}
-            - name: MQ_ENABLE_TLS
-              value: {{ .Values.qmspec.pki.enableTls | quote }}
+            {{- if .Values.qmspec.pki.tlsSecretName }}
+            - name: MQ_ENABLE_TLS_NO_VAULT
+              value: 'true'
+            {{- end }}
             - name: VAULT_ENABLE_TLS
               value: {{ .Values.qmspec.vault.tls.enable | quote }}
-
             {{- with .Values.qmspec.ldapCredsSecret }}
             {{- if .name }}
             - name: LDAP_BIND_PASSWORD
@@ -152,7 +153,7 @@ spec:
             - containerPort: 9443
               protocol: TCP
           volumeMounts:
-            {{- if eq .Values.qmspec.storage.usepvc "true" }}
+            {{- if eq .Values.qmspec.qmconf.storage.usePvc "true" }}
             - name: mqmdata
               mountPath: /mnt/mqm/data
             {{- end }}
@@ -173,7 +174,7 @@ spec:
               mountPath: /etc/mqm/webuser
             {{- end }}
             # tls enabled
-            {{- if eq .Values.qmspec.pki.enableTls "true"}}
+            {{- if .Values.qmspec.pki.tlsSecretName }}
             # and vault tls disabled
             {{- if not (eq .Values.qmspec.vault.tls.enable "true") }}
             - name: qm-tls
@@ -182,7 +183,7 @@ spec:
             {{- end }}
 
       volumes:
-        {{- if eq .Values.qmspec.storage.usepvc "true" }}
+        {{- if eq .Values.qmspec.qmconf.storage.usePvc "true" }}
         - name: mqmdata
           persistentVolumeClaim:
             claimName: {{ .Release.Name }}-{{ .Values.qmspec.qmconf.storage.pvcName }}
@@ -208,7 +209,7 @@ spec:
             name: webuser-{{ .Release.Name }}
         {{- end }}
         # mount tls secret if tls is enabled and vault tls is disabled
-        {{- if and (eq .Values.qmspec.pki.enableTls "true") (not (eq .Values.qmspec.vault.tls.enable "true")) }}
+        {{- if and (Values.qmspec.pki.tlsSecretName) (not (eq .Values.qmspec.vault.tls.enable "true")) }}
         - name: qm-tls
           secret:
             secretName: {{ .Values.qmspec.pki.tlsSecretName }}
