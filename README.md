@@ -417,7 +417,7 @@ mq:
 qmspec<br>
 
 | Path                        | Type       | Value    |
-| :---:                       | :---:      | :---:    |
+| :---                        | :---:      | :---     |
 |qmspec.license.accept        | string     | 'true'   |
 |qmspec.labels                | map        | additional labels for chart resources |
 |qmspec.annotations           | map        | additional annotations for chart resources |
