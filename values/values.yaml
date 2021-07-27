@@ -1,68 +1,51 @@
 qmspec:
 
+  #
+  # accept license - required
+  #
   license:
-    accept: true
+    accept: 'true'
 
+  #
+  # create image pull secret
+  # oc create secret docker-registry image-pull-secret --docker-username=<u> --docker-password=<p> --docker-email=<e>
+  #
   imagePullSecrets: 
-    - name: image-pull-secret
+    - name: 'image-pull-secret'
 
+  #
+  # create tls secret
+  # oc create secret generic qm-tls --from-file=tls.key=</path/to/tls.key> --from-file=tls.crt=</path/to/tls.crt> --from-file=ca.crt=</path/to/ca.crt>
+  #
   pki:
-    tlsSecretName: qm-tls
-    enableTls: "false"
+    tlsSecretName: 'qm-tls'
 
-#  ldapCredsSecret:
-#    name: ldapcreds
-#    passwordkey: password # optional, default is "password"
+  #
+  # create ldap secret
+  # oc create secret generic ldapcreds --from-literal=password=<ldappassword>
+  #
+  ldapCredsSecret:
+    name: ldapcreds
 
-  vault:
-    ldapCreds:
-      enable: 'true'
-      injectpath: '/vault/secrets/mq-ldapcreds.txt'
-    tls:
-      enable: 'true'
-      keyinjectpath: '/vault/secrets/tls.key'
-      certinjectpath: '/vault/secrets/tls.crt'
-#      cainjectpath: '/vault/secrets/ca.pem'
-
-  annotations:
-    vault.hashicorp.com/agent-inject: 'true'
-
-    # role for ldap creds and tls key pair
-    vault.hashicorp.com/role: 'mq'
-
-    # ldap creds
-    vault.hashicorp.com/agent-inject-secret-mq-ldapcreds.txt: 'secret/data/mq/ldapcreds'
-    vault.hashicorp.com/agent-inject-template-mq-ldapcreds.txt: |          
-      {{- with secret "secret/data/mq/ldapcreds" -}}
-      {{ .Data.data.password }}
-      {{- end -}}
-
-    # tls key pair
-    vault.hashicorp.com/agent-inject-secret-tls.key: 'secret/data/mq/tls'
-    vault.hashicorp.com/agent-inject-template-tls.key : |
-      {{- with secret "secret/data/mq/tls" -}}
-      {{ .Data.data.key }}
-      {{- end -}}
-    vault.hashicorp.com/agent-inject-secret-tls.crt: 'secret/data/mq/tls'
-    vault.hashicorp.com/agent-inject-template-tls.crt : |
-      {{- with secret "secret/data/mq/tls" -}}
-      {{ .Data.data.cert }}
-      {{- end -}}
-#    vault.hashicorp.com/agent-inject-secret-ca.crt: 'secret/data/mq/tls'
-#    vault.hashicorp.com/agent-inject-template-ca.crt : |
-#      {{- with secret "secret/data/mq/tls" -}}
-#      {{ .Data.data.ca }}
-#      {{- end -}}
-
-#  storage:
-#    usepvc: 'false'
+  # @todo: refactor
+  storage:
+    usepvc: 'false'
 
   qmconf:
+    # queue manager name - required
     name: qm20
+
+    # custom docker image - required
     image: docker.io/simong5000/txmq-mq-base-rpm-9.2.2.0:106
+
+    # image pull policy IfNotPresent|Always
     imagePoolPolicy: Always
 
+    #
+    # set environment variables
+    #
     env:
+      # start mq web console
     - name: MQ_START_MQWEB
       value: "1"
 
@@ -81,7 +64,13 @@ qmspec:
       deleteClaim: false
       size: 2Gi
 
+#
+# mq web console configuration
+#
 webuser:
+  #
+  # groups mapped to built-in web roles
+  #
   webroles:
   - name: MQWebAdmin
     groups: [devs]
@@ -90,6 +79,9 @@ webuser:
   - name: MQWebUser
     groups: [devs]
 
+  #
+  # groups mapped to built-in api roles
+  #
   apiroles:
   - name: MQWebAdmin
     groups: [devs]
@@ -98,6 +90,9 @@ webuser:
   - name: MQWebUser
     groups: ["devs"]
 
+  #
+  # ldap registry
+  #
   ldapregistry:
     connect:
       realm: openldap
@@ -105,22 +100,22 @@ webuser:
       port: 389
       ldaptype: Custom
       binddn: cn=admin,dc=szesto,dc=com
+      #
+      # bind password is defined in ldap secret
+      # or in the vault if configured
+      # otherwise define bind password here.
+      #
       bindpassword: ""
       basedn: dc=szesto,dc=com
       sslenabled: false
 
+    # group metadata
     groupdef:
       objectclass: groupOfNames
       groupnameattr: cn
       groupmembershipattr: member
 
+    # user metadata
     userdef:
       objectclass: inetOrgPerson
       usernameattr: uid
-
-  allowedhosts: []
-
-  clientauth:
-    keystorepass: ""
-    truststorepass: ""
-    enabled: false
