@@ -416,6 +416,14 @@ mq:
 
 qmspec<br>
 
-| Path                 | Description| Value    |
-| :---:                | :---:      | :---:    |
-|qmspec.license.accept | string     | 'true'   |
+| Path                        | Type       | Value    |
+| :---:                       | :---:      | :---:    |
+|qmspec.license.accept        | string     | 'true'   |
+|qmspec.labels                | map        | additional labels for chart resources |
+|qmspec.annotations           | map        | additional annotations for chart resources |
+|qmspec.capabilities          | string     | mq image capabilities: 'mqbase' |
+|qmspec.licenseAnnotations    | map        | custom license annotations to apply to chart resources |
+|qmspec.affinity              | map        | kubernetes affinity object for queue manager pods |
+|qmspec.serviceAccount        | map        | service account object
+|qmspec.serviceAccount.name   | string     | service account name, default 'mqdepolyer' |
+|qmspec.serviceAccount.create | boolean    | true - chart will create service account, false - existing service account |
