@@ -414,16 +414,36 @@ mq:
 
 ### TxMQ Chart Reference.
 
-qmspec<br>
+**qmspec** object:<br>
 
 | Path                        | Type       | Value    |
 | :---                        | :---:      | :---     |
-|qmspec.license.accept        | string     | 'true'   |
-|qmspec.labels                | map        | additional labels for chart resources |
-|qmspec.annotations           | map        | additional annotations for chart resources |
-|qmspec.capabilities          | string     | mq image capabilities: 'mqbase' |
-|qmspec.licenseAnnotations    | map        | custom license annotations to apply to chart resources |
-|qmspec.affinity              | map        | kubernetes affinity object for queue manager pods |
-|qmspec.serviceAccount        | map        | service account object
-|qmspec.serviceAccount.name   | string     | service account name, default 'mqdepolyer' |
-|qmspec.serviceAccount.create | boolean    | true - chart will create service account, false - existing service account |
+|license.accept               | string     | 'true'   |
+|labels                       | map        | additional labels for chart resources |
+|annotations                  | map        | additional annotations for chart resources |
+|capabilities                 | string     | mq image capabilities: 'mqbase' |
+|licenseAnnotations           | map        | custom license annotations to apply to chart resources |
+|affinity                     | map        | kubernetes affinity object for queue manager pods |
+|serviceAccount               | map        | service account object
+|serviceAccount.name          | string     | service account name, default 'mqdepolyer' |
+|serviceAccount.create        | boolean    | true - chart will create service account, false - existing service account |
+|imagePullSecrets             | map        | image pull secrets object
+|imagePullSecrets.name        | string     | docker registry image pull secret |
+|pki                          | map        | queue manager pki object
+|pki.tlsSecretName            | string     | generic TLS secret. Not recommended, use vault instead |
+|ldapCredsSecret              |            | queue manager LDAP credentials object
+|ldapCredsSecret.name         |string      | generic TLS secret name. Not recommended, use vault instead |
+|ldapCredsSecret.passwordKey  |string      | secret key, default: password
+|vault                        | hashicorp vault object|
+|vault.ldapCreds              | vault LDAP credentials object |
+|vault.ldapCreds.enable       | string      | 'true' - inject queue manager LDAP credentials from the vault, defaults to 'false' |
+|vault.ldapCreds.injectpath   | string      | vault credentials injection path. Prefix with /vault/secrets/
+|vault.tls                    | vault TLS credentials object|
+|vault.tls.enable             | string      | 'true' - inject queue manager TLS credentials from the vault, defaults to 'false' |
+|vault.tls.keyinjectpath      | string      | TLS key injection path, prefix with /vault/secret |
+|vault.tls.certinjectpath     | string      | TLS cert injection path, prefix with /vault/secret |
+|vault.tls.cainjectpath       | string      | TLS ca injection path, prefix with /vault/secret |
+|terminationGracePeriodSeconds | integer    | 10 seconds. @todo |
+|storage                       | object     | storage object. @todo |
+|storage.usepvc                | string     | 'true' - use pvc for persistent storage |
+|pvcname                       | string     | chart external pvc name |
