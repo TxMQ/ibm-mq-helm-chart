@@ -464,3 +464,59 @@ mq:
 | accessMode                  | string     | storage class access mode |
 | deleteClaim                 | string     | 'false' @todo |
 | size                        | string     | storage claim size, default 2Gi |
+
+**qmspec.webuser** object<br>
+| Path                        | Type       | Value    |
+| :---                        | :---:      | :---     |
+| webroles                    | list       | a list of predefined web roles for mq web console. |
+|    - name: MQWebAdmin       | string     | built-in role |
+|      groups: []             |string list | a list of groups mapped to a role |
+|    - name: MQWebAdminRO     |string      | built-in role |
+|      groups: []             |string list | a list of groups mapped to a role |
+|    - name: MQWebUser        |string      | built-in role |
+|      groups: []             |string list | a list of groups mapped to a role |
+| apiroles                    | list       | a list of predefined api roles for mq web console |
+|    - name: MQWebAdmin        | string     | built-in role |
+|      groups: []              | string list | a list of user groups mapped to a role |
+|    - name: MQWebAdminRO      | string      | built-in role |
+|      groups: []              | string list | a list of user groups mapped to a role |
+|    - name: MQWebUser         | string      | built-in role |
+|      groups: []              | string list | a list of user groups mapped to a role |
+| ldapregistry                | object     | ldap registry object |
+|    connect:                  | object     | ldap connection object |
+|      realm                   | string     | ldap realm |
+|      host                    | string     | ldap host |
+
+
+
+
+      port
+      ldaptype: Custom
+      binddn: ""
+      bindpassword: ""
+      basedn: ""
+      sslenabled: false
+
+    groupdef:
+      objectclass: groupOfNames
+      groupnameattr: cn
+      groupmembershipattr: member
+
+    userdef:
+      objectclass: inetOrgPerson
+      usernameattr: uid
+
+  allowedhosts: []
+
+  clientauth:
+    keystorepass: ""
+    truststorepass: ""
+    enabled: false
+
+  variables:
+  - name: httpsPort
+    value: "9443"
+  - name: httpHost
+    value: '*'
+  - name: mqRestCorsAllowedOrigints
+    value: '*'
