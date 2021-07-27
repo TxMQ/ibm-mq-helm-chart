@@ -49,7 +49,36 @@ You can either use existing LDAP server or deploy openldap chart.<br>
 
 Hashicorp vault is recommended. You can either use existing vault, or deploy hashicorp vault chart.<br>
 
+**Configuring a chart**<br>
+Chart configuration contains many parameters and and be updated at any time.<br>
+
+`values` directory contains starter configuration files.
+
+Look at the comments and update `values/values.yaml` file for the first configuration.<br>
+
+That would include accepting a license, creating kubernetes secrets, naming queue manager, and ldap configuration.<br>
+
+`helm install -f values/values.yaml <release-name> mqchart/`
+
+It is recommended that Hashicorp vault integration is configured as next step.<br>
+
+After vault is configured in `values/vault.yaml` pass it to the chart:<br>
+`helm install -f values/values.yaml -f values/vault.yaml <release-name> mqchart/`
+
+To configure queue manager at startup, place *mqsc* commands in `values/mqscic.yaml` file and pass it to the chart:
+`helm install -f values/values.yaml -f values/vault.yaml -f values/mqscic.yaml <release-name> mqchart/`
+
+To update queue manager ini parameters, place them in the `values/qmini.yaml` file and pass it to the chart:
+`helm install -f values/values.yaml -f values/vault.yaml -f values/mqscic.yaml -f values/qmini.yaml <release-name> mqchart/`
+
+To use higher-level mq configuration abstraction, put it in the `values/mq.yaml` file and pass it to the chart:<br>
+`helm install -f values/values.yaml -f values/vault.yaml -f values/mqscic.yaml -f values/qmini.yaml -f values/mq.yaml <release-name> mqchart/`
+
+The first file is required. Any combination of files can be passed to the chart.<br>
+
 **Examples and Reference**<br>
+
+Use examples as a starting point for chart configuration.
 
 **Secrets.**<br>
 Secrets are used for LDAP authentication and TLS keys and certificates.
