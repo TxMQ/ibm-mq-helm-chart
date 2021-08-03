@@ -21,7 +21,10 @@ spec:
       terminationGracePeriodSeconds: 30
       securityContext: {}
       containers:
-        - resources: {}
+        - resources:
+            limits:
+              cpu: "5m"
+              memory: "60Mi"
           readinessProbe:
             exec:
               command:

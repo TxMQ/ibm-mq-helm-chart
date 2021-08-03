@@ -81,6 +81,12 @@ spec:
           resources:
             {{- toYaml . | nindent 12 }}
           {{- end }}
+          startupProbe:
+            httpGet:
+              path: /ready
+              port: 40000
+            failureThreshold: 50 # retry 50 times; 30*50 = 1500 seconds
+            periodSeconds: 30 # try every 30 seconds
           readinessProbe:
             httpGet:
               path: /ready

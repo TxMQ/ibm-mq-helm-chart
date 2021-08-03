@@ -18,14 +18,14 @@ qmspec:
   # oc create secret generic qm-tls --from-file=tls.key=</path/to/tls.key> --from-file=tls.crt=</path/to/tls.crt> --from-file=ca.crt=</path/to/ca.crt>
   #
   pki:
-    tlsSecretName: '' # qm-tls
+    tlsSecretName: 'qm-tls'
 
   #
   # create ldap secret
   # oc create secret generic ldapcreds --from-literal=password=<ldappassword>
   #
   ldapCredsSecret:
-    name: '' # ldapcreds
+    name: 'ldapcreds' # ldapcreds
 
   # queue manager name - required
   name: qm20
@@ -44,16 +44,16 @@ qmspec:
   - name: MQ_START_MQWEB
     value: "1"
 
-#    resources:
-#      limits:
-#        cpu: '1'
-#        memory: 1Gi
-#      requests:
-#        cpu: '1'
-#        memory: 1Gi
+#  resources:
+#    limits:
+#      cpu: "250m"
+#      memory: "512Mi"
+#    requests:
+#      cpu: "250m"
+#      memory: "512Mi"
 
   storage:
-    usePvc: 'false'
+    usePvc: 'true'
     pvcName: qm-sts-claim
     storageClass: standard
     accessMode: ReadWriteOnce

@@ -38,7 +38,7 @@ mq:
       clientauth: false
       ciphers: []
     access:
-      allowip: ['vm-glwinx-037.*']
+      allowip: ['*']
     authority:
       - group: [devs]
         grant: [chg, crt, dlt, dsp, ctrl, ctrlx]
@@ -51,7 +51,7 @@ mq:
     tls:
       enabled: false
     access:
-      allowip: ['vm-glwinx-038.*']
+      allowip: ['*']
     authority:
       - group: [devs]
         grant: [alladm]

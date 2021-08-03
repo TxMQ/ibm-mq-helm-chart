@@ -2,29 +2,29 @@ mqscic: |
   DEFINE QLOCAL(Q.B) REPLACE
   DEFINE QLOCAL(Q.C) REPLACE
   *
-  ALTER QMGR CONNAUTH(USE.LDAP)
+  *ALTER QMGR CONNAUTH(USE.LDAP)
   *
-  define authinfo(use.ldap) + 
-  authtype(IDPWLDAP) + 
-  adoptctx(yes) + 
-  authormd(searchgrp) + 
-  basedng('ou=groups,dc=szesto,dc=com') + 
-  basednu('ou=users,dc=szesto,dc=com') + 
-  CLASSGRP(groupOfNames) + 
-  CLASSUSR(inetOrgPerson) + 
-  CONNAME('openldap.default.svc.cluster.local(389)') + 
-  CHCKCLNT(required) + 
-  CHCKLOCL(optional) + 
-  DESCR('ldap authinfo') + 
-  FAILDLAY(1) + 
-  FINDGRP(member) + 
-  GRPFIELD(cn) + 
-  LDAPPWD('admin') + 
-  LDAPUSER('cn=admin,dc=szesto,dc=com') + 
-  NESTGRP(yes) + 
-  SECCOMM(no) + 
-  SHORTUSR(cn) + 
-  USRFIELD(uid) + 
-  REPLACE
+  *define authinfo(use.ldap) + 
+  *authtype(IDPWLDAP) + 
+  *adoptctx(yes) + 
+  *authormd(searchgrp) + 
+  *basedng('ou=groups,dc=szesto,dc=com') + 
+  *basednu('ou=users,dc=szesto,dc=com') + 
+  *CLASSGRP(groupOfNames) + 
+  *CLASSUSR(inetOrgPerson) + 
+  *CONNAME('openldap.default.svc.cluster.local(389)') + 
+  *CHCKCLNT(required) + 
+  *CHCKLOCL(optional) + 
+  *DESCR('ldap authinfo') + 
+  *FAILDLAY(1) + 
+  *FINDGRP(member) + 
+  *GRPFIELD(cn) + 
+  *LDAPPWD('admin') + 
+  *LDAPUSER('cn=admin,dc=szesto,dc=com') + 
+  *NESTGRP(yes) + 
+  *SECCOMM(no) + 
+  *SHORTUSR(cn) + 
+  *USRFIELD(uid) + 
+  *REPLACE
   *
-  REFRESH SECURITY TYPE(CONNAUTH)
+  *REFRESH SECURITY TYPE(CONNAUTH)

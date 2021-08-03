@@ -6,7 +6,8 @@ metadata:
     {{- include "mqchart.labels" . | nindent 4 }}
 spec:
 #  clusterIP: None
-  type: NodePort
+#  type: NodePort
+  type: LoadBalancer
   ports:
     - port: 1414
       targetPort: 1414
