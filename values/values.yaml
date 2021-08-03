@@ -31,7 +31,7 @@ qmspec:
   name: qm20
 
   # custom docker image - required
-  image: docker.io/simong5000/txmq-mq-base-rpm-9.2.2.0:107
+  image: docker.io/simong5000/txmq-mq-base-rpm-9.2.2.0:108
 
   # image pull policy IfNotPresent|Always
   imagePoolPolicy: Always
