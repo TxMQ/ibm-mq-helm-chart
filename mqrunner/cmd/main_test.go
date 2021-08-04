@@ -11,5 +11,10 @@ func TestRunMain(t *testing.T) {
 		return
 	}
 
+	err = os.Setenv("MQ_ENABLE_TLS_NO_VAULT", "1")
+	if err != nil {
+		return
+	}
+
 	Runmain()
 }

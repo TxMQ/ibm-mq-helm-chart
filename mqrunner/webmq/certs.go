@@ -21,7 +21,7 @@ func ImportWebconsoleCerts() (string, string, error) {
 	certpath := util.GetTlsCertPath()
 	capath := util.GetTlsCaPath()
 
-	ssldir := util.GetSsldir()
+	ssldir := util.GetSsldir("")
 
 	return RecreateWebmqKeystore(ssldir, keypath, certpath, capath)
 }

@@ -42,7 +42,7 @@ func IsEnableTls() bool {
 }
 
 func SetQmgrKeyRepoLocation(qmgr string) error {
-	sslkeyr := filepath.Join(_ssldir, _keyDatabaseStem)
+	sslkeyr := filepath.Join(GetSsldir(qmgr), _keyDatabaseStem)
 	return SetSslKeyRepo(qmgr, sslkeyr)
 }
 
@@ -50,8 +50,15 @@ func getTrustdir() string {
 	return _trustdir
 }
 
-func GetSsldir() string {
-	return _ssldir
+func GetSsldir(qmgr string) string {
+	if len(qmgr) > 0 {
+		// queue manager default
+		return fmt.Sprintf("/var/mqm/qmgrs/%s/ssl", qmgr)
+
+	} else {
+		// web console
+		return _ssldir
+	}
 }
 
 func GetTlsKeyPath() string {
@@ -94,7 +101,7 @@ func ImportCertificates(qmgr string) error {
 	trustdir := getTrustdir()
 
 	// key store directory
-	ssldir := GetSsldir()
+	ssldir := GetSsldir(qmgr)
 
 	// certs are mounted into the container as secrets
 	// with keys tls.key, tls.crt, and ca.crt

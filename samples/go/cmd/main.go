@@ -44,7 +44,7 @@ func main()  {
 		username: "karson",
 		password: "password",
 		qname: "Q.A",
-		keyrepo: "/home/simon/dev/mq-operator/samples/keystore/key.db",
+		keyrepo: "/home/simon/dev/mq-operator/samples/keystore/key",
 	}
 
 	qmgr, err := CreateConnection(env)

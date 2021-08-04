@@ -106,14 +106,15 @@ func Runmain() {
 
 	log.Printf("qmgr %s started", qmgr)
 
+	// using default key repository
 	// set qmgr tls key repository
-	if util.IsEnableTls() {
-		err = util.SetQmgrKeyRepoLocation(qmgr)
-		if err != nil {
-			// log and exit
-			log.Fatalf("set-qmgr-key-repo-location: %v\n", err)
-		}
-	}
+	//if util.IsEnableTls() {
+	//	err = util.SetQmgrKeyRepoLocation(qmgr)
+	//	if err != nil {
+	//		// log and exit
+	//		log.Fatalf("set-qmgr-key-repo-location: %v\n", err)
+	//	}
+	//}
 
 	// configure webconsole
 	if isStartMqweb() || isConfigureMqweb() {
