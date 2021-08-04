@@ -33,6 +33,12 @@ func Runmain() {
 	// get queue manager name
 	qmgr := os.Getenv("MQ_QMGR_NAME")
 
+	// merge mqsc startup files
+	err = util.MergeMqscFiles()
+	if err != nil {
+		log.Fatalf("merge-mqsc-files: %v\n", err)
+	}
+
 	// start runner
 	log.Printf("mq runner %s starting...\n", qmgr)
 	ctl := util.StartRunner()
@@ -86,12 +92,6 @@ func Runmain() {
 			// log and exit
 			log.Fatalf("import-certificates: %v\n", err)
 		}
-	}
-
-	// merge mqsc startup files
-	err = util.MergeMqscFiles()
-	if err != nil {
-		log.Fatalf("merge-mqsc-files: %v\n", err)
 	}
 
 	// start qeueue manager
