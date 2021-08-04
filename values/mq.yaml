@@ -46,18 +46,6 @@ mq:
         grant: [alladm]
     alter: []
 
-  - svrconnproperties:
-      name: epn.autorun.svrcon
-    tls:
-      enabled: false
-    access:
-      allowip: ['*']
-    authority:
-      - group: [devs]
-        grant: [alladm]
-        revoke: [dlt]
-    alter: []
-
   localqueue:
   - name: q.a
 

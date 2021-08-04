@@ -30,23 +30,8 @@ func Runmain() {
 
 	log.Printf("%s\n", "mq directories created")
 
-	// import certs into the keystore
+	// get queue manager name
 	qmgr := os.Getenv("MQ_QMGR_NAME")
-
-	if util.IsEnableTls() {
-
-		err = util.ImportCertificates(qmgr)
-		if err != nil {
-			// log and exit
-			log.Fatalf("import-certificates: %v\n", err)
-		}
-	}
-
-	// merge mqsc startup files
-	err = util.MergeMqscFiles()
-	if err != nil {
-		log.Fatalf("merge-mqsc-files: %v\n", err)
-	}
 
 	// start runner
 	log.Printf("mq runner %s starting...\n", qmgr)
@@ -93,6 +78,21 @@ func Runmain() {
 	//
 	//	log.Printf("qmgr %s stopped", qmgr)
 	//}
+
+	if util.IsEnableTls() {
+		// import certs into the keystore
+		err = util.ImportCertificates(qmgr)
+		if err != nil {
+			// log and exit
+			log.Fatalf("import-certificates: %v\n", err)
+		}
+	}
+
+	// merge mqsc startup files
+	err = util.MergeMqscFiles()
+	if err != nil {
+		log.Fatalf("merge-mqsc-files: %v\n", err)
+	}
 
 	// start qeueue manager
 	err = util.StartQmgr(qmgr)
