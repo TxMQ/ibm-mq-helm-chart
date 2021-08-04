@@ -33,6 +33,8 @@ func Runmain() {
 	// get queue manager name
 	qmgr := os.Getenv("MQ_QMGR_NAME")
 
+	// get qmgr log format basic|json
+
 	// merge mqsc startup files
 	err = util.MergeMqscFiles()
 	if err != nil {
@@ -63,6 +65,12 @@ func Runmain() {
 
 		log.Printf("qmgr %s created", qmgr)
 	}
+
+	// tail system log: /var/mqm/errors/AMQERR01.LOG
+	util.TailMqLog()
+
+	// tail qmgr log: /var/mqm/qmgrs/{qmgr}/errors/AMQERR01.LOG
+	util.TailQmgrLog(qmgr)
 
 	// todo: stop/start: make sure qmgr completely stopped
 	// this is an edge use case

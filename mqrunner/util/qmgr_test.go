@@ -151,7 +151,8 @@ func TestImportTrustChains(t *testing.T) {
 	certdir := filepath.Join(u.HomeDir, "etc/mqm/pki/cert")
 	trustdir := filepath.Join(u.HomeDir, "etc/mqm/pki/trust")
 
-	err = ImportTrustChains(keydbpath, certdir, trustdir)
+	// TODO: fix test case
+	err = ImportTrustChains(keydbpath, certdir, "", trustdir)
 
 	if err != nil {
 		fmt.Printf("%v\n", err)
@@ -164,7 +165,8 @@ func TestPemToP12(t *testing.T) {
 	certdir := filepath.Join(u.HomeDir, "etc/mqm/pki/cert")
 	certlabel := "ibmwebspheremqqm2"
 
-	p12file, err := PemToP12(certdir, ssldir, certlabel)
+	// TODO: fix test case
+	p12file, err := PemToP12("", certdir, ssldir, certlabel)
 	if err != nil {
 		fmt.Printf("%v\n", err)
 	} else {
