@@ -76,6 +76,8 @@ To use higher-level mq configuration abstraction, put it in the `values/mq.yaml`
 
 The first file is required. Any combination of files can be passed to the chart.<br>
 
+** Mq git configuration **<br>
+
 **Examples and Reference**<br>
 
 Use examples as a starting point for chart configuration.
