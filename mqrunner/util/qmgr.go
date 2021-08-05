@@ -38,8 +38,8 @@ func CreateQmgr(qmgr string) error {
 	// qmgr parameters - may change
 	qmgrPort := "1414"
 	deadLetterQeueue := "SYSTEM.DEAD.LETTER.QUEUE"
-	mqscic := _mqscic
-	qmini := _qmini
+	mqscic := GetMqscic()
+	qmini := GetQmini()
 
 	ismqscic := true
 	isqmini := true
@@ -58,8 +58,8 @@ func CreateQmgr(qmgr string) error {
 	//
 	// crtmqm -c "queue manager" -ic mqsc-file-path -ii ini-file-path -lc -p 1414 -q -u SYSTEM.DEAD.LETTER.QUEUE
 	// -lc - circular logging
-	// -ii argument is not passed yet
-	// -ic argument is not passed yet
+	// -ii qm.ini file
+	// -ic mqsc file
 	// -md - qmgr data path, /var/mqm/qmgrs
 	// -oa group - (default) authorization mode
 

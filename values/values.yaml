@@ -31,7 +31,7 @@ qmspec:
   name: qm20
 
   # custom docker image - required
-  image: docker.io/simong5000/txmq-mq-base-rpm-9.2.2.0:112
+  image: docker.io/simong5000/txmq-mq-base-rpm-9.2.2.0:113
 
   # image pull policy IfNotPresent|Always
   imagePoolPolicy: Always
@@ -43,6 +43,8 @@ qmspec:
     # start mq web console
   - name: MQ_START_MQWEB
     value: "1"
+  - name: GIT_CONFIG_URL
+    value: ""
 
 #  resources:
 #    limits:

@@ -41,6 +41,16 @@ func Runmain() {
 		log.Fatalf("merge-mqsc-files: %v\n", err)
 	}
 
+	// fetch and merge startup config files
+	giturl := os.Getenv("GIT_CONFIG_URL")
+
+	if len(giturl) > 0 {
+		err = util.MergeGitConfigFiles(giturl)
+		if err != nil {
+			log.Fatalf("fetch-merge-config-files: %v\n", err)
+		}
+	}
+
 	// start runner
 	log.Printf("mq runner %s starting...\n", qmgr)
 	ctl := util.StartRunner()
