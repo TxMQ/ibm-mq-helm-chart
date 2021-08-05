@@ -76,6 +76,16 @@ func Runmain() {
 		log.Printf("qmgr %s created", qmgr)
 	}
 
+	// check mqsc syntax errors
+	ok, err := util.CheckMqscSyntax(qmgr)
+	if err != nil {
+		log.Fatalf("%v\n", err)
+	}
+
+	if !ok {
+		// todo: decide what to do if syntax errors
+	}
+
 	// tail system log: /var/mqm/errors/AMQERR01.LOG
 	util.TailMqLog()
 
