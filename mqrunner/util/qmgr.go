@@ -67,12 +67,13 @@ func CreateQmgr(qmgr string) error {
 
 	args = append(args, "-lc")
 
+	// todo: uncomment
 	if ismqscic {
-		args = append(args, "-ic", mqscic)
+		//args = append(args, "-ic", mqscic)
 	}
 
 	if isqmini {
-		args = append(args, "-ii", qmini)
+		//args = append(args, "-ii", qmini)
 	}
 
 	args = append(args, "-u", deadLetterQeueue)

@@ -420,6 +420,9 @@ func ImportP12(p12path, kdbpath, certlabel string) error {
 		}
 	}
 
+	log.Printf("import-p12-2: imported p12 file %s into key db %s with cert label '%s'\n",
+		p12path, kdbpath, certlabel)
+
 	return nil
 }
 
