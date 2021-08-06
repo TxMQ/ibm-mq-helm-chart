@@ -68,6 +68,12 @@ qmspec:
     # oc create secret generic qm-tls --from-file=tls.key=</path/to/tls.key> --from-file=tls.crt=</path/to/tls.crt> --from-file=ca.crt=</path/to/ca.crt>
     tlsSecretName: ""
 
+    # trust config map name
+    # config map keys must have .crt suffix.
+    # inlcude as many ca files as you need.
+    # oc create configmap qm-trust --from-file=ca1.crt=</path/to/ca1.crt> --from-file=ca2.crt=</path/to/ca2.crt> ...
+    trustMapName: ""
+
   # ldap credentials secret
   ldapCredsSecret:
     # ldap secret name

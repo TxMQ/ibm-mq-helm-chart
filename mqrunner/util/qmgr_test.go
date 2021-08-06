@@ -152,7 +152,7 @@ func TestImportTrustChains(t *testing.T) {
 	trustdir := filepath.Join(u.HomeDir, "etc/mqm/pki/trust")
 
 	// TODO: fix test case
-	err = ImportTrustChains(keydbpath, certdir, "", trustdir)
+	err = ImportTrustCerts(keydbpath, certdir, "", trustdir)
 
 	if err != nil {
 		fmt.Printf("%v\n", err)

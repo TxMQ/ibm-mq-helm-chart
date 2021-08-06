@@ -187,6 +187,11 @@ spec:
               mountPath: /etc/mqm/pki/cert
             {{- end }}
             {{- end }}
+            # trust config map
+            {{- if .Values.qmspec.pki.trustMapName }}
+            - name: qm-trust
+              mountPath: /etc/mqm/pki/trust
+            {{- end }}
 
       volumes:
         {{- if eq .Values.qmspec.storage.usePvc "true" }}
@@ -219,4 +224,9 @@ spec:
         - name: qm-tls
           secret:
             secretName: {{ .Values.qmspec.pki.tlsSecretName }}
+        {{- end }}
+        {{- if .Values.qmspec.pki.trustMapName }}
+        - name: qm-trust
+          conifgMap:
+            name: {{ .Values.qmspec.pki.trustMapName }}
         {{- end }}

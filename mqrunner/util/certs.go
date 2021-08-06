@@ -116,8 +116,8 @@ func ImportCertificates(qmgr string) error {
 		return err
 	}
 
-	// import ca chains into the keystore. ca-chains include self-signed certs.
-	err = ImportTrustChains(kdbpath, certpath, capath, trustdir)
+	// import ca certs into the keystore. ca-certs include self-signed certs.
+	err = ImportTrustCerts(kdbpath, certpath, capath, trustdir)
 	if err != nil {
 		return err
 	}
@@ -256,20 +256,12 @@ func IsSelfSigned(certpath string) (string, string, bool, error) {
 	return subject, issuer,  issuer == subject, nil
 }
 
-func ImportTrustChains(keydbpath, certpath, capath, trustdir string) error {
+func ImportTrustCerts(keydbpath, certpath, capath, trustdir string) error {
 
 	// check if cert path exists
-	_, err := os.Stat(certpath)
-	if err != nil {
-		return err
-	}
-
-	// check if tls.crt exists
-	//certpath := filepath.Join(certdir, _certfile)
-
 	log.Printf("import-trust-chains-1: expecting certificate %s\n", certpath)
 
-	_, err = os.Stat(certpath)
+	_, err := os.Stat(certpath)
 	if err != nil {
 		return err
 	}
@@ -288,26 +280,17 @@ func ImportTrustChains(keydbpath, certpath, capath, trustdir string) error {
 			certpath, keydbpath)
 
 		// add self-signed certificate:
-		// runmqckm -cert -add -db filename -stashed -label label -file filename -format ascii
 
 		label := "ssca"
-		out , err := exec.Command("/opt/mqm/bin/runmqckm", "-cert", "-add", "-db", keydbpath, "-stashed",
-			"-label", label, "-file", certpath, "-format", "ascii").CombinedOutput()
 
-		if err != nil {
-			if out != nil {
-				return fmt.Errorf("%s\n", string(out))
-			} else {
-				return err
-			}
+		if err = addcert(keydbpath, label, certpath); err != nil {
+			return err
 		}
 	}
 
 	//
 	// certdir 'may' contain ca.crt
 	//
-	//capath := filepath.Join(certdir, _cafile)
-
 	_, err = os.Stat(capath)
 	if err == nil {
 
@@ -319,24 +302,57 @@ func ImportTrustChains(keydbpath, certpath, capath, trustdir string) error {
 		log.Printf("import-trust-chains-4: importing ca cert %s into key db %s, label %s\n",
 			capath, keydbpath, label)
 
-		out, err := exec.Command("/opt/mqm/bin/runmqckm", "-cert", "-add", "-db", keydbpath, "-stashed",
-			"-label", label, "-file", capath, "-format", "ascii").CombinedOutput()
-
-		if err != nil {
-			if out != nil {
-				return fmt.Errorf("%s\n", string(out))
-			} else {
-				return err
-			}
+		if err = addcert(keydbpath, label, capath); err != nil {
+			return nil
 		}
 
 	} else if !os.IsNotExist(err) {
 		return err
 	}
 
-	// todo
-	// trust directory may contain trust chains
-	// chain: root->ca1->ca2->...->ca
+	// trust directory may contain trust certs, *.crt
+	_, err = os.Stat(trustdir)
+	if err == nil {
+		trustpems, err := ReadDir(trustdir, "crt")
+		if err != nil {
+			return err
+		}
+
+		if len(trustpems) > 0 {
+			for idx, trustpem := range trustpems {
+
+				label := fmt.Sprintf("trust%d", idx)
+
+				log.Printf("import-trust-chains-5: importing ca cert %s into key db %s, label %s\n",
+					trustpem, keydbpath, label)
+
+				if err = addcert(keydbpath, label, trustpem); err != nil {
+					return err
+				}
+			}
+		}
+
+	} else if !os.IsNotExist(err) {
+		return nil
+	}
+
+	return nil
+}
+
+func addcert(keydbpath, label, certpath string) error {
+
+	// runmqckm -cert -add -db filename -stashed -label label -file filename -format ascii
+
+	out, err := exec.Command("/opt/mqm/bin/runmqckm", "-cert", "-add", "-db", keydbpath, "-stashed",
+		"-label", label, "-file", certpath, "-format", "ascii").CombinedOutput()
+
+	if err != nil {
+		if out != nil {
+			return fmt.Errorf("%s\n", string(out))
+		} else {
+			return err
+		}
+	}
 
 	return nil
 }
