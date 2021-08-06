@@ -227,6 +227,6 @@ spec:
         {{- end }}
         {{- if .Values.qmspec.pki.trustMapName }}
         - name: qm-trust
-          conifgMap:
+          configMap:
             name: {{ .Values.qmspec.pki.trustMapName }}
         {{- end }}

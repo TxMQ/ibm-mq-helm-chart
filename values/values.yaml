@@ -24,7 +24,7 @@ qmspec:
   #
   pki:
     tlsSecretName: 'qm-tls'
-    trustMapName: '' # 'qm-trust'
+    trustMapName: 'qm-trust'
 
   #
   # create ldap secret
