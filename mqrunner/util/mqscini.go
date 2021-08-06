@@ -43,12 +43,12 @@ func MergeMqscFiles() error {
 	return nil
 }
 
-func MergeGitConfigFiles(giturl string) error {
+func MergeGitConfigFiles(gitclone GitCloneConfig) error {
 
 	mqscicOutFile := GetMqscic()
 	qminiOutFile := GetQmini()
 
-	err := FetchMergeConfigFiles(giturl, mqscicOutFile, qminiOutFile)
+	err := FetchMergeConfigFiles(gitclone, mqscicOutFile, qminiOutFile)
 	if err != nil {
 		return err
 	}

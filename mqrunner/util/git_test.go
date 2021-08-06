@@ -17,12 +17,31 @@ func TestCloneGitRepo(t *testing.T) {
 
 	defer func() { _ = os.RemoveAll(dir) }()
 
-	url := "https://github.com/szesto/mq-operator.git"
+	gitconfig := GitCloneConfig{
+		Url:           "https://github.com/szesto/mq-operator.git",
+		ReferenceName: "",
+		Tag:           "",
+		Dir:           "",
+	}
 
-	err = CloneGitRepo(dir, url)
+	err = CloneGitRepo(dir, gitconfig)
 	if err != nil {
 		log.Fatalf("%v\n", err)
 	}
 
-	fmt.Printf("cloned git repo %s\n", url)
+	fmt.Printf("cloned git repo %s to %s\n", gitconfig.Url, dir)
+}
+
+func TestFetchMergeConfigFiles(t *testing.T) {
+	gitconfig := GitCloneConfig{
+		Url:           "https://github.com/szesto/mq-operator.git",
+		ReferenceName: "",
+		Tag:           "",
+		Dir:           "values",
+	}
+
+	err := FetchMergeConfigFiles(gitconfig, GetMqscic(), GetQmini())
+	if err != nil {
+		log.Fatalf("%v\n", err)
+	}
 }

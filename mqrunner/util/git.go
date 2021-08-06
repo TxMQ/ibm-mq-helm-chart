@@ -4,13 +4,20 @@ import (
 	git "github.com/go-git/go-git/v5"
 )
 
+type GitCloneConfig struct {
+	Url string	// git repo url
+	ReferenceName string
+	Tag string
+	Dir string // directory in repository
+}
+
 // Clone git repository. There could be more parameters
 // eg auth, ref, etc
 
-func CloneGitRepo(path string, url string) error {
+func CloneGitRepo(path string, config GitCloneConfig) error {
 
 	options := git.CloneOptions {
-		URL:               url, // https://github.com/.../foo.git
+		URL:               config.Url, // https://github.com/.../foo.git
 		Auth:              nil,
 		RemoteName:        "",
 		ReferenceName:     "",

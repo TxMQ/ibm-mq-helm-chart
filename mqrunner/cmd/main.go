@@ -43,9 +43,21 @@ func Runmain() {
 
 	// fetch and merge startup config files
 	giturl := os.Getenv("GIT_CONFIG_URL")
+	//gitbranch := os.Getenv("GIT_CONFIG_BRANCH")
+	//gittag := os.Getenv("GIT_CONFIG_TAG")
+	gitref := os.Getenv("GIT_CONFIG_REF")
+	gitdir := os.Getenv("GIT_CONFIG_DIR")
 
 	if len(giturl) > 0 {
-		err = util.MergeGitConfigFiles(giturl)
+
+		gitclone := util.GitCloneConfig {
+			Url:           giturl,
+			ReferenceName: gitref,
+			Tag:           "",
+			Dir:           gitdir,
+		}
+
+		err = util.MergeGitConfigFiles(gitclone)
 		if err != nil {
 			log.Fatalf("fetch-merge-config-files: %v\n", err)
 		}
@@ -83,7 +95,7 @@ func Runmain() {
 	}
 
 	if !ok {
-		// todo: decide what to do if syntax errors
+		// todo: complain about syntax errors
 	}
 
 	// tail system log: /var/mqm/errors/AMQERR01.LOG

@@ -11,21 +11,26 @@ import (
 	"szesto.com/mqrunner/mqsc"
 )
 
-func FetchMergeConfigFiles(giturl, mqscicpath, qminipath string) error {
+func FetchMergeConfigFiles(gitclone GitCloneConfig, mqscicpath, qminipath string) error {
 
-	dir, err := ioutil.TempDir("", "git-clone")
+	clonedir, err := ioutil.TempDir("", "git-clone")
 	if err != nil {
 		return err
 	}
 
-	defer func() { _ = os.RemoveAll(dir) }()
+	defer func() { _ = os.RemoveAll(clonedir) }()
 
-	err = CloneGitRepo(dir, giturl)
+	err = CloneGitRepo(clonedir, gitclone)
 	if err != nil {
 		return err
 	}
 
-	log.Printf("cloned git repo %s\n", giturl)
+	log.Printf("cloned git repo %s to %s\n", gitclone.Url, clonedir)
+
+	dir := clonedir
+	if len(gitclone.Dir) > 0 {
+		dir = filepath.Join(clonedir, gitclone.Dir)
+	}
 
 	// merge ini files
 	err = QminiMerge(dir, qminipath)
@@ -62,7 +67,7 @@ func QminiMerge(dir, outfile string) error {
 
 	// for each mqsc file, merge into output file
 	for _, mqinifile := range mqinifiles {
-		err = AppendFile(mqinifile, outfile, "#")
+		err = AppendFile(mqinifile, outfile, "#*")
 		if err != nil {
 			// print error message and continue
 			log.Printf("mqini-merge error, file %s : %v\n", mqinifile, err)
@@ -154,7 +159,7 @@ func AppendFile(infile, outfile, separator string) error {
 	defer func() { _ = f.Close() } ()
 
 	// write mqsc separator
-	_, err = f.WriteString(fmt.Sprintf("%s\n", separator))
+	_, err = f.WriteString(fmt.Sprintf("%s file '%s'\n", separator, infile))
 	if err != nil {
 		return err
 	}

@@ -5,7 +5,7 @@ registry=$1
 # Chart.AppVersion value must match this value.
 mqver="9.2.2.0"
 
-tag="117"
+tag="118"
 
 image=txmq-mq-base-rpm-$mqver
 
