@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: qmini-{{ .Release.Name }}
+  labels:
+    {{- include "mqchart.labels" . | nindent 4 }}
+data:
+  qmini.ini: |+
+    {{- if .Values.qmini }}
+    {{- .Values.qmini | nindent 4 }}
+    {{- end }}

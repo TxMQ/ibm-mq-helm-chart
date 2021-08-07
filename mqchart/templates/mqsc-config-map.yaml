@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mqsc-yaml-{{ .Release.Name }}
+  labels:
+    {{- include "mqchart.labels" . | nindent 4 }}
+data:
+  mq.yaml: |-
+    {{- if  .Values.mq }}
+    {{- toYaml .Values.mq | nindent 4 }}
+    {{- end }}

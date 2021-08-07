@@ -1,0 +1,56 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: bootstrap-ldif
+data:
+  bootstrap.ldif: |
+    dn: ou=users,dc=szesto,dc=com
+    objectclass: organizationalUnit
+    objectclass: top
+    ou: users
+
+    dn: uid=karson,ou=users,dc=szesto,dc=com
+    objectclass: inetOrgPerson
+    objectclass: organizationalPerson
+    objectclass: person
+    objectclass: top
+    uid: karson
+    cn: karson
+    sn: szesto
+    mail: karson@szesto.com
+    userPassword: password
+
+    dn: uid=roky,ou=users,dc=szesto,dc=com
+    objectclass: inetOrgPerson
+    objectclass: organizationalPerson
+    objectclass: person
+    objectclass: top
+    uid: roky
+    cn: roky
+    sn: szesto
+    mail: roky@szesto.com
+    userPassword: password
+
+    dn: uid=tobsky,ou=users,dc=szesto,dc=com
+    objectclass: inetOrgPerson
+    objectclass: organizationalPerson
+    objectclass: person
+    objectclass: top
+    uid: tobsky
+    cn: tobsky
+    sn: szesto
+    mail: tobsky@szesto.com
+    userPassword: password
+
+    dn: ou=groups,dc=szesto,dc=com
+    objectclass: organizationalUnit
+    objectclass: top
+    ou: groups
+
+    dn: cn=devs,ou=groups,dc=szesto,dc=com
+    objectclass: groupOfNames
+    objectclass: top
+    cn: devs
+    member: uid=karson,ou=users,dc=szesto,dc=com
+    member: uid=roky,ou=users,dc=szesto,dc=com
+    member: uid=tobsky,ou=users,dc=szesto,dc=com

@@ -1,0 +1,3 @@
+qmini: |
+  Log:
+    LogBufferPages=0

@@ -1,0 +1,257 @@
+qmspec:
+
+  # a number of standard labeles are
+  # injected by chart templates
+  # place additional labeles here
+  # podTemplateSpec
+
+  labels: {}
+
+  # a number of standard annotations are
+  # injected by chart templates
+  # place additional annotations here
+  # do not use for license annotations
+  # podTemplateSpec
+
+  annotations: {} 
+
+  # mq image capabilities
+  # base, advanced, custom
+
+  capabilities: mqbase
+
+  # predefined license annotations are
+  # injected by stateful set template
+  # if capabilities is set to "custom"
+  # define license annotations
+
+  licenseAnnotations: {}
+
+  # standard pod affinity object
+  # defined in: podSpec
+
+  affinity:
+    nodeAffinity: {}
+    podAffinity: {}
+    podAntiAffinity: {}
+
+  # service account settings
+
+  serviceAccount:
+    # create service account
+    create: true
+
+    # default service account name
+    # if service account is created
+    # by the chart then service
+    # account name is prefixed by
+    # release name
+    name: mqdeployer
+
+  # docker registry image pull secret
+  # oc create secret docker-registry image-pull-secret --docker-username=<u> --docker-password=<p> --docker-email=<e>
+  # defined in: podSpec
+  imagePullSecrets:
+    - name: ""
+
+  # license acceptance
+  license:
+    accept: 'false'
+
+  # pki settings
+  pki:
+
+    # tls secret name
+    # if vault is enabled this 
+    # secret is ignored
+    # this secret must include tls.key, tls.crt, and [ca.crt] keys
+    # oc create secret generic qm-tls --from-file=tls.key=</path/to/tls.key> --from-file=tls.crt=</path/to/tls.crt> --from-file=ca.crt=</path/to/ca.crt>
+    tlsSecretName: ""
+
+    # trust config map name
+    # config map keys must have .crt suffix.
+    # inlcude as many ca files as you need.
+    # oc create configmap qm-trust --from-file=ca1.crt=</path/to/ca1.crt> --from-file=ca2.crt=</path/to/ca2.crt> ...
+    trustMapName: ""
+
+  # ldap credentials secret
+  ldapCredsSecret:
+    # ldap secret name
+    # if vault is enabled this secret is ignored
+    # oc create secret generic ldapcreds --from-literal=password=<ldappassword>
+    name: ''
+
+    # default secret key
+    passwordkey: password 
+
+  # hashicorp vault integration
+  # injection annotations not included here
+
+  vault:
+    ldapCreds:
+      # enable vault ldap credential integration
+      enable: 'false'
+
+      # ldap credential injection path
+      # injection path is defined by injection annotation
+      # and must be the same
+      injectpath: ''
+
+    tls:
+      # enable tls vault integration
+      enable: 'false'
+
+      # tls key injection path
+      # tls key injection path is defined by injection
+      # annotation and must be the same.
+      keyinjectpath: ''
+
+      # tls cert injection path
+      # tls cert injection path is defined by injection
+      # annotation and must be the same.
+      certinjectpath: ''
+
+      # tls ca injection path
+      # tls ca injection path is defined by injection
+      # annotation and must be the same.
+      cainjectpath: ''
+
+  # @todo: describe
+  terminationGracePeriodSeconds: 10
+
+  # queue manager name
+  name: ""
+
+  # queue manager custom image
+  image: ""
+
+  # defined in: container
+  imagePoolPolicy: IfNotPresent
+
+  # standard kubernetes resources
+  # limits and requests for cpu and memory
+  # defined in: container
+  # resources:
+  #   limits:
+  #     cpu: ...
+  #     memory: ...
+  #   requests:
+  #     cpu: ...
+  #     memory: ...
+
+  resources: {} 
+
+  # @todo
+  debug: false # env
+  logFormat: {} # env
+  metrics: true # prometeus metrics env
+
+  # queue manager storage
+  storage:
+
+    # if this value is set to 'true'
+    # pvc volume will be injected into
+    # queue manager pod.
+    usePvc: 'true'
+
+    # pvc name is formed by appending this
+    # value to the release name: {release}-{pvcname}
+    pvcName: 'qm-sts-pvc'
+
+    # pvc storage class
+    storageClass: ''
+
+    # queue manager volume access mode ReadWriteOnce|ReadWriteMany
+    accessMode: ReadWriteOnce
+
+    # @todo
+    deleteClaim: false
+
+    # queue manager volume size
+    size: 2Gi
+
+#
+# mq web console
+#
+webuser:
+  #
+  # built-in web roles
+  # list groups and principals
+  #
+  webroles:
+  - name: MQWebAdmin
+    groups: []
+  - name: MQWebAdminRO
+    groups: []
+  - name: MQWebUser
+    groups: []
+
+  #
+  # built-in api roles
+  # list groups and principals
+  #
+  apiroles:
+  - name: MQWebAdmin
+    groups: []
+  - name: MQWebAdminRO
+    groups: []
+  - name: MQWebUser
+    groups: []
+
+  #
+  # ldap reigstry
+  #
+  ldapregistry:
+    # ldap connection info
+    connect:
+      # ldap realm
+      realm: ""
+      # ldap host
+      host: ""
+      # ldap port
+      port: 389
+      # ldap type
+      # for custom ldap define group and user metadata
+      ldaptype: Custom
+      # bind dn
+      binddn: ""
+      # bind password
+      # define ldap secret or vault
+      # otherwise use this field
+      bindpassword: ""
+      # base dn
+      basedn: ""
+      # ldap ssl
+      sslenabled: false
+
+    # group metadata
+    groupdef:
+      objectclass: groupOfNames
+      groupnameattr: cn
+      groupmembershipattr: member
+
+    # user metadata
+    userdef:
+      objectclass: inetOrgPerson
+      usernameattr: uid
+
+  # hosts allowed to connect to mq web console
+  allowedhosts: []
+
+  # client authentication settings
+  clientauth:
+    keystorepass: ""
+    truststorepass: ""
+    enabled: false
+
+  # liberty configuration variables
+  variables:
+  # https port
+  - name: httpsPort
+    value: "9443"
+  # listening interfaces
+  - name: httpHost
+    value: '*'
+  # cors configuration
+  - name: mqRestCorsAllowedOrigints
+    value: '*'

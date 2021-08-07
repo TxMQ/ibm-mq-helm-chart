@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mqscic-{{ .Release.Name }}
+  labels:
+    {{- include "mqchart.labels" . | nindent 4 }}
+data:
+  mqscini.mqsc: |+
+    {{- if .Values.mqscic }}
+    {{- .Values.mqscic | nindent 4 }}
+    {{- end }}

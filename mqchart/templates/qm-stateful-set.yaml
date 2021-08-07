@@ -1,0 +1,232 @@
+kind: StatefulSet
+apiVersion: apps/v1
+metadata:
+  name: {{ .Release.Name }}-{{ .Values.qmspec.name }}
+  finalizers: []
+  labels:
+    {{- include "mqchart.labels" . | nindent 4 }}
+    {{- if .Values.qmspec.labels }}
+    {{- toYaml .Values.qmspec.labels | nindent 4 }}
+    {{- end }}
+spec:
+  replicas: 1
+  serviceName: qmgr
+  podManagementPolicy: Parallel
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      partition: 0
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      {{- include "mqchart.selectorLabels" . | nindent 6 }}
+
+  template:
+    metadata:
+      finalizers: []
+      labels:
+        {{- include "mqchart.labels" . | nindent 8 }}
+      annotations:
+        productVersion: {{ .Chart.AppVersion }}
+
+        {{- if eq .Values.qmspec.capabilities "mqbase" }}
+        productName: "IBM MQ"
+        productID: "c661609261d5471fb4ff8970a36bccea"
+        productChargedContainers: "qmgr"
+        productMetric: "VIRTUAL_PROCESSOR_CORE"
+        {{- end }}
+
+        {{- if eq .Values.qmspec.capabilities "mqadvanced" }}
+        productName: "IBM MQ Advanced"
+        productID: "208423bb063c43288328b1d788745b0c"
+        productChargedContainers: "qmgr"
+        productMetric: "VIRTUAL_PROCESSOR_CORE" 
+        {{- end }}
+
+        {{- if eq .Values.qmspec.capabilities "mqcustom"}}
+        {{- toYaml .Values.qmspec.licenseAnnotations | nindent 8 }}
+        {{- end }}
+
+        {{- if .Values.qmspec.annotations }}
+        {{- toYaml .Values.qmspec.annotations | nindent 8 }}
+        {{- end }}
+
+        checksum/config: {{ include (print $.Template.BasePath "/mqsc-config-map.yaml") . | sha256sum }}
+
+    spec:
+      {{- with .Values.qmspec.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+
+      serviceAccount: {{.Release.Name}}-{{.Values.qmspec.serviceAccount.name}}
+      serviceAccountName: {{.Release.Name}}-{{.Values.qmspec.serviceAccount.name}}
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      terminationGracePeriodSeconds: 30
+      dnsPolicy: ClusterFirst
+
+      {{- with .Values.qmspec.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+
+      containers:
+        - name: qmgr
+          image: {{ .Values.qmspec.image | squote }}
+          imagePullPolicy: {{ default "IfNotPresent" .Values.qmspec.imagePullPolicy }}
+#          terminationMessagePolicy: File
+#          terminationMessagePath: /run/termination-log
+          {{- with .Values.qmspec.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          startupProbe:
+            httpGet:
+              path: /ready
+              port: 40000
+            failureThreshold: 50 # retry 50 times; 30*50 = 1500 seconds
+            periodSeconds: 30 # try every 30 seconds
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 40000
+            initialDelaySeconds: 10
+            timeoutSeconds: 3
+            periodSeconds: 5
+            successThreshold: 1
+            failureThreshold: 1
+          livenessProbe:
+            httpGet:
+              path: /healthy
+              port: 40000
+            initialDelaySeconds: 10
+            timeoutSeconds: 5
+            periodSeconds: 10
+            successThreshold: 1
+            failureThreshold: 1
+
+          # environemnt variables
+          env:
+            - name: MQ_QMGR_NAME
+              value: {{ .Values.qmspec.name | quote }}
+            {{- if .Values.qmspec.pki.tlsSecretName }}
+            - name: MQ_ENABLE_TLS_NO_VAULT
+              value: 'true'
+            {{- end }}
+            - name: VAULT_ENABLE_TLS
+              value: {{ .Values.qmspec.vault.tls.enable | quote }}
+            {{- with .Values.qmspec.ldapCredsSecret }}
+            {{- if .name }}
+            - name: LDAP_BIND_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .name }}
+                  key: {{ default "password" .passwordKey }}
+            {{- end }}
+            {{- end }}
+
+            {{- with .Values.qmspec.vault }}
+            {{- if eq .ldapCreds.enable "true" }}
+            - name: VAULT_LDAP_CREDS_INJECT_PATH
+              value: {{ .ldapCreds.injectpath }}
+            {{- end }}
+            {{- end }}
+
+            {{- with .Values.qmspec.vault }}
+            {{- if eq .tls.enable "true" }}
+            - name: VAULT_TLS_KEY_INJECT_PATH
+              value: {{ .tls.keyinjectpath }}
+            - name: VAULT_TLS_CERT_INJECT_PATH
+              value: {{ .tls.certinjectpath }}
+            - name: VAULT_TLS_CA_INJECT_PATH
+              value: {{ .tls.cainjectpath }}              
+            {{- end }}
+            {{- end }}
+
+            {{- with .Values.qmspec.env }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          securityContext:
+            readOnlyRootFilesystem: false
+            runAsUser: 1001
+            runAsGroup: 1001
+          ports:
+            - containerPort: 1414
+              protocol: TCP
+            - containerPort: 9157
+              protocol: TCP
+            - containerPort: 9443
+              protocol: TCP
+          volumeMounts:
+            {{- if eq .Values.qmspec.storage.usePvc "true" }}
+            - name: mqmdata
+              mountPath: /mnt/mqm/data
+            {{- end }}
+            {{- if .Values.mq }}
+            - name: mqsc-yaml
+              mountPath: /etc/mqm/mqyaml
+            {{- end }}
+            {{- if .Values.mqscic }}
+            - name: mqscic
+              mountPath: /etc/mqm/mqsc
+            {{- end }}
+            {{- if .Values.qmini }}
+            - name: qmini
+              mountPath: /etc/mqm/qmini
+            {{- end }}
+            {{- if .Values.webuser }}
+            - name: webuser
+              mountPath: /etc/mqm/webuser
+            {{- end }}
+            # tls enabled
+            {{- if .Values.qmspec.pki.tlsSecretName }}
+            # and vault tls disabled
+            {{- if not (eq .Values.qmspec.vault.tls.enable "true") }}
+            - name: qm-tls
+              mountPath: /etc/mqm/pki/cert
+            {{- end }}
+            {{- end }}
+            # trust config map
+            {{- if .Values.qmspec.pki.trustMapName }}
+            - name: qm-trust
+              mountPath: /etc/mqm/pki/trust
+            {{- end }}
+
+      volumes:
+        {{- if eq .Values.qmspec.storage.usePvc "true" }}
+        - name: mqmdata
+          persistentVolumeClaim:
+            claimName: {{ .Release.Name }}-{{ .Values.qmspec.storage.pvcName }}
+        {{- end }}
+        {{- if .Values.mq }}
+        - name: mqsc-yaml
+          configMap:
+            name: mqsc-yaml-{{ .Release.Name }}
+        {{- end }}
+        {{- if .Values.mqscic }}
+        - name: mqscic
+          configMap:
+            name: mqscic-{{ .Release.Name }}
+        {{- end }}
+        {{- if .Values.qmini }}
+        - name: qmini
+          configMap:
+            name: qmini-{{ .Release.Name }}
+        {{- end }}
+        {{- if .Values.webuser }}
+        - name: webuser
+          configMap:
+            name: webuser-{{ .Release.Name }}
+        {{- end }}
+        # mount tls secret if tls is enabled and vault tls is disabled
+        {{- if and (.Values.qmspec.pki.tlsSecretName) (not (eq .Values.qmspec.vault.tls.enable "true")) }}
+        - name: qm-tls
+          secret:
+            secretName: {{ .Values.qmspec.pki.tlsSecretName }}
+        {{- end }}
+        {{- if .Values.qmspec.pki.trustMapName }}
+        - name: qm-trust
+          configMap:
+            name: {{ .Values.qmspec.pki.trustMapName }}
+        {{- end }}
