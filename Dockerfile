@@ -11,7 +11,7 @@ USER 0
 # install additional packages
 RUN microdnf --disableplugin=subscription-manager install shadow-utils bc tar procps-ng gzip findutils pam passwd wget util-linux sudo libselinux-utils \
     bash ca-certificates file gawk glibc-common grep ncurses-compat-libs sed which openldap-clients openssl \
-    libgcc libstdc++
+    libgcc libstdc++ git
 
 # mqm user and group
 RUN groupadd -g 1001 mqm && useradd -u 1001 -g 1001 -d /var/mqm -M -e "" -K PASS_MAX_DAYS=-1  mqm

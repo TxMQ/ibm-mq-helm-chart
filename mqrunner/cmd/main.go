@@ -43,21 +43,18 @@ func Runmain() {
 
 	// fetch and merge startup config files
 	giturl := os.Getenv("GIT_CONFIG_URL")
-	//gitbranch := os.Getenv("GIT_CONFIG_BRANCH")
-	//gittag := os.Getenv("GIT_CONFIG_TAG")
 	gitref := os.Getenv("GIT_CONFIG_REF")
 	gitdir := os.Getenv("GIT_CONFIG_DIR")
 
 	if len(giturl) > 0 {
 
-		gitclone := util.GitCloneConfig {
+		fetchconf := util.FetchConfig{
 			Url:           giturl,
 			ReferenceName: gitref,
-			Tag:           "",
 			Dir:           gitdir,
 		}
 
-		err = util.MergeGitConfigFiles(gitclone)
+		err = util.MergeGitConfigFiles(fetchconf)
 		if err != nil {
 			log.Fatalf("fetch-merge-config-files: %v\n", err)
 		}

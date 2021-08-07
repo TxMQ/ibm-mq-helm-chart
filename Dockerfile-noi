@@ -11,7 +11,7 @@ USER 0
 # packages
 RUN microdnf --disableplugin=subscription-manager install shadow-utils bc tar procps-ng gzip findutils pam passwd wget util-linux sudo libselinux-utils
 RUN microdnf --disableplugin=subscription-manager install bash ca-certificates file gawk glibc-common grep ncurses-compat-libs sed which openldap-clients openssl
-RUN microdnf --disableplugin=subscription-manager install libgcc libstdc++
+RUN microdnf --disableplugin=subscription-manager install libgcc libstdc++ git
 
 ARG ACETARDIR=MQServer-noi
 RUN mkdir /tmp/MQServer-noi

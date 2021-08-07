@@ -107,7 +107,9 @@ func CreateConnection(env Env) (ibmmq.MQQueueManager, error) {
 		// The ClientAuth field says whether or not the client needs to present its own certificate
 		// Must match the SVRCONN definition.
 		// alter channel(epn.svrconn) chltype(svrconn) sslcauth(optional)
-		cd.SSLClientAuth = ibmmq.MQSCA_OPTIONAL
+		//cd.SSLClientAuth = ibmmq.MQSCA_OPTIONAL
+		cd.CertificateLabel = "ibmwebspheremqkarson"
+		cd.SSLClientAuth = ibmmq.MQSCA_REQUIRED
 	}
 
 	// Reference the CD structure from the CNO

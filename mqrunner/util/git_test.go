@@ -10,34 +10,32 @@ import (
 
 func TestCloneGitRepo(t *testing.T) {
 
-	dir, err := ioutil.TempDir("", "git-clone")
+	dir, err := ioutil.TempDir("", "git-fetch")
 	if err != nil {
 		log.Fatalf("%v\n", err)
 	}
 
 	defer func() { _ = os.RemoveAll(dir) }()
 
-	gitconfig := GitCloneConfig{
-		Url:           "https://github.com/szesto/mq-operator.git",
-		ReferenceName: "",
-		Tag:           "",
+	gitconfig := FetchConfig{
+		Url:           "https://github.com/szesto/wiki.git",
+		ReferenceName: "hello",
 		Dir:           "",
 	}
 
-	err = CloneGitRepo(dir, gitconfig)
+	err = GitFetch(dir, gitconfig)
 	if err != nil {
 		log.Fatalf("%v\n", err)
 	}
 
-	fmt.Printf("cloned git repo %s to %s\n", gitconfig.Url, dir)
+	fmt.Printf("fetched git repo %s to %s\n", gitconfig.Url, dir)
 }
 
 func TestFetchMergeConfigFiles(t *testing.T) {
-	gitconfig := GitCloneConfig{
-		Url:           "https://github.com/szesto/mq-operator.git",
-		ReferenceName: "",
-		Tag:           "",
-		Dir:           "values",
+	gitconfig := FetchConfig{
+		Url:           "https://github.com/szesto/wiki.git",
+		ReferenceName: "main",
+		Dir:           "zosconn",
 	}
 
 	err := FetchMergeConfigFiles(gitconfig, GetMqscic(), GetQmini())

@@ -7,8 +7,8 @@ outdir=$3
 p12path="$outdir/client_key.p12"
 kdbpath="$outdir/key.kdb"
 
-#certlabel="ibmwebspheremqkarson"
-certlabel="cert"
+certlabel="ibmwebspheremqkarson"
+#certlabel="cert"
 
 /usr/bin/openssl pkcs12 -export -name $certlabel -out $p12path -inkey $keypath -in $certpath -keypbe NONE -certpbe NONE -nomaciter -passout "pass:"
 

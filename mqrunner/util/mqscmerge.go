@@ -11,25 +11,29 @@ import (
 	"szesto.com/mqrunner/mqsc"
 )
 
-func FetchMergeConfigFiles(gitclone GitCloneConfig, mqscicpath, qminipath string) error {
+func FetchMergeConfigFiles(fetchconf FetchConfig, mqscicpath, qminipath string) error {
 
-	clonedir, err := ioutil.TempDir("", "git-clone")
+	fetchdir, err := ioutil.TempDir("", "git-fetch")
 	if err != nil {
 		return err
 	}
 
-	defer func() { _ = os.RemoveAll(clonedir) }()
+	defer func() { _ = os.RemoveAll(fetchdir) }()
 
-	err = CloneGitRepo(clonedir, gitclone)
+	err = GitFetch(fetchdir, fetchconf)
 	if err != nil {
 		return err
 	}
 
-	log.Printf("cloned git repo %s to %s\n", gitclone.Url, clonedir)
+	log.Printf("fetched git repo %s to %s\n", fetchconf.Url, fetchdir)
 
-	dir := clonedir
-	if len(gitclone.Dir) > 0 {
-		dir = filepath.Join(clonedir, gitclone.Dir)
+	dir := fetchdir
+	if len(fetchconf.Dir) > 0 {
+		dir = filepath.Join(fetchdir, fetchconf.Dir)
+
+		if _, err := os.Stat(dir); err != nil {
+			return err
+		}
 	}
 
 	// merge ini files
