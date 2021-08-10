@@ -59,8 +59,7 @@ func (props *SvrconnProperties) mqsc() string {
 			"maxinst(%d)" + cont + // maxinst
 			"maxinstc(%d)" + cont + // maxinstc
 			"maxmsgl(%d)" + cont + // maxmsgl
-			"sharecnv(%d)" + cont + // sharecnv
-			"replace" + endl
+			"sharecnv(%d)" + endl // sharecnv
 
 	s := fmt.Sprintf(t, strings.ToUpper(props.Name), props.Descr,
 		props.discint, props.hbint, props.maxinst, props.maxinstc, props.Maxmsgl, props.sharecnv)

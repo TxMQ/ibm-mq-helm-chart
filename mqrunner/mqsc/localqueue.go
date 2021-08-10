@@ -129,7 +129,7 @@ func (lq *Localqueue) Mqsc() string {
 	//if len(lq.Like) > 0 {
 	//
 	//	t :=
-	//		"define qlocal(%s) replace" + cont + // qname
+	//		"define qlocal(%s)" + cont + // qname
 	//		"descr(%s)" + cont + // descr
 	//		"like(%s)" // like
 	//
@@ -142,7 +142,7 @@ func (lq *Localqueue) Mqsc() string {
 	//
 
 	//t :=
-	//	"define qlocal(%s) replace" + cont + // qname
+	//	"define qlocal(%s)" + cont + // qname
 	//	"descr('%s')" + cont + // descr
 	//	"put(%s)" + cont + // put enabled/disabled
 	//	"get(%s)" + cont + // get enabled/disabled
@@ -197,7 +197,7 @@ func (lq *Localqueue) Mqsc() string {
 	//
 	//mqsc = append(mqsc, s)
 
-	t := "define qlocal(%s) replace" + endl // qname
+	t := "define qlocal(%s)" + endl // qname
 	s := fmt.Sprintf(t, lq.Name)
 	mqsc = append(mqsc, s)
 

@@ -112,8 +112,7 @@ func (ldap *LdapAuthinfo) Mqsc() string {
 		"NESTGRP(yes)" + cont  +
 		"SECCOMM(no)" + cont + // todo: parameterize, ssl to ldap
 		"SHORTUSR(%s)" + cont + // {{ .users.shortUserNameAttr }}) +
-		"USRFIELD(%s)" + cont + // {{ .users.userNameAttr }});
-		"replace" + endl +
+		"USRFIELD(%s)" + endl + // {{ .users.userNameAttr }});
 		star +
 		"REFRESH SECURITY TYPE(CONNAUTH)" + endl
 
