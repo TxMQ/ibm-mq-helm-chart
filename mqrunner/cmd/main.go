@@ -18,8 +18,23 @@ func isConfigureMqweb() bool {
 
 func Runmain() {
 
+	debug := util.GetDebugFlag()
+
+	if debug {
+		log.Printf("runmain: debug flag set")
+	}
+
+	if debug {
+		_ = util.ShowMounts()
+	}
+
 	// env variables set in the pod template
 	// MQ_QMGR_NAME - queue manager name
+
+	if debug {
+		_ = util.ListDir("/var/mqm")
+		_ = util.ListDir("/mnt/mqm/data")
+	}
 
 	// create runtime directories
 	err := util.CreateDirectories()
@@ -30,8 +45,17 @@ func Runmain() {
 
 	log.Printf("%s\n", "mq directories created")
 
+	if debug {
+		_ = util.ListDir("/var/mqm")
+		_ = util.ListDir("/mnt/mqm/data")
+	}
+
 	// get queue manager name
 	qmgr := os.Getenv("MQ_QMGR_NAME")
+
+	if debug {
+		log.Printf("runmain: qmgr name: %s\n", qmgr)
+	}
 
 	// get qmgr log format basic|json
 
@@ -45,6 +69,10 @@ func Runmain() {
 	giturl := os.Getenv("GIT_CONFIG_URL")
 	gitref := os.Getenv("GIT_CONFIG_REF")
 	gitdir := os.Getenv("GIT_CONFIG_DIR")
+
+	if debug {
+		log.Printf("runmain: giturl '%s', gitref '%s', gitdir '%s'\n", giturl, gitref, gitdir)
+	}
 
 	if len(giturl) > 0 {
 
@@ -61,7 +89,7 @@ func Runmain() {
 	}
 
 	// start runner
-	log.Printf("mq runner %s starting...\n", qmgr)
+	log.Printf("mq runner for qmgr '%s' starting...\n", qmgr)
 	ctl := util.StartRunner()
 	<-ctl
 
@@ -75,6 +103,10 @@ func Runmain() {
 	}
 
 	if exists == false {
+		if debug {
+			log.Printf("runmain: qmgr %s does not exist, will be created\n", qmgr)
+		}
+
 		// create queue manager
 		err = util.CreateQmgr(qmgr)
 		if err != nil {

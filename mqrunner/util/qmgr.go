@@ -3,6 +3,7 @@ package util
 import (
 	"fmt"
 	"io/ioutil"
+	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -35,9 +36,11 @@ func CreateDirectories() error {
 
 func CreateQmgr(qmgr string) error {
 
+	debug := GetDebugFlag()
+
 	// qmgr parameters - may change
 	qmgrPort := "1414"
-	deadLetterQeueue := "SYSTEM.DEAD.LETTER.QUEUE"
+	deadLetterQeueue := "SYSTEM.DEAD.LETTER.QUEUE" // todo: env variable
 	mqscic := GetMqscic()
 	qmini := GetQmini()
 
@@ -85,7 +88,19 @@ func CreateQmgr(qmgr string) error {
 	//	"-ic", mqscic,
 	//	"-u", deadLetterQeueue, "-p", qmgrPort, "-q", qmgr).CombinedOutput()
 
+	if debug {
+		log.Printf("create-qmgr: running command: /opt/mqm/bin/crtmqm %s\n", strings.Join(args, " "))
+	}
+
 	out, err := exec.Command("/opt/mqm/bin/crtmqm", args...).CombinedOutput()
+
+	if debug {
+		if len(string(out)) > 0 {
+			log.Printf("create-qmgr: out: %s, err: %v\n", string(out), err)
+		} else {
+			log.Printf("create-qmgr: err: %v\n", err)
+		}
+	}
 
 	if err != nil {
 		if out != nil {
@@ -166,6 +181,10 @@ func IsQmgrRunning(qmgr string) (bool, error) {
 
 func QmgrExists(qmgr string) (bool, error) {
 
+	if GetDebugFlag() {
+		log.Printf("qmgr-exists: check if queue manager %s exists\n", qmgr)
+	}
+
 	st, err := QmgrStatus(qmgr)
 	if err != nil {
 		return false, err
@@ -194,13 +213,32 @@ func parseParenValue(input, keyword string) (bool, string) {
 
 func QmgrStatus(qmgr string) (string, error) {
 
+	debug := GetDebugFlag()
+
+	if debug {
+		log.Printf("qmgr-status: running command: /opt/mqm/bin/dspmq -m %s", qmgr)
+	}
+
 	out, err := exec.Command("/opt/mqm/bin/dspmq", "-m", qmgr).CombinedOutput()
+
+	if debug {
+		if len(string(out)) > 0 {
+			log.Printf("qmgr-status: out: %s, err: %v\n", string(out), err)
+		} else {
+			log.Printf("qmgr-status: err: %v\n", err)
+		}
+	}
 
 	if err != nil {
 		cerr := strings.TrimSpace(string(out))
 
 		// AMQ7048E: The queue manager name is either not valid or not known.
 		if strings.HasPrefix(cerr, "AMQ7048E") {
+
+			if debug {
+				log.Printf("qmgr-status: qmgr %s status is %s\n", qmgr, _qmgrnotknown)
+			}
+
 			return _qmgrnotknown, nil
 		}
 
@@ -215,11 +253,20 @@ func QmgrStatus(qmgr string) (string, error) {
 		ok, status := parseParenValue(cout, "STATUS")
 
 		if ok && strings.ToLower(status) == "running" {
+
+			if debug {
+				log.Printf("qmgr-status: qmgr %s status is %s\n", qmgr, _qmgrrunning)
+			}
+
 			return _qmgrrunning, nil
 		}
 	}
 
 	// QMNAME(qm)  STATUS(Ended normally|immediately)
+	if debug {
+		log.Printf("qmgr-status: qmgr %s status is %s\n", qmgr, _qmgrnotrunning)
+	}
+
 	return _qmgrnotrunning, nil
 }
 

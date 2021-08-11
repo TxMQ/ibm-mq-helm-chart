@@ -5,7 +5,7 @@ registry=$1
 # Chart.AppVersion value must match this value.
 mqver="9.2.2.0"
 
-tag="122"
+tag="134"
 
 image=txmq-mq-base-rpm-$mqver
 
@@ -13,4 +13,4 @@ sudo podman build --build-arg RPMDIR="rpm/MQServer" --build-arg MQVER=$mqver -t 
 
 sudo podman tag "localhost/$image:$tag" "$registry/$image:$tag"
 
-sudo podman push $registry/$image:$tag
+#sudo podman push $registry/$image:$tag

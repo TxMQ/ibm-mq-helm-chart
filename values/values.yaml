@@ -37,7 +37,7 @@ qmspec:
   name: qm20
 
   # custom docker image - required
-  image: docker.io/simong5000/txmq-mq-base-rpm-9.2.2.0:122
+  image: docker.io/simong5000/txmq-mq-base-rpm-9.2.2.0:134
 
   # image pull policy IfNotPresent|Always
   imagePoolPolicy: Always
@@ -51,6 +51,12 @@ qmspec:
     value: "1"
   - name: GIT_CONFIG_URL
     value: ""
+  - name: GIT_CONFIG_REF
+    value: ""
+  - name: GIT_CONFIG_DIR
+    value: ""
+  - name: MQRUNNER_DEBUG
+    value: "1"
 
 #  resources:
 #    limits:
