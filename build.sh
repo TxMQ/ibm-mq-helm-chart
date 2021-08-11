@@ -13,4 +13,4 @@ sudo podman build --build-arg RPMDIR="rpm/MQServer" --build-arg MQVER=$mqver -t 
 
 sudo podman tag "localhost/$image:$tag" "$registry/$image:$tag"
 
-#sudo podman push $registry/$image:$tag
+sudo podman push $registry/$image:$tag
