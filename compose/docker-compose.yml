@@ -1,27 +1,27 @@
 services:
   mqrunner:
-    image: localhost/txmq-mq-base-rpm-9.2.2.0:123
+    image: docker.io/simong5000/txmq-mq-base-rpm-9.2.2.0:159
 
     ports:
     - '1414:1414'
 
     environment:
-    - MQRUNNER_DEBUG="1"
     - MQ_QMGR_NAME=qm20
-    - MQ_START_WEB="0"
+    - MQRUNNER_DEBUG=1
+    - MQ_START_WEB=0
     - LDAP_BIND_PASSWORD=admin
-    - MQ_ENABLE_TLS_NO_VAULT="false"
-    - VAULT_ENABLE_TLS="false"
-    - VAULT_LDAP_CREDS_INJECT_PATH=""
-    - VAULT_TLS_KEY_INJECT_PATH=""
-    - VAULT_TLS_CERT_INJECT_PATH=""
-    - VAULT_TLS_CA_INJECT_PATH=""
-    - GIT_CONFIG_URL=""
-    - GIT_CONFIG_REF=""
-    - GIT_CONFIG_DIR=""
+    - MQ_ENABLE_TLS_NO_VAULT=false
+    - VAULT_ENABLE_TLS=false
+    - VAULT_LDAP_CREDS_INJECT_PATH=
+    - VAULT_TLS_KEY_INJECT_PATH=
+    - VAULT_TLS_CERT_INJECT_PATH=
+    - VAULT_TLS_CA_INJECT_PATH=
+    - GIT_CONFIG_URL=
+    - GIT_CONFIG_REF=
+    - GIT_CONFIG_DIR=
 
     volumes:
-    - mqdata:/mnt/mqm/data
+    - mqdata:/var/mqm
 #    - mqscyaml
 #    - mqscic
 #    - qmini

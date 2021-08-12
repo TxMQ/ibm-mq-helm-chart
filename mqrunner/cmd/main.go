@@ -66,26 +66,9 @@ func Runmain() {
 	}
 
 	// fetch and merge startup config files
-	giturl := os.Getenv("GIT_CONFIG_URL")
-	gitref := os.Getenv("GIT_CONFIG_REF")
-	gitdir := os.Getenv("GIT_CONFIG_DIR")
-
-	if debug {
-		log.Printf("run-main: giturl '%s', gitref '%s', gitdir '%s'\n", giturl, gitref, gitdir)
-	}
-
-	if len(giturl) > 0 {
-
-		fetchconf := util.FetchConfig{
-			Url:           giturl,
-			ReferenceName: gitref,
-			Dir:           gitdir,
-		}
-
-		err = util.MergeGitConfigFiles(fetchconf)
-		if err != nil {
-			log.Fatalf("fetch-merge-config-files: %v\n", err)
-		}
+	err = util.MergeGitConfigFiles()
+	if err != nil {
+		log.Printf("fetch-merge-config-files: %v\n", err)
 	}
 
 	// start runner

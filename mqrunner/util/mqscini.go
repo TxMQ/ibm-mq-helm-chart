@@ -1,5 +1,10 @@
 package util
 
+import (
+	"log"
+	"os"
+)
+
 const _mqscic = "/etc/mqm/mqscic.mqsc"
 const _qmini = "/etc/mqm/qmini.ini"
 
@@ -43,15 +48,35 @@ func MergeMqscFiles() error {
 	return nil
 }
 
-func MergeGitConfigFiles(gitclone FetchConfig) error {
+func MergeGitConfigFiles2(fc FetchConfig) error {
+
+	if GetDebugFlag() {
+		log.Printf("run-main: giturl '%s', gitref '%s', gitdir '%s'\n", fc.Url, fc.ReferenceName, fc.Dir)
+	}
+
+	// protect againts "''" case
+	if len(fc.Url) <= 2 {
+		return nil
+	}
 
 	mqscicOutFile := GetMqscic()
 	qminiOutFile := GetQmini()
 
-	err := FetchMergeConfigFiles(gitclone, mqscicOutFile, qminiOutFile)
+	err := FetchMergeConfigFiles(fc, mqscicOutFile, qminiOutFile)
 	if err != nil {
 		return err
 	}
 
 	return nil
+}
+
+func MergeGitConfigFiles() error {
+
+	fc := FetchConfig{
+		Url:           os.Getenv("GIT_CONFIG_URL"),
+		ReferenceName: os.Getenv("GIT_CONFIG_REF"),
+		Dir:           os.Getenv("GIT_CONFIG_DIR"),
+	}
+
+	return MergeGitConfigFiles2(fc)
 }
