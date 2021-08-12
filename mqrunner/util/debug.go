@@ -41,7 +41,7 @@ func ListDir(dir string) error {
 
 	out, err := runcmd("ls", "-l", dir)
 	if err != nil {
-		fmt.Printf("list-dir: out: %s, err: %v\n", string(out), err)
+		fmt.Printf("list-dir: out: %s, err: %v\n", out, err)
 		return err
 	}
 
@@ -58,9 +58,9 @@ func runcmd(cmd string, args ...string) (string, error) {
 	out, err := exec.Command(cmd, args...).CombinedOutput()
 
 	if err != nil {
-		if out != nil {
+		if len(string(out)) > 0 {
 			cerr := string(out)
-			return "", fmt.Errorf("%v\n", cerr)
+			return "", fmt.Errorf("out: %s err: %v\n", cerr, err)
 		} else {
 			return "", err
 		}

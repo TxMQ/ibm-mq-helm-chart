@@ -95,14 +95,15 @@ func Runmain() {
 
 	//defer util.StopRunner()
 
-	// check if qmgr exists
-	exists, err := util.QmgrExists(qmgr)
+	// check if qmgr already configured
+	qmconf, msg, err := util.QmgrConf(qmgr)
 	if err != nil {
-		// log and exit
-		log.Fatalf("qmgr-exists: %v\n", err)
+		log.Printf("run-main: %v\n", err)
+	} else {
+		log.Printf("%s\n", msg)
 	}
 
-	if exists == false {
+	if qmconf == false {
 		if debug {
 			log.Printf("run-main: qmgr %s does not exist, will be created\n", qmgr)
 		}

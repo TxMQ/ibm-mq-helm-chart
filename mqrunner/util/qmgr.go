@@ -183,6 +183,26 @@ func IsQmgrRunning(qmgr string) (bool, error) {
 	return false,nil
 }
 
+func QmgrConf(qmgr string) (bool, string, error) {
+
+	if GetDebugFlag() {
+		log.Printf("qmgr-conf: check if qmgr '%s' already configured\n", qmgr)
+	}
+
+	out, err := runcmd("/opt/mqm/bin/dspmqinf", "-s", "QueueManager", qmgr)
+	if err != nil {
+		if len(out) > 0 {
+			cerr := string(out)
+			return false, "", fmt.Errorf("out: %s, err: %v\n", cerr, err)
+		} else {
+			return false, "", err
+		}
+	}
+
+	cout := string(out)
+	return true, cout, nil
+}
+
 func QmgrExists(qmgr string) (bool, error) {
 
 	if GetDebugFlag() {
