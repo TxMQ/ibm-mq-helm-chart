@@ -1,11 +1,11 @@
 package util
 
 import (
-	"bytes"
 	"fmt"
 	"log"
 	"os"
 	"os/exec"
+	"strings"
 )
 
 func GetDebugFlag() bool {
@@ -34,6 +34,7 @@ func ShowMounts() error {
 }
 
 func ListDir(dir string) error {
+
 	if GetDebugFlag() {
 		log.Printf("list-dir: listing directory %s\n", dir)
 	}
@@ -49,15 +50,22 @@ func ListDir(dir string) error {
 }
 
 func runcmd(cmd string, args ...string) (string, error) {
-	c := exec.Command(cmd, args...)
 
-	var out bytes.Buffer
-	c.Stdout = &out
-	c.Stderr = &out
-
-	if err := c.Run(); err != nil {
-		return "", err
+	if GetDebugFlag() {
+		log.Printf("run-cmd: %s %s\n", cmd, strings.Join(args, " "))
 	}
 
-	return c.String(), nil
+	out, err := exec.Command(cmd, args...).CombinedOutput()
+
+	if err != nil {
+		if out != nil {
+			cerr := string(out)
+			return "", fmt.Errorf("%v\n", cerr)
+		} else {
+			return "", err
+		}
+	}
+
+	cout := string(out)
+	return cout, nil
 }

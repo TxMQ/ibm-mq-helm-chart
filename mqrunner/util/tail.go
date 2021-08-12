@@ -60,6 +60,7 @@ func TailFile(file string, config tail.Config) {
 	for line := range t.Lines {
 		// apply AMQ* filter
 		if len(line.Text) > 0 {
+			// todo: pass environment var with pattern
 			if strings.HasPrefix(line.Text, "NOOUT" /*"AMQ"*/) {
 				fmt.Println(line.Text)
 			}

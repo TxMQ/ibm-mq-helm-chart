@@ -1,7 +1,6 @@
 package util
 
 import (
-	"fmt"
 	"golang.org/x/sys/unix"
 	"log"
 	"os"
@@ -38,18 +37,18 @@ func StartRunner() chan int {
 		for {
 			select {
 			case <- cld:
-				log.Printf("zobmie...")
+				//log.Printf("runner: %s\n", "zobmie...")
 				var ws unix.WaitStatus
 
-				pid, err := unix.Wait4(-1, &ws, unix.WNOHANG, nil)
+				/*pid*/ _, err := unix.Wait4(-1, &ws, unix.WNOHANG, nil)
 				if err != nil {
-					log.Printf("%v\n", err)
+					log.Printf("runner: err: %v\n", err)
 				} else {
-					log.Printf("Reaped PID %v", pid)
+					//log.Printf("Reaped PID %v", pid)
 				}
 
 			case <- sig:
-				fmt.Println("signal, exiting...")
+				log.Printf("runner: %s\n", "signal, exiting...")
 				// shutdown probe
 				_ = probe.Shutdown()
 

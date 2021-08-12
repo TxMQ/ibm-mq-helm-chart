@@ -161,7 +161,9 @@ spec:
           volumeMounts:
             {{- if eq .Values.qmspec.storage.usePvc "true" }}
             - name: mqmdata
-              mountPath: /mnt/mqm/data
+              #mountPath: /mnt/mqm/data
+              # mount directly into /var/mqm
+              mountPath: /var/mqm
             {{- end }}
             {{- if .Values.mq }}
             - name: mqsc-yaml

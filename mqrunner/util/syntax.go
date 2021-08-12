@@ -12,7 +12,18 @@ func CheckMqscSyntax(qmgr string) (bool, error) {
 
 	cmdfile := GetMqscic()
 
-	log.Printf("check-mqsc-syntax: checking file %s", cmdfile)
+	log.Printf("check-mqsc-syntax: checking file '%s'", cmdfile)
+
+	_, err := os.Stat(cmdfile)
+	if err != nil && os.IsNotExist(err) {
+		if GetDebugFlag() {
+			fmt.Printf("check-mqsc-syntax: file '%s' does not exist\n", cmdfile)
+		}
+		return true, nil
+
+	} else if err != nil {
+		return false, err
+	}
 
 	cout, err := exec.Command("/opt/mqm/bin/runmqsc", "-e", "-v", "-f", cmdfile, qmgr).CombinedOutput()
 	if err != nil {
@@ -22,7 +33,7 @@ func CheckMqscSyntax(qmgr string) (bool, error) {
 			if idx := strings.Index(cerr, "AMQ8118E"); idx >= 0 {
 				return false, fmt.Errorf("AMQ8118E: IBM MQ queue manager %s does not exist", qmgr)
 			} else {
-				return false, err
+				return false, fmt.Errorf("out: %s, err: %v\n", string(cout), err)
 			}
 		} else {
 			return false, err

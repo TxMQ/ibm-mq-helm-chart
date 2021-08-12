@@ -2,7 +2,7 @@ package util
 
 import (
 	"context"
-	"fmt"
+	"log"
 	"net/http"
 	"time"
 )
@@ -20,18 +20,18 @@ func (p *Probe) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		// todo
 		if  _showready > 0 {
 			_showready--
-			fmt.Println("ready probe called... return 200")
+			log.Printf("probe: %s\n", "ready probe called... return 200")
 		}
 
 	} else if r.RequestURI == "/healthy" {
 		// todo
 		if _showhealthy > 0 {
 			_showhealthy--
-			fmt.Println("healthy probe called... return 200")
+			log.Printf("probe: %s\n", "healthy probe called... return 200")
 		}
 
 	} else {
-		fmt.Println("probe called... return 200")
+		log.Printf("probe: %s\n", "probe called... return 200")
 	}
 
 	w.WriteHeader(200)
@@ -59,11 +59,11 @@ func StartProbe(ctl chan int) *Probe {
 
 	// run probe
 	go func() {
-		fmt.Println("probe running...")
+		log.Printf("start-probe: %s\n", "probe running...")
 		ctl <- 0
 
 		err := probe.srv.ListenAndServe()
-		fmt.Printf("probe stopped... %v\n", err)
+		log.Printf("probe stopped... %v\n", err)
 	}()
 
 	return probe

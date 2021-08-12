@@ -6,6 +6,7 @@ import (
 	"os"
 	"szesto.com/mqrunner/util"
 	"szesto.com/mqrunner/webmq"
+	"time"
 )
 
 func isStartMqweb() bool {
@@ -21,19 +22,19 @@ func Runmain() {
 	debug := util.GetDebugFlag()
 
 	if debug {
-		log.Printf("runmain: debug flag set")
+		log.Printf("run-main: debug flag set")
 	}
 
-	if debug {
-		_ = util.ShowMounts()
-	}
+	//if debug {
+	//	_ = util.ShowMounts()
+	//}
 
 	// env variables set in the pod template
 	// MQ_QMGR_NAME - queue manager name
 
 	if debug {
 		_ = util.ListDir("/var/mqm")
-		_ = util.ListDir("/mnt/mqm/data")
+		time.Sleep(1 * time.Second)
 	}
 
 	// create runtime directories
@@ -47,14 +48,13 @@ func Runmain() {
 
 	if debug {
 		_ = util.ListDir("/var/mqm")
-		_ = util.ListDir("/mnt/mqm/data")
 	}
 
 	// get queue manager name
 	qmgr := os.Getenv("MQ_QMGR_NAME")
 
 	if debug {
-		log.Printf("runmain: qmgr name: %s\n", qmgr)
+		log.Printf("run-main: qmgr name: '%s'\n", qmgr)
 	}
 
 	// get qmgr log format basic|json
@@ -71,7 +71,7 @@ func Runmain() {
 	gitdir := os.Getenv("GIT_CONFIG_DIR")
 
 	if debug {
-		log.Printf("runmain: giturl '%s', gitref '%s', gitdir '%s'\n", giturl, gitref, gitdir)
+		log.Printf("run-main: giturl '%s', gitref '%s', gitdir '%s'\n", giturl, gitref, gitdir)
 	}
 
 	if len(giturl) > 0 {
@@ -89,7 +89,7 @@ func Runmain() {
 	}
 
 	// start runner
-	log.Printf("mq runner for qmgr '%s' starting...\n", qmgr)
+	log.Printf("mq runner '%s' starting...\n", qmgr)
 	ctl := util.StartRunner()
 	<-ctl
 
@@ -104,7 +104,7 @@ func Runmain() {
 
 	if exists == false {
 		if debug {
-			log.Printf("runmain: qmgr %s does not exist, will be created\n", qmgr)
+			log.Printf("run-main: qmgr %s does not exist, will be created\n", qmgr)
 		}
 
 		// create queue manager
@@ -115,16 +115,25 @@ func Runmain() {
 		}
 
 		log.Printf("qmgr %s created", qmgr)
+
+	} else {
+		if debug {
+			log.Printf("run-main: qmgr '%s' exists", qmgr)
+		}
 	}
 
 	// check mqsc syntax errors
 	ok, err := util.CheckMqscSyntax(qmgr)
 	if err != nil {
-		log.Fatalf("%v\n", err)
+		log.Printf("%v\n", err)
 	}
 
-	if !ok {
-		// todo: complain about syntax errors
+	if ok {
+		if debug {
+			log.Printf("run-main: %s\n", "startup mqsc syntax check passed")
+		}
+	} else {
+		log.Printf("run-main: %s\n","startup mqsc commands contain syntax errors")
 	}
 
 	// tail system log: /var/mqm/errors/AMQERR01.LOG
@@ -161,6 +170,10 @@ func Runmain() {
 			// log and exit
 			log.Fatalf("import-certificates: %v\n", err)
 		}
+	} else {
+		if debug {
+			log.Printf("run-main: TLS is not enabled")
+		}
 	}
 
 	// start qeueue manager
@@ -173,7 +186,7 @@ func Runmain() {
 		// 2021/06/25 20:45:57 start-qmgr: IBM MQ queue manager 'qm10' ending.
 	}
 
-	log.Printf("qmgr %s started", qmgr)
+	log.Printf("qmgr '%s' started", qmgr)
 
 	// using default key repository
 	// set qmgr tls key repository
@@ -212,10 +225,10 @@ func Runmain() {
 	// clear env var secrets
 	util.ClearEnvSecrets()
 
-	log.Printf("mq runner %s running...\n", qmgr)
+	log.Printf("mq runner '%s' running...\n", qmgr)
 
 	<-ctl
-	log.Printf("mq runner %s exiting...\n", qmgr)
+	log.Printf("mq runner '%s' exiting...\n", qmgr)
 }
 
 func main() {

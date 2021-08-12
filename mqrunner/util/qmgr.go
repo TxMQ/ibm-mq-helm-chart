@@ -21,7 +21,11 @@ func CreateDirectories() error {
 	// create mq directories
 	// this command requires su on rpm install
 	//
-	out, err := exec.Command("/opt/mqm/bin/crtmqdir", "-f", "-a").CombinedOutput()
+	if GetDebugFlag() {
+		log.Printf("create-directories: %s\n","/opt/mqm/bin/crtmqdir_setuid -f -a")
+	}
+
+	out, err := exec.Command("/opt/mqm/bin/crtmqdir_setuid", "-f", "-a").CombinedOutput()
 	if err != nil {
 		if out != nil {
 			cerr := string(out)
@@ -236,7 +240,7 @@ func QmgrStatus(qmgr string) (string, error) {
 		if strings.HasPrefix(cerr, "AMQ7048E") {
 
 			if debug {
-				log.Printf("qmgr-status: qmgr %s status is %s\n", qmgr, _qmgrnotknown)
+				log.Printf("qmgr-status: qmgr %s status is '%s'\n", qmgr, _qmgrnotknown)
 			}
 
 			return _qmgrnotknown, nil
@@ -255,7 +259,7 @@ func QmgrStatus(qmgr string) (string, error) {
 		if ok && strings.ToLower(status) == "running" {
 
 			if debug {
-				log.Printf("qmgr-status: qmgr %s status is %s\n", qmgr, _qmgrrunning)
+				log.Printf("qmgr-status: qmgr %s status is '%s'\n", qmgr, _qmgrrunning)
 			}
 
 			return _qmgrrunning, nil
@@ -264,7 +268,7 @@ func QmgrStatus(qmgr string) (string, error) {
 
 	// QMNAME(qm)  STATUS(Ended normally|immediately)
 	if debug {
-		log.Printf("qmgr-status: qmgr %s status is %s\n", qmgr, _qmgrnotrunning)
+		log.Printf("qmgr-status: qmgr %s status is '%s'\n", qmgr, _qmgrnotrunning)
 	}
 
 	return _qmgrnotrunning, nil
