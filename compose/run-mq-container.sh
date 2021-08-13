@@ -1,4 +1,6 @@
-#!/bin/bash -x
+#!/bin/bash
+
+tag=$1
 
 # vault
 vault="-e VAULT_ENABLE_TLS=false -e VAULT_LDAP_CREDS_INJECT_PATH= -e VAULT_TLS_KEY_INJECT_PATH= -e VAULT_TLS_CERT_INJECT_PATH= -e VAULT_TLS_CA_INJECT_PATH="
@@ -7,16 +9,21 @@ vault="-e VAULT_ENABLE_TLS=false -e VAULT_LDAP_CREDS_INJECT_PATH= -e VAULT_TLS_K
 git="-e GIT_CONFIG_URL= -e GIT_CONFIG_REF= -e GIT_CONFIG_DIR="
 
 # web
-web="-e MQ_START_WEB=0"
+web="-e MQ_START_MQWEB=1"
 
 # debug
 debug="-e MQRUNNER_DEBUG=1"
+
+# tls
+tls="-e MQ_ENABLE_TLS_NO_VAULT=1"
 
 # qmgr, required
 qmgr="-e MQ_QMGR_NAME=qm20"
 
 # all envs
-envars="$qmgr $debug $web $vault $git"
+envars="$qmgr $debug $tls $web $vault $git"
+
+# todo: create volume
 
 # run
-sudo podman run --rm -v mqdata:/var/mqm $envars -p 1414:1414 localhost/txmq-mq-base-rpm-9.2.2.0:159
+sudo podman run --rm -v mqdata:/var/mqm -v mqsc:/etc/mqm/mqsc -v qmtls:/etc/mqm/pki/cert -v qmtrust:/etc/mqm/pki/trust -v webuser:/etc/mqm/webuser $envars -p 1414:1414 -p 9443:9443 -p 40000:40000 localhost/txmq-mq-base-rpm-9.2.2.0:$tag

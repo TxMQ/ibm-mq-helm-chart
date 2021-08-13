@@ -1,6 +1,6 @@
 services:
   mqrunner:
-    image: docker.io/simong5000/txmq-mq-base-rpm-9.2.2.0:159
+    image: docker.io/simong5000/txmq-mq-base-rpm-9.2.2.0:167
 
     ports:
     - '1414:1414'
@@ -8,7 +8,7 @@ services:
     environment:
     - MQ_QMGR_NAME=qm20
     - MQRUNNER_DEBUG=1
-    - MQ_START_WEB=0
+    - MQ_START_MQWEB=0
     - LDAP_BIND_PASSWORD=admin
     - MQ_ENABLE_TLS_NO_VAULT=false
     - VAULT_ENABLE_TLS=false

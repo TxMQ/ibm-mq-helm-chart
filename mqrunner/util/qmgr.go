@@ -15,6 +15,51 @@ const _qmgrrunning = "running"
 const _qmgrnotrunning = "notrunning"
 const _qmgrnotknown = "notknown"
 
+func ApplyStartupConfig(qmgr string) error {
+
+	cmdfile := GetMqscic()
+
+	_, err := os.Stat(cmdfile)
+	if err != nil && os.IsNotExist(err) {
+		log.Printf("apply-startup-config: command file '%s' does not exist\n", cmdfile)
+		return nil
+
+	} else if err != nil {
+		return err
+	}
+
+	// check mqsc syntax errors
+	//ok, err := CheckMqscSyntax(qmgr, cmdfile)
+	//if err != nil {
+	//	log.Printf("%v\n", err)
+	//}
+	//
+	//if !ok {
+	//	return fmt.Errorf("%s\n","startup mqsc commands contain syntax errors")
+	//}
+	//
+	//if debug {
+	//	log.Printf("apply-startup-config: %s\n", "startup mqsc syntax check passed")
+	//}
+
+	if GetDebugFlag() {
+		log.Printf("apply-startup-config: run mqsc commands from '%s'\n", cmdfile)
+	}
+
+	out, err := RunmqscFromFile(qmgr, cmdfile)
+	if err != nil {
+		return err
+	}
+
+	if len(out) > 0 {
+		log.Printf("apply-startup-config: %s\n", out)
+	}
+
+	// parse out syntax message
+
+	return nil
+}
+
 func CreateDirectories() error {
 
 	//
@@ -38,7 +83,18 @@ func CreateDirectories() error {
 	return nil
 }
 
-func CreateQmgr(qmgr string) error {
+func DeleteQmgr(qmgr string) error {
+
+	out, err := runcmd("/opt/mqm/bin/dltmqm", qmgr)
+	if err != nil {
+		return err
+	}
+
+	log.Printf("delete-qmgr: %s\n", out)
+	return nil
+}
+
+func CreateQmgr(qmgr string, icignore bool) error {
 
 	debug := GetDebugFlag()
 
@@ -52,7 +108,7 @@ func CreateQmgr(qmgr string) error {
 	isqmini := true
 
 	_, err := os.Stat(mqscic)
-	if err != nil {
+	if err != nil || icignore {
 		ismqscic = false
 	}
 
@@ -329,7 +385,7 @@ func RunmqscFromFile(qmgr, cmdfile string) (string, error) {
 			if idx := strings.Index(cerr, "AMQ8118E"); idx >= 0 {
 				return "", fmt.Errorf("AMQ8118E: IBM MQ queue manager %s does not exist", qmgr)
 			} else {
-				return cerr, err
+				return "", fmt.Errorf("run-mqsc-from-file: %s, %v\n", cerr, err)
 			}
 		} else {
 			return "", err

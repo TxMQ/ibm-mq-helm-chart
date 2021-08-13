@@ -1,0 +1,49 @@
+allowedhosts: []
+apiroles:
+- groups:
+  - devs
+  name: MQWebAdmin
+- groups:
+  - devs
+  name: MQWebAdminRO
+- groups:
+  - devs
+  name: MQWebUser
+clientauth:
+  enabled: false
+  keystorepass: ""
+  truststorepass: ""
+ldapregistry:
+  connect:
+    basedn: dc=szesto,dc=com
+    binddn: cn=admin,dc=szesto,dc=com
+    bindpassword: ""
+    host: openldap.default.svc.cluster.local
+    ldaptype: Custom
+    port: 389
+    realm: openldap
+    sslenabled: false
+  groupdef:
+    groupmembershipattr: member
+    groupnameattr: cn
+    objectclass: groupOfNames
+  userdef:
+    objectclass: inetOrgPerson
+    usernameattr: uid
+variables:
+- name: httpsPort
+  value: "9443"
+- name: httpHost
+  value: '*'
+- name: mqRestCorsAllowedOrigints
+  value: '*'
+webroles:
+- groups:
+  - devs
+  name: MQWebAdmin
+- groups:
+  - devs
+  name: MQWebAdminRO
+- groups:
+  - devs
+  name: MQWebUser

@@ -83,6 +83,12 @@ func QminiMerge(dir, outfile string) error {
 
 func MqscMerge(dir string, outfile string) error {
 
+	debug := GetDebugFlag()
+
+	if debug {
+		log.Printf("looking for mqsc files in '%s'\n", dir)
+	}
+
 	// find *.mqsc files in input directory
 	mqscfiles, err := ReadDir(dir, "mqsc")
 	if err != nil {
@@ -90,6 +96,9 @@ func MqscMerge(dir string, outfile string) error {
 	}
 
 	if len(mqscfiles) == 0 {
+		if debug {
+			log.Printf("mqsc-merge: no mqsc files in '%s'\n", dir)
+		}
 		return nil
 	}
 
@@ -101,6 +110,15 @@ func MqscMerge(dir string, outfile string) error {
 			log.Printf("mqsc-merge error, file %s : %v\n", mqscfile, err)
 		}
 	}
+
+	//if debug {
+	//	out, err := runcmd("cat", outfile)
+	//	if err != nil {
+	//		log.Printf("%v\n", err)
+	//	} else {
+	//		fmt.Printf("%s\n", out)
+	//	}
+	//}
 
 	return nil
 }
@@ -149,6 +167,11 @@ func MqYamlMerge(dir string, outfile string) error {
 }
 
 func AppendFile(infile, outfile, separator string) error {
+
+	debug := GetDebugFlag()
+	if debug {
+		log.Printf("append-file: merging file '%s' into '%s'\n", infile, outfile)
+	}
 
 	databytes, err := os.ReadFile(infile)
 	if err != nil {

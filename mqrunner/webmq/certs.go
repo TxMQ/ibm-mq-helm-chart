@@ -2,6 +2,7 @@ package webmq
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -32,6 +33,8 @@ func RecreateWebmqKeystore(ssldir, keypath, certpath, capath string) (string, st
 
 func CreateWebmqKeystore(ssldir, keypath, certpath, capath string, deleteExistingKeystore bool) (string, string, error) {
 
+	debug := util.GetDebugFlag()
+
 	// check if ssldir exists
 	_, err := os.Stat(ssldir)
 	if err != nil {
@@ -59,8 +62,39 @@ func CreateWebmqKeystore(ssldir, keypath, certpath, capath string, deleteExistin
 
 	p12path := filepath.Join(ssldir, "webmq.p12")
 
+	if debug {
+		log.Printf("create-web-keystore-1: re-creating keystore %s\n", p12path)
+	}
+
 	if deleteExistingKeystore {
-		// delete existing keystore
+		if debug {
+			log.Printf("create-web-keystore-2: deleting keystore %s\n", p12path)
+		}
+
+		_, err := os.Stat(p12path)
+		if err != nil && os.IsNotExist(err) {
+			log.Printf("create-web-keystore-20: keystore %s does not exist\n", p12path)
+		} else if err != nil {
+			return "", "", err
+		} else {
+			if debug {
+				log.Printf("create-web-keystore-3: deleting keystore '%s'\n", p12path)
+				log.Printf("create-web-keystore-4: rm -f %s\n", p12path)
+			}
+
+			out, err := exec.Command("rm", "-f", p12path).CombinedOutput()
+			if err != nil {
+				if out != nil {
+					return "", "", fmt.Errorf("create-web-keystore: %s\n", out)
+				} else {
+					return "", "", err
+				}
+			}
+
+			if out != nil {
+				log.Printf("create-web-keystore-5: %s\n", out)
+			}
+		}
 	}
 
 	// use openssl to create p12 file from key,cert,chain input
@@ -68,6 +102,10 @@ func CreateWebmqKeystore(ssldir, keypath, certpath, capath string, deleteExistin
 
 	// generate random password
 	// openssl rand -base64 14 > keystore.password
+	if debug {
+		log.Printf("create-web-keystore-6: %s\n", "openssl rand -base64 14")
+	}
+
 	passbytes, err := exec.Command("openssl", "rand", "-base64", "14").CombinedOutput()
 	if err != nil {
 		return "","", err
@@ -76,7 +114,9 @@ func CreateWebmqKeystore(ssldir, keypath, certpath, capath string, deleteExistin
 	// strip newline character at the end of the password
 	password := strings.TrimSuffix(string(passbytes), "\n")
 
-	// save password into the file?
+	if debug {
+		log.Printf("create-web-keystore-7: %s\n", "/opt/mqm/web/bin/securityUtility encode password")
+	}
 
 	// encode password
 	encbytes, err := exec.Command("/opt/mqm/web/bin/securityUtility", "encode", string(password)).CombinedOutput()
@@ -96,6 +136,11 @@ func CreateWebmqKeystore(ssldir, keypath, certpath, capath string, deleteExistin
 
 	if iscapath {
 
+		if debug {
+			log.Printf("create-web-keystore-8: /usr/bin/openssl pkcs12 -export -name %s -out %s -inkey %s -in %s -certfile %s -password pass:password\n",
+				_certlabel, p12path, keypath, certpath, capath)
+		}
+
 		out, err := exec.Command("/usr/bin/openssl", "pkcs12", "-export", "-name", _certlabel, "-out", p12path,
 			"-inkey", keypath, "-in", certpath, "-certfile", capath, "-password", "pass:" + string(password)).CombinedOutput()
 
@@ -108,6 +153,11 @@ func CreateWebmqKeystore(ssldir, keypath, certpath, capath string, deleteExistin
 		}
 
 	} else {
+
+		if debug {
+			log.Printf("create-web-keystore-9: /usr/bin/openssl pkcs12 -export -name %s -out %s -inkey %s -in %s -password pass:password\n",
+				_certlabel, p12path, keypath, certpath)
+		}
 
 		out, err := exec.Command("/usr/bin/openssl", "pkcs12", "-export", "-name", _certlabel, "-out", p12path,
 			"-inkey", keypath, "-in", certpath, "-password", "pass:" + string(password)).CombinedOutput()
@@ -122,6 +172,10 @@ func CreateWebmqKeystore(ssldir, keypath, certpath, capath string, deleteExistin
 	}
 
 	// change p12 file mode
+	if debug {
+		log.Printf("create-web-keystore-10: chmod 0666 %s\n", p12path)
+	}
+
 	err = os.Chmod(p12path, 0666)
 	if err != nil {
 		return "", "", err

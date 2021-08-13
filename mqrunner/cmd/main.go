@@ -6,7 +6,6 @@ import (
 	"os"
 	"szesto.com/mqrunner/util"
 	"szesto.com/mqrunner/webmq"
-	"time"
 )
 
 func isStartMqweb() bool {
@@ -32,10 +31,10 @@ func Runmain() {
 	// env variables set in the pod template
 	// MQ_QMGR_NAME - queue manager name
 
-	if debug {
-		_ = util.ListDir("/var/mqm")
-		time.Sleep(1 * time.Second)
-	}
+	//if debug {
+	//	_ = util.ListDir("/var/mqm")
+	//	time.Sleep(1 * time.Second)
+	//}
 
 	// create runtime directories
 	err := util.CreateDirectories()
@@ -46,9 +45,9 @@ func Runmain() {
 
 	log.Printf("%s\n", "mq directories created")
 
-	if debug {
-		_ = util.ListDir("/var/mqm")
-	}
+	//if debug {
+	//	_ = util.ListDir("/var/mqm")
+	//}
 
 	// get queue manager name
 	qmgr := os.Getenv("MQ_QMGR_NAME")
@@ -57,7 +56,7 @@ func Runmain() {
 		log.Printf("run-main: qmgr name: '%s'\n", qmgr)
 	}
 
-	// get qmgr log format basic|json
+	// todo: qmgr log format basic|json
 
 	// merge mqsc startup files
 	err = util.MergeMqscFiles()
@@ -65,7 +64,7 @@ func Runmain() {
 		log.Fatalf("merge-mqsc-files: %v\n", err)
 	}
 
-	// fetch and merge startup config files
+	// fetch and merge config files
 	err = util.MergeGitConfigFiles()
 	if err != nil {
 		log.Printf("fetch-merge-config-files: %v\n", err)
@@ -91,8 +90,8 @@ func Runmain() {
 			log.Printf("run-main: qmgr %s does not exist, will be created\n", qmgr)
 		}
 
-		// create queue manager
-		err = util.CreateQmgr(qmgr)
+		// create queue manager, ignore ic file
+		err = util.CreateQmgr(qmgr, true)
 		if err != nil {
 			// log and exit
 			log.Fatalf("create-qmgr: %v\n", err)
@@ -106,46 +105,11 @@ func Runmain() {
 		}
 	}
 
-	// check mqsc syntax errors
-	ok, err := util.CheckMqscSyntax(qmgr)
-	if err != nil {
-		log.Printf("%v\n", err)
-	}
-
-	if ok {
-		if debug {
-			log.Printf("run-main: %s\n", "startup mqsc syntax check passed")
-		}
-	} else {
-		log.Printf("run-main: %s\n","startup mqsc commands contain syntax errors")
-	}
-
 	// tail system log: /var/mqm/errors/AMQERR01.LOG
 	util.TailMqLog()
 
 	// tail qmgr log: /var/mqm/qmgrs/{qmgr}/errors/AMQERR01.LOG
 	util.TailQmgrLog(qmgr)
-
-	// todo: stop/start: make sure qmgr completely stopped
-	// this is an edge use case
-
-	//// check if qmgr is running
-	//running, err := util.IsQmgrRunning(qmgr)
-	//if err != nil {
-	//	// log and exit
-	//	log.Fatalf("is-qmgr-running: %v\n", err)
-	//}
-	//
-	//// if running, stop qmgr
-	//if running {
-	//	err = util.StopQmgr(qmgr)
-	//	if err != nil {
-	//		// log and exit
-	//		log.Fatalf("stop-qmgr: %v\n", err)
-	//	}
-	//
-	//	log.Printf("qmgr %s stopped", qmgr)
-	//}
 
 	if util.IsEnableTls() {
 		// import certs into the keystore
@@ -172,16 +136,6 @@ func Runmain() {
 
 	log.Printf("qmgr '%s' started", qmgr)
 
-	// using default key repository
-	// set qmgr tls key repository
-	//if util.IsEnableTls() {
-	//	err = util.SetQmgrKeyRepoLocation(qmgr)
-	//	if err != nil {
-	//		// log and exit
-	//		log.Fatalf("set-qmgr-key-repo-location: %v\n", err)
-	//	}
-	//}
-
 	// configure webconsole
 	if isStartMqweb() || isConfigureMqweb() {
 		log.Printf("%s\n", "configuring webconsole")
@@ -197,13 +151,18 @@ func Runmain() {
 		if isStartMqweb() {
 			err = util.StartMqweb()
 			if err != nil {
-				// log and exit
-				log.Fatalf("start-mq-web: %v\n", err)
+				// log
+				log.Printf("start-mq-web: %v\n", err)
 			}
 		}
 
 	} else {
 		log.Printf("%s\n", "webconsole is off")
+	}
+
+	// apply startup configuration
+	if err = util.ApplyStartupConfig(qmgr); err != nil {
+		log.Printf("run-main: %v\n", err)
 	}
 
 	// clear env var secrets
