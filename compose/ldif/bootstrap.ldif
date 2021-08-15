@@ -1,0 +1,41 @@
+dn: dc=szesto,dc=com
+objectClass: dcObject
+objectClass: organization
+dc: szesto
+o: szesto
+
+dn: ou=users,dc=szesto,dc=com
+objectClass: organizationalUnit
+ou: users
+
+dn: ou=groups,dc=szesto,dc=com
+objectClass: organizationalUnit
+ou: groups
+
+dn: uid=roky,ou=users,dc=szesto,dc=com
+objectClass: inetOrgPerson
+uid: roky
+cn: roky
+sn: szesto
+userPassword: hello
+
+dn: uid=karson,ou=users,dc=szesto,dc=com
+objectClass: inetOrgPerson
+uid: karson
+cn: karson
+sn: szesto
+userPassword: hello
+
+dn: uid=tobsky,ou=users,dc=szesto,dc=com
+objectClass: inetOrgPerson
+uid: tobsky
+cn: tobsky
+sn: szesto
+userPassword: hello
+
+dn: cn=devs,ou=groups,dc=szesto,dc=com
+objectClass: groupOfNames
+cn: devs
+member: uid=roky,ou=users,dc=szesto,dc=com
+member: uid=karson,ou=users,dc=szesto,dc=com
+member: uid=tobsky,ou=users,dc=szesto,dc=com

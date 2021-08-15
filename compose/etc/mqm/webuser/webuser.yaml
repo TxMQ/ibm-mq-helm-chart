@@ -18,9 +18,10 @@ ldapregistry:
     basedn: dc=szesto,dc=com
     binddn: cn=admin,dc=szesto,dc=com
     bindpassword: ""
-    host: openldap.default.svc.cluster.local
+    #host: openldap.default.svc.cluster.local
+    host: redhat.fios-router.home
     ldaptype: Custom
-    port: 389
+    port: 1389
     realm: openldap
     sslenabled: false
   groupdef:

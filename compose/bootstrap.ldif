@@ -1,0 +1,45 @@
+dn: uid=karson,ou=users,dc=szesto,dc=com
+objectClass: inetOrgPerson
+#objectClass: organizationalPerson
+objectClass: person
+objectClass: top
+uid: karson
+cn: karson
+sn: szesto
+mail: karson@szesto.com
+userPassword: password
+
+dn: uid=roky,ou=users,dc=szesto,dc=com
+objectClass: inetOrgPerson
+#objectClass: organizationalPerson
+objectClass: person
+objectClass: top
+uid: roky
+cn: roky
+sn: szesto
+mail: roky@szesto.com
+userPassword: password
+
+dn: uid=tobsky,ou=users,dc=szesto,dc=com
+objectClass: inetOrgPerson
+#objectClass: organizationalPerson
+objectClass: person
+objectClass: top
+uid: tobsky
+cn: tobsky
+sn: szesto
+mail: tobsky@szesto.com
+userPassword: password
+
+dn: ou=groups,dc=szesto,dc=com
+objectClass: organizationalUnit
+objectClass: top
+ou: groups
+
+dn: cn=devs,ou=groups,dc=szesto,dc=com
+objectClass: groupOfNames
+objectClass: top
+cn: devs
+member: uid=karson,ou=users,dc=szesto,dc=com
+member: uid=roky,ou=users,dc=szesto,dc=com
+member: uid=tobsky,ou=users,dc=szesto,dc=com

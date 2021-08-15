@@ -10,8 +10,9 @@ sudo podman volume rm mqsc
 sudo podman volume rm qmtls
 sudo podman volume rm qmtrust
 sudo podman volume rm webuser
+sudo podman volume rm ldif
 
-sudo podman run --cidfile $cidfile --name etcmqm -v mqsc:/etc/mqm/mqsc -v qmtls:/etc/mqm/pki/cert -v qmtrust:/etc/mqm/pki/trust -v webuser:/etc/mqm/webuser $img /bin/sh
+sudo podman run --cidfile $cidfile --name etcmqm -v mqsc:/etc/mqm/mqsc -v qmtls:/etc/mqm/pki/cert -v qmtrust:/etc/mqm/pki/trust -v webuser:/etc/mqm/webuser -v ldif:/ldifs $img /bin/sh
 
 cid=$(cat $cidfile)
 
@@ -37,6 +38,12 @@ done
 for f in `ls etc/mqm/webuser/webuser.yaml`
 do
 sudo podman cp $f etcmqm:/etc/mqm/webuser
+done
+
+# openldap ldif volume
+for f in `ls ldif/*.ldif`
+do
+sudo podman cp $f etcmqm:/ldifs
 done
 
 sudo podman container stop $cid
