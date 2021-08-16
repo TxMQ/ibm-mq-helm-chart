@@ -1,43 +1,62 @@
+version: "3.9"
+
 services:
-  mqrunner:
-    image: docker.io/simong5000/txmq-mq-base-rpm-9.2.2.0:167
-
-    ports:
-    - '1414:1414'
-
-    environment:
-    - MQ_QMGR_NAME=qm20
-    - MQRUNNER_DEBUG=1
-    - MQ_START_MQWEB=0
-    - LDAP_BIND_PASSWORD=admin
-    - MQ_ENABLE_TLS_NO_VAULT=false
-    - VAULT_ENABLE_TLS=false
-    - VAULT_LDAP_CREDS_INJECT_PATH=
-    - VAULT_TLS_KEY_INJECT_PATH=
-    - VAULT_TLS_CERT_INJECT_PATH=
-    - VAULT_TLS_CA_INJECT_PATH=
-    - GIT_CONFIG_URL=
-    - GIT_CONFIG_REF=
-    - GIT_CONFIG_DIR=
-
-    volumes:
-    - mqdata:/var/mqm
-#    - mqscyaml
-#    - mqscic
-#    - qmini
-#    - webuser
-#    - qmtls
-#    - qmtrust
-
   openldap:
     image: docker.io/bitnami/openldap:latest
     ports:
       - '1389:1389'
       - '1636:1636'
+    volumes:
+      - ldif:/ldifs
     environment:
-    - LDAP_ROOT=dc=szesto,dc=com
-    - LDAP_ADMIN_USERNAME=admin
-    - LDAP_ADMIN_PASSWORD=admin
+      - LDAP_ROOT=dc=szesto,dc=com
+      - LDAP_ADMIN_USERNAME=admin
+      - LDAP_ADMIN_PASSWORD=admin
+      - LDAP_ALLOW_ANON_BINDING=no
+
+  mqrunner:
+    image: localhost/txmq-mq-base-rpm-9.2.2.0:175
+    depends_on:
+      - openldap
+    ports:
+      - '1414:1414'
+      - '9443:9443'
+      - '40000:40000'
+    volumes:
+      - mqdata:/var/mqm
+      - mqsc:/etc/mqm/mqsc
+      - qmtls:/etc/mqm/pki/cert 
+      - qmtrust:/etc/mqm/pki/trust
+      - webuser:/etc/mqm/webuser
+    environment:
+      - MQ_QMGR_NAME=qm20
+      - LDAP_BIND_PASSWORD=admin
+      - MQ_START_MQWEB=1
+      - MQRUNNER_DEBUG=1
+      - GIT_CONFIG_URL= 
+      - GIT_CONFIG_REF= 
+      - GIT_CONFIG_DIR=
+      - MQ_ENABLE_TLS_NO_VAULT=1
+      - VAULT_ENABLE_TLS=false 
+      - VAULT_LDAP_CREDS_INJECT_PATH= 
+      - VAULT_TLS_KEY_INJECT_PATH= 
+      - VAULT_TLS_CERT_INJECT_PATH= 
+      - VAULT_TLS_CA_INJECT_PATH=
 
 volumes:
   mqdata:
+
+  mqsc:
+    external: true
+
+  qmtls:
+    external: true
+
+  qmtrust:
+    external: true
+
+  webuser:
+    external: true
+
+  ldif:
+    external: true
