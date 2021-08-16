@@ -2,9 +2,9 @@ kind: PersistentVolumeClaim
 apiVersion: v1
 metadata:
   annotations:
-#    {{- if not .Values.qmspec.storage.deleteClaim }}
-#    "helm.sh/resource-policy": keep
-#    {{- end }}
+    {{- if not .Values.qmspec.storage.deleteClaim }}
+    "helm.sh/resource-policy": keep
+    {{- end }}
   labels:
     {{- include "mqchart.labels" . | nindent 4 }}
   name: {{ .Release.Name }}-{{ .Values.qmspec.storage.pvcName }}

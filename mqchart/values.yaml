@@ -164,7 +164,7 @@ qmspec:
     # queue manager volume access mode ReadWriteOnce|ReadWriteMany
     accessMode: ReadWriteOnce
 
-    # @todo
+    # delete pvc when queue manager is deleted
     deleteClaim: false
 
     # queue manager volume size
