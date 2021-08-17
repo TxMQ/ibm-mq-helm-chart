@@ -1,41 +1,41 @@
-dn: dc=szesto,dc=com
+dn: dc=mqldap,dc=com
 objectClass: dcObject
 objectClass: organization
-dc: szesto
-o: szesto
+dc: mqldap
+o: mqldap
 
-dn: ou=users,dc=szesto,dc=com
+dn: ou=users,dc=mqldap,dc=com
 objectClass: organizationalUnit
 ou: users
 
-dn: ou=groups,dc=szesto,dc=com
+dn: ou=groups,dc=mqldap,dc=com
 objectClass: organizationalUnit
 ou: groups
 
-dn: uid=roky,ou=users,dc=szesto,dc=com
+dn: uid=user1,ou=users,dc=mqldap,dc=com
 objectClass: inetOrgPerson
-uid: roky
-cn: roky
-sn: szesto
+uid: user1
+cn: user1
+sn: user1
 userPassword: hello
 
-dn: uid=karson,ou=users,dc=szesto,dc=com
+dn: uid=user2,ou=users,dc=mqldap,dc=com
 objectClass: inetOrgPerson
-uid: karson
-cn: karson
-sn: szesto
+uid: user2
+cn: user2
+sn: user2
 userPassword: hello
 
-dn: uid=tobsky,ou=users,dc=szesto,dc=com
+dn: uid=user3,ou=users,dc=mqldap,dc=com
 objectClass: inetOrgPerson
-uid: tobsky
-cn: tobsky
-sn: szesto
+uid: user3
+cn: user3
+sn: user3
 userPassword: hello
 
-dn: cn=devs,ou=groups,dc=szesto,dc=com
+dn: cn=devs,ou=groups,dc=mqldap,dc=com
 objectClass: groupOfNames
 cn: devs
-member: uid=roky,ou=users,dc=szesto,dc=com
-member: uid=karson,ou=users,dc=szesto,dc=com
-member: uid=tobsky,ou=users,dc=szesto,dc=com
+member: uid=user1,ou=users,dc=mqldap,dc=com
+member: uid=user2,ou=users,dc=mqldap,dc=com
+member: uid=user3,ou=users,dc=mqldap,dc=com

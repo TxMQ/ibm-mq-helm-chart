@@ -9,17 +9,22 @@ apiroles:
 - groups:
   - devs
   name: MQWebUser
-clientauth:
-  enabled: false
-  keystorepass: ""
-  truststorepass: ""
+webroles:
+- groups:
+  - devs
+  name: MQWebAdmin
+- groups:
+  - devs
+  name: MQWebAdminRO
+- groups:
+  - devs
+  name: MQWebUser
 ldapregistry:
   connect:
-    basedn: dc=szesto,dc=com
-    binddn: cn=admin,dc=szesto,dc=com
+    basedn: dc=mqldap,dc=com
+    binddn: cn=admin,dc=mqldap,dc=com
     bindpassword: ""
-    #host: openldap.default.svc.cluster.local
-    host: redhat.fios-router.home
+    host: openldap.default.svc.cluster.local
     ldaptype: Custom
     port: 1389
     realm: openldap
@@ -31,6 +36,10 @@ ldapregistry:
   userdef:
     objectclass: inetOrgPerson
     usernameattr: uid
+clientauth:
+  enabled: false
+  keystorepass: ""
+  truststorepass: ""
 variables:
 - name: httpsPort
   value: "9443"
@@ -38,13 +47,3 @@ variables:
   value: '*'
 - name: mqRestCorsAllowedOrigints
   value: '*'
-webroles:
-- groups:
-  - devs
-  name: MQWebAdmin
-- groups:
-  - devs
-  name: MQWebAdminRO
-- groups:
-  - devs
-  name: MQWebUser
