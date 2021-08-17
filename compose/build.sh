@@ -8,6 +8,8 @@ qmname=${1:-"qm1"}
 
 if [[ ! -d output/etc ]]; then
 cp -r etc output
+mkdir -p output/etc/mqm/pki/cert
+mkdir -p output/etc/mqm/pki/trust
 fi
 
 if [[ ! -d output/ldif ]]; then
