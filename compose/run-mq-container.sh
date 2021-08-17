@@ -1,9 +1,12 @@
 #!/bin/bash -x
 
-tag=$1
-img=localhost/txmq-mq-base-rpm-9.2.2.0:$tag
+# read env
+. ../env.sh
 
-name=qm20
+tag=${1:-$MQIMGTAG}
+img=$DC_MQIMGREG/txmq-mq-base-rpm-$MQVER:$tag
+
+qmname=qm20
 net=qmnet
 
 # vault
@@ -25,10 +28,10 @@ tls="-e MQ_ENABLE_TLS_NO_VAULT=1"
 ldap="-e LDAP_BIND_PASSWORD=admin"
 
 # qmgr, required
-qmgr="-e MQ_QMGR_NAME=qm20"
+qmgr="-e MQ_QMGR_NAME=$qmname"
 
 # all envs
 envars="$qmgr $debug $tls $web $vault $git $ldap"
 
 # run
-sudo podman run --rm --name $name --network $net -v mqdata:/var/mqm -v mqsc:/etc/mqm/mqsc -v qmtls:/etc/mqm/pki/cert -v qmtrust:/etc/mqm/pki/trust -v webuser:/etc/mqm/webuser $envars -p 1414:1414 -p 9443:9443 -p 40000:40000 $img
+sudo podman run --rm --name $qmname --network $net -v mqdata:/var/mqm -v mqsc:/etc/mqm/mqsc -v qmtls:/etc/mqm/pki/cert -v qmtrust:/etc/mqm/pki/trust -v webuser:/etc/mqm/webuser $envars -p 1414:1414 -p 9443:9443 -p 40000:40000 $img

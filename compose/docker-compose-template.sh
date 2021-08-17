@@ -1,3 +1,10 @@
+#!/bin/bash -x
+
+. ../env.sh
+
+outdir=$1
+
+cat <<EOF > $outdir/docker-compose.yaml
 version: "3.9"
 
 services:
@@ -9,13 +16,13 @@ services:
     volumes:
       - ldif:/ldifs
     environment:
-      - LDAP_ROOT=dc=szesto,dc=com
+      - LDAP_ROOT=dc=mqldap,dc=com
       - LDAP_ADMIN_USERNAME=admin
       - LDAP_ADMIN_PASSWORD=admin
       - LDAP_ALLOW_ANON_BINDING=no
 
   mqrunner:
-    image: localhost/txmq-mq-base-rpm-9.2.2.0:175
+    image: $DC_MQIMGREG/txmq-mq-base-rpm-$MQVER:$MQIMGTAG
     depends_on:
       - openldap
     ports:
@@ -60,3 +67,4 @@ volumes:
 
   ldif:
     external: true
+EOF
