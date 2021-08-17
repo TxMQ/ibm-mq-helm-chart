@@ -67,6 +67,15 @@ qmspec:
   - name: MQRUNNER_DEBUG
     value: "1"
 
+  - name: MQ_LOG_FILTER
+    # filter mq log to standard output
+    # comma separated list of prefixes
+    # empty value will suppress mq output to std out
+    # special value NO_FILTER will output every line of mq log
+    # special value DEFAULT_FILTER will apply AMQ filter to mq output
+    #
+    value: ""
+
 #  resources:
 #    limits:
 #      cpu: "250m"

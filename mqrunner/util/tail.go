@@ -3,6 +3,8 @@ package util
 import (
 	"fmt"
 	"github.com/nxadm/tail"
+	"log"
+	"os"
 	"strings"
 )
 
@@ -23,7 +25,8 @@ func TailMqLog() {
 		Logger:      nil,
 	}
 
-	go TailFile(mqlog, config)
+	filters := getLogFilters()
+	go TailFile(mqlog, config, filters)
 }
 
 func TailQmgrLog(qmgr string) {
@@ -43,10 +46,27 @@ func TailQmgrLog(qmgr string) {
 		Logger:      nil,	// Use a Logger. When nil, the Logger is set to tail.DefaultLogger.
 	}
 
-	go TailFile(qmgrlog, config)
+	filters := getLogFilters()
+	go TailFile(qmgrlog, config, filters)
 }
 
-func TailFile(file string, config tail.Config) {
+func getLogFilters() []string {
+	// comma separated list of filters
+	fenv := os.Getenv("MQ_LOG_FILTER")
+	if len(fenv) > 0 {
+		return strings.Split(fenv, ",")
+	}
+	return nil
+}
+
+func TailFile(file string, config tail.Config, filters []string) {
+
+	const mqLogDefaultFilter = "DEFAULT_FILTER"
+	const mqLogNoFilter = "NO_FILTER"
+
+	if GetDebugFlag() {
+		log.Printf("tail-file: applying log filters: %v to log file: %s\n", filters, file)
+	}
 
 	// open file
 	t, err := tail.TailFile(file, config)
@@ -58,11 +78,27 @@ func TailFile(file string, config tail.Config) {
 	// range over the channel of Lines
 	// forever (follow, re-open)
 	for line := range t.Lines {
-		// apply AMQ* filter
-		if len(line.Text) > 0 {
-			// todo: pass environment var with pattern
-			if strings.HasPrefix(line.Text, "NOOUT" /*"AMQ"*/) {
+
+		if len(filters) == 0 {
+			// no-output
+			continue
+
+		} else if len(filters) == 1 && strings.ToUpper(filters[0]) == mqLogNoFilter {
+			// output every line
+			fmt.Println(line.Text)
+
+		} else if len(filters) == 1 && strings.ToUpper(filters[0]) == mqLogDefaultFilter {
+			if strings.HasPrefix(line.Text, "AMQ") {
 				fmt.Println(line.Text)
+			}
+
+		} else if len(filters) > 0 {
+			// apply input filters
+			for _, f := range filters {
+				if strings.HasPrefix(line.Text, f) {
+					fmt.Println(line.Text)
+					break
+				}
 			}
 		}
 	}

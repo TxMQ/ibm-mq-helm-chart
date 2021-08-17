@@ -41,6 +41,7 @@ services:
       - LDAP_BIND_PASSWORD=admin
       - MQ_START_MQWEB=1
       - MQRUNNER_DEBUG=1
+      - MQ_LOG_FILTER=
       - GIT_CONFIG_URL= 
       - GIT_CONFIG_REF= 
       - GIT_CONFIG_DIR=

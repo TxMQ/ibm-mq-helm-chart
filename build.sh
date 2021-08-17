@@ -4,6 +4,11 @@
 
 registry=${1:-$MQIMGREG}
 
+if [[ -z $registry ]]; then
+echo output image registry parameter required
+exit 1
+fi
+
 # Chart.AppVersion value must match this value.
 mqver=$MQVER
 
