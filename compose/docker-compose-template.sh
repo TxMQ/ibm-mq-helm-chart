@@ -3,6 +3,7 @@
 . ../env.sh
 
 outdir=$1
+qmgrname=$2
 
 cat <<EOF > $outdir/docker-compose.yaml
 version: "3.9"
@@ -36,7 +37,7 @@ services:
       - qmtrust:/etc/mqm/pki/trust
       - webuser:/etc/mqm/webuser
     environment:
-      - MQ_QMGR_NAME=qm20
+      - MQ_QMGR_NAME=$qmgrname
       - LDAP_BIND_PASSWORD=admin
       - MQ_START_MQWEB=1
       - MQRUNNER_DEBUG=1

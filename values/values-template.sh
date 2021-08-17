@@ -4,6 +4,7 @@
 . ../env.sh
 
 outdir=$1
+qmname=$2
 
 cat << EOF > $outdir/values.yaml
 qmspec:
@@ -42,7 +43,7 @@ qmspec:
     name: 'ldapcreds' # ldapcreds
 
   # queue manager name - required
-  name: qm20
+  name: $qmname
 
   # custom docker image - required
   image: $MQIMGREG/txmq-mq-base-rpm-$MQVER:$MQIMGTAG

@@ -3,10 +3,10 @@
 # read env
 . ../env.sh
 
-tag=${1:-$MQIMGTAG}
+tag=$MQIMGTAG
 img=$DC_MQIMGREG/txmq-mq-base-rpm-$MQVER:$tag
 
-qmname=qm20
+qmname=${1:-"qm1"}
 net=qmnet
 
 # vault

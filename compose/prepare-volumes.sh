@@ -17,31 +17,31 @@ sudo podman run --cidfile $cidfile --name etcmqm -v mqsc:/etc/mqm/mqsc -v qmtls:
 cid=$(cat $cidfile)
 
 # mqsc volume
-for f in `ls etc/mqm/mqsc/*.mqsc`
+for f in `ls output/etc/mqm/mqsc/*.mqsc`
 do 
 sudo podman cp $f etcmqm:/etc/mqm/mqsc
 done
 
 # qmtls volume
-for f in `ls etc/mqm/pki/cert/*`
+for f in `ls output/etc/mqm/pki/cert/*`
 do
 sudo podman cp $f etcmqm:/etc/mqm/pki/cert
 done
 
 # qmtrust volume
-for f in `ls etc/mqm/pki/trust/*`
+for f in `ls output/etc/mqm/pki/trust/*`
 do
 sudo podman cp $f etcmqm:/etc/mqm/pki/trust
 done
 
 # webuser volume
-for f in `ls etc/mqm/webuser/webuser.yaml`
+for f in `ls output/etc/mqm/webuser/webuser.yaml`
 do
 sudo podman cp $f etcmqm:/etc/mqm/webuser
 done
 
 # openldap ldif volume
-for f in `ls ldif/*.ldif`
+for f in `ls output/ldif/*.ldif`
 do
 sudo podman cp $f etcmqm:/ldifs
 done

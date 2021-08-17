@@ -2,7 +2,9 @@
 
 mkdir -p output
 
-./values-template.sh output
+qmname=${1:-"qm1"}
+
+./values-template.sh output $qmname
 
 cp mqscic.yaml output
 cp mq.yaml  output  
