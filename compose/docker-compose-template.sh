@@ -5,7 +5,7 @@
 outdir=$1
 qmgrname=$2
 
-cat <<EOF > $outdir/docker-compose.yaml
+cat <<EOF > $outdir/docker-compose-$qmgrname.yaml
 version: "3.9"
 
 services:
