@@ -22,7 +22,14 @@ func MergeMqscFiles() error {
 	mqyamlDir := "/etc/mqm/mqyaml"
 	mqyamlOutFile := GetMqscic()
 
-	err := MqYamlMerge(mqyamlDir, mqyamlOutFile)
+	// delete existing mqscic file
+	err := deleteFile(mqyamlOutFile)
+	if err != nil {
+		// log error message
+		log.Printf("merge-mqsc-files: %v\n", err)
+	}
+
+	err = MqYamlMerge(mqyamlDir, mqyamlOutFile)
 	if err != nil {
 		return err
 	}
