@@ -24,7 +24,7 @@ ldapregistry:
     basedn: dc=mqldap,dc=com
     binddn: cn=admin,dc=mqldap,dc=com
     bindpassword: ""
-    host: openldap.default.svc.cluster.local
+    host: openldap
     ldaptype: Custom
     port: 1389
     realm: openldap
