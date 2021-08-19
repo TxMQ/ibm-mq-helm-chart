@@ -1,3 +1,16 @@
+#!/bin/bash
+
+envfile=$1
+
+if [[ -z $envfile ]]; then
+echo env file required: ./webuser-template.sh \<envfile\>
+exit 1
+fi
+
+# load env
+. $envfile
+
+cat <<EOF > output/webuser.yaml
 webuser:
   webroles:
   - name: MQWebAdmin
@@ -18,12 +31,12 @@ webuser:
   ldapregistry:
     connect:
       realm: openldap
-      host: openldap.default.svc.cluster.local
-      port: 389
+      host: $LDAP_HOST
+      port: $LDAP_PORT
       ldaptype: Custom
-      binddn: cn=admin,dc=mqldap,dc=com
-      bindpassword: admin
-      basedn: dc=mqldap,dc=com
+      binddn: $LDAP_USER
+      bindpassword: 
+      basedn: $LDAP_ROOT
       sslenabled: false
 
     groupdef:
@@ -49,3 +62,4 @@ webuser:
     value: '*'
   - name: mqRestCorsAllowedOrigints
     value: '*'
+EOF

@@ -1,12 +1,18 @@
 #!/bin/bash
 
-# read env
-. ../env.sh
+envfile=$1
 
-outdir=$1
-qmname=$2
+if [[ -z $envfile ]]; then
+echo qm env file required, ./qmspec-template.sh envfile
+exit 1
+fi
 
-cat << EOF > $outdir/values.yaml
+# load env
+. $envfile
+
+outdir=output
+
+cat << EOF > $outdir/qmspec.yaml
 qmspec:
 
   #
@@ -43,7 +49,7 @@ qmspec:
     name: 'ldapcreds' # ldapcreds
 
   # queue manager name - required
-  name: $qmname
+  name: $QMNAME
 
   # custom docker image - required
   image: $MQIMGREG/txmq-mq-base-rpm-$MQVER:$MQIMGTAG
@@ -89,63 +95,6 @@ qmspec:
     pvcName: qm-sts-claim
     storageClass: standard
     accessMode: ReadWriteOnce
-    # @todo
     deleteClaim: false
     size: 2Gi
-
-#
-# mq web console configuration
-#
-webuser:
-  #
-  # groups mapped to built-in web roles
-  #
-  webroles:
-  - name: MQWebAdmin
-    groups: [devs]
-  - name: MQWebAdminRO
-    groups: [devs]
-  - name: MQWebUser
-    groups: [devs]
-
-  #
-  # groups mapped to built-in api roles
-  #
-  apiroles:
-  - name: MQWebAdmin
-    groups: [devs]
-  - name: MQWebAdminRO
-    groups: [devs]
-  - name: MQWebUser
-    groups: ["devs"]
-
-  #
-  # ldap registry
-  #
-  ldapregistry:
-    connect:
-      realm: openldap
-      host: openldap.default.svc.cluster.local
-      port: 389
-      ldaptype: Custom
-      binddn: cn=admin,dc=mqldap,dc=com
-      #
-      # bind password is defined in ldap secret
-      # or in the vault if configured
-      # otherwise define bind password here.
-      #
-      bindpassword: ""
-      basedn: dc=mqldap,dc=com
-      sslenabled: false
-
-    # group metadata
-    groupdef:
-      objectclass: groupOfNames
-      groupnameattr: cn
-      groupmembershipattr: member
-
-    # user metadata
-    userdef:
-      objectclass: inetOrgPerson
-      usernameattr: uid
 EOF

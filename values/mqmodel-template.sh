@@ -1,6 +1,21 @@
+#!/bin/bash
+
+envfile=$1
+
+if [[ -z $envfile ]]; then
+echo env file parameter required: mqmodel-template.sh \<envfile\>
+exit 1
+fi
+
+# read env
+. $envfile
+
+outdir=output
+
+cat <<EOF > $outdir/mqmodel.yaml
 mq:
   qmgr:
-    name: qm20
+    name: $QMNAME
     access:
       allowip: ["*"]
     authority:
@@ -13,30 +28,30 @@ mq:
   auth:
     ldap:
       connect:
-        ldaphost: "openldap.default.svc.cluster.local"
-        ldapport: 389
-        binddn: "cn=admin,dc=szesto,dc=com"
+        ldaphost: "$LDAP_HOST"
+        ldapport: $LDAP_PORT
+        binddn: "$LDAP_USER"
         bindpassword: ""
         tls: false
       groups:
-        groupsearchbasedn: "ou=groups,dc=szesto,dc=com"
+        groupsearchbasedn: "$BASEDN_GROUPS"
         objectclass: "groupOfNames"
         groupnameattr: "cn"
         groupmembershipattr: "member"
       users:
-        usersearchbasedn: "ou=users,dc=szesto,dc=com"
+        usersearchbasedn: "$BASEDN_USERS"
         objectclass: "inetOrgPerson"
         usernameattr: "uid"
         shortusernameattr: "cn"
 
   svrconn:
   - svrconnproperties:
-      name: epn.svrconn
+      name: APP.SVRCONN
       maxmsgl: 4096
     tls:
-      enabled: false
-      clientauth: false
-      ciphers: []
+      enabled: true
+      clientauth: true
+      ciphers: [TLS_RSA_WITH_AES_128_CBC_SHA256]
     access:
       allowip: ['*']
     authority:
@@ -44,7 +59,8 @@ mq:
         grant: [chg, crt, dlt, dsp, ctrl, ctrlx]
       - group: [devs]
         grant: [alladm]
-    alter: []
+    alter:
+      - ALTER CHANNEL(APP.SVRCONN) CHLTYPE(SVRCONN) SSLCAUTH(OPTIONAL)
 
   localqueue:
   - name: q.a
@@ -61,3 +77,4 @@ mq:
     - group: [devs]
       grant: [alladm]
       revoke: [dlt]
+EOF

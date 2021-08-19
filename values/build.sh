@@ -2,25 +2,28 @@
 
 qmname=${1:-"qm1"}
 
-registry=${2:-$MQIMGREG}
-
-if [[ -z $registry ]]; then
-echo mq image registry parameter required, set MQIMGREG env, or pass on the command line: build.sh \<qm\> \<registry\>
+if [[ -z $MQIMGREG ]]; then
+echo mq image registry value required, set MQIMGREG env var
 exit 1
 fi
 
 mkdir -p output
+envfile=output/$qmname.env
 
-if [[ ! -f output/values.yaml ]]; then
-./values-template.sh output $qmname
+if [[ ! -f $envfile ]]; then
+./setenv.sh $qmname
+fi
+
+if [[ ! -f output/qmspec.yaml ]]; then
+./qmspec-template.sh $envfile
 fi
 
 if [[ ! -f output/mqscic.yaml ]]; then
-cp mqscic.yaml output
+./mqscic-template.sh $envfile
 fi
 
-if [[ ! -f output/mq.yaml ]]; then
-cp mq.yaml  output  
+if [[ ! -f output/mqmodel.yaml ]]; then
+./mqmodel-template.sh $envfile
 fi
 
 if [[ ! -f output/qmini.yaml ]]; then
@@ -32,5 +35,5 @@ cp vault.yaml output
 fi
 
 if [[ ! -f output/webuser.yaml ]]; then
-cp webuser.yaml output
+./webuser-template.sh $envfile
 fi

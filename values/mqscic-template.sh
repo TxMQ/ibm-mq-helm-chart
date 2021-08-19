@@ -1,21 +1,29 @@
+qmenv=$1
+
+if [[ -z $qmenv ]]; then
+echo qm environment file required: ./mqscic-template.sh \<envfile\>
+exit 1
+fi
+
+# load environment
+. $qmenv
+
+cat <<EOF > output/mqscic.yaml
 mqscic: |
   DEFINE QLOCAL(Q.B) REPLACE DEFPSIST(YES)
   DEFINE QLOCAL(Q.C) REPLACE DEFPSIST(YES)
   *
-  *ALTER CHANNEL(EPN.SVRCONN) CHLTYPE(SVRCONN) SSLCAUTH(OPTIONAL)
-  *ALTER CHANNEL CHLTYPE(SVRCONN) SSLCIPH(TLS_RSA_WITH_AES_128_CBC_SHA256)
-  *
   *ALTER QMGR CONNAUTH(USE.LDAP)
   *
-  *define authinfo(use.ldap) + 
-  *authtype(IDPWLDAP) + 
-  *adoptctx(yes) + 
-  *authormd(searchgrp) + 
-  *basedng('ou=groups,dc=szesto,dc=com') + 
-  *basednu('ou=users,dc=szesto,dc=com') + 
+  *DEFINE AUTHINFO(USE.LDAP) + 
+  *AUTHTYPE(IDPWLDAP) + 
+  *ADOPTCTX(YES) + 
+  *AUTHORMD(SEARCHGRP) + 
+  *BASEDNG('$BASEDN_GROUPS') + 
+  *BASEDNU('$BASEDN_USERS') + 
   *CLASSGRP(groupOfNames) + 
   *CLASSUSR(inetOrgPerson) + 
-  *CONNAME('openldap.default.svc.cluster.local(389)') + 
+  *CONNAME('$LDAP_HOST($LDAP_PORT)') + 
   *CHCKCLNT(required) + 
   *CHCKLOCL(optional) + 
   *DESCR('ldap authinfo') + 
@@ -23,7 +31,7 @@ mqscic: |
   *FINDGRP(member) + 
   *GRPFIELD(cn) + 
   *LDAPPWD('admin') + 
-  *LDAPUSER('cn=admin,dc=szesto,dc=com') + 
+  *LDAPUSER('$LDAP_USER') + 
   *NESTGRP(yes) + 
   *SECCOMM(no) + 
   *SHORTUSR(cn) + 
@@ -31,3 +39,4 @@ mqscic: |
   *REPLACE
   *
   *REFRESH SECURITY TYPE(CONNAUTH)
+EOF
