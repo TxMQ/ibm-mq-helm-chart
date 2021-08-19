@@ -128,14 +128,14 @@ webuser:
       host: openldap.default.svc.cluster.local
       port: 389
       ldaptype: Custom
-      binddn: cn=admin,dc=szesto,dc=com
+      binddn: cn=admin,dc=mqldap,dc=com
       #
       # bind password is defined in ldap secret
       # or in the vault if configured
       # otherwise define bind password here.
       #
       bindpassword: ""
-      basedn: dc=szesto,dc=com
+      basedn: dc=mqldap,dc=com
       sslenabled: false
 
     # group metadata

@@ -21,9 +21,9 @@ webuser:
       host: openldap.default.svc.cluster.local
       port: 389
       ldaptype: Custom
-      binddn: cn=admin,dc=szesto,dc=com
+      binddn: cn=admin,dc=mqldap,dc=com
       bindpassword: admin
-      basedn: dc=szesto,dc=com
+      basedn: dc=mqldap,dc=com
       sslenabled: false
 
     groupdef:

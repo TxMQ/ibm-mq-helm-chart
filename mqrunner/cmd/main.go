@@ -16,9 +16,13 @@ func isConfigureMqweb() bool {
 	return os.Getenv("MQ_CONFIGURE_MQWEB") == "1"
 }
 
-func Runmain() {
+func prepareQueueManager(qmgr string) error {
 
 	debug := util.GetDebugFlag()
+
+	if debug {
+		log.Printf("run-main: qmgr name: '%s'\n", qmgr)
+	}
 
 	if debug {
 		log.Printf("run-main: debug flag set")
@@ -37,10 +41,10 @@ func Runmain() {
 	//}
 
 	// create runtime directories
-	err := util.CreateDirectories()
-	if err != nil {
-		// ignore for now
+	if err := util.CreateDirectories(); err != nil {
 		fmt.Printf("create-directories: %v\n", err)
+
+		return err
 	}
 
 	log.Printf("%s\n", "mq directories created")
@@ -49,61 +53,68 @@ func Runmain() {
 	//	_ = util.ListDir("/var/mqm")
 	//}
 
-	// get queue manager name
-	qmgr := os.Getenv("MQ_QMGR_NAME")
-
-	if debug {
-		log.Printf("run-main: qmgr name: '%s'\n", qmgr)
-	}
-
 	// todo: qmgr log format basic|json
 
 	// merge mqsc startup files
-	err = util.MergeMqscFiles()
-	if err != nil {
-		log.Fatalf("merge-mqsc-files: %v\n", err)
+	if err := util.MergeMqscFiles(); err != nil {
+		log.Printf("merge-mqsc-files: %v\n", err)
+
+		// ignore merge error, continue
 	}
 
 	// fetch and merge config files
-	err = util.MergeGitConfigFiles()
-	if err != nil {
+	if err := util.MergeGitConfigFiles(); err != nil {
 		log.Printf("fetch-merge-config-files: %v\n", err)
+
+		// ignore merge error, continue
 	}
 
-	// start runner
-	log.Printf("mq runner '%s' starting...\n", qmgr)
-	ctl := util.StartRunner()
-	<-ctl
+	return nil
+}
 
-	//defer util.StopRunner()
+func createQueueManager(qmgr string) error {
+	debug := util.GetDebugFlag()
 
 	// check if qmgr already configured
 	qmconf, msg, err := util.QmgrConf(qmgr)
 	if err != nil {
+		// log error message, continue as if qmgr does not exist
 		log.Printf("run-main: %v\n", err)
+
 	} else {
 		log.Printf("%s\n", msg)
 	}
 
 	if qmconf == false {
 		if debug {
-			log.Printf("run-main: qmgr %s does not exist, will be created\n", qmgr)
+			log.Printf("run-main: queue manager %s does not exist, will be created\n", qmgr)
 		}
 
 		// create queue manager, ignore ic file
-		err = util.CreateQmgr(qmgr, true)
-		if err != nil {
-			// log and exit
-			log.Fatalf("create-qmgr: %v\n", err)
-		}
+		if err = util.CreateQmgr(qmgr, true); err != nil {
+			// log error
+			log.Printf("create-qmgr: %v\n", err)
 
-		log.Printf("qmgr %s created", qmgr)
+			log.Printf("queue manager %s create failed", qmgr)
+
+			return err
+
+		} else {
+			log.Printf("queue manager %s created", qmgr)
+		}
 
 	} else {
 		if debug {
-			log.Printf("run-main: qmgr '%s' exists", qmgr)
+			log.Printf("run-main: queue manager '%s' exists", qmgr)
 		}
 	}
+
+	return nil
+}
+
+func postCreateQueueManager(qmgr string) error {
+
+	debug := util.GetDebugFlag()
 
 	// tail system log: /var/mqm/errors/AMQERR01.LOG
 	util.TailMqLog()
@@ -113,11 +124,13 @@ func Runmain() {
 
 	if util.IsEnableTls() {
 		// import certs into the keystore
-		err = util.ImportCertificates(qmgr)
-		if err != nil {
-			// log and exit
-			log.Fatalf("import-certificates: %v\n", err)
+		if err := util.ImportCertificates(qmgr); err != nil {
+			// log error
+			log.Printf("import-certificates: %v\n", err)
+
+			// return error?
 		}
+
 	} else {
 		if debug {
 			log.Printf("run-main: TLS is not enabled")
@@ -125,34 +138,41 @@ func Runmain() {
 	}
 
 	// start qeueue manager
-	err = util.StartQmgr(qmgr)
-	if err != nil {
-		// log and exit
-		log.Fatalf("start-qmgr: %v\n", err)
+	if err := util.StartQmgr(qmgr); err != nil {
+		// log error
+		log.Printf("start-qmgr: %v\n", err)
 
-		// queue manager stop may take time
-		// 2021/06/25 20:45:57 start-qmgr: IBM MQ queue manager 'qm10' ending.
+		log.Printf("Queue manager %s did not start\n", qmgr)
+
+		return err
 	}
 
-	log.Printf("qmgr '%s' started", qmgr)
+	log.Printf("Queue manager '%s' started", qmgr)
 
 	// configure webconsole
 	if isStartMqweb() || isConfigureMqweb() {
 		log.Printf("%s\n", "configuring webconsole")
 
-		err = webmq.ConfigureWebconsole()
+		err := webmq.ConfigureWebconsole()
 		if err != nil {
-			// log and exit
-			log.Fatalf("configure-webconsole: %v\n", err)
-		}
+			// log error
+			log.Printf("configure-webconsole: %v\n", err)
 
-		log.Printf("%s\n", "starting mq web console")
+			if isStartMqweb() {
+				log.Printf("web console configuration failed, web console will not be started")
+			}
 
-		if isStartMqweb() {
-			err = util.StartMqweb()
-			if err != nil {
-				// log
-				log.Printf("start-mq-web: %v\n", err)
+		} else {
+
+			if isStartMqweb() {
+				log.Printf("%s\n", "starting mq web console")
+				log.Printf("%s\n", "web console will connect to ldap, if taking too long check ldap server")
+
+				err = util.StartMqweb()
+				if err != nil {
+					// log error
+					log.Printf("start-mq-web: %v\n", err)
+				}
 			}
 		}
 
@@ -161,8 +181,47 @@ func Runmain() {
 	}
 
 	// apply startup configuration
-	if err = util.ApplyStartupConfig(qmgr); err != nil {
+	if err := util.ApplyStartupConfig(qmgr); err != nil {
+		// log error message
 		log.Printf("run-main: %v\n", err)
+	}
+
+	return nil
+}
+
+func Runmain() {
+
+	// get queue manager name
+	qmgr := os.Getenv("MQ_QMGR_NAME")
+	log.Printf("run-main: qmgr name: '%s'\n", qmgr)
+
+	// prepare queue manager
+	err := prepareQueueManager(qmgr)
+	if err != nil {
+		// log error
+		log.Printf("run-main: %v\n", err)
+	}
+
+	// start mq runner
+	log.Printf("mq runner '%s' starting...\n", qmgr)
+	ctl := util.StartRunner()
+	<-ctl
+
+	// create queue manager
+	err = createQueueManager(qmgr)
+	if err != nil {
+		fmt.Printf("run-main: %v\n", err)
+
+		fmt.Printf("run-main: creating queue manager failed, queue manager %s is not fully functional\n", qmgr)
+	}
+
+	// post-create queue manager
+	err = postCreateQueueManager(qmgr)
+	if err != nil {
+		// log error
+		fmt.Printf("run-main: %v\n", err)
+
+		fmt.Printf("run-main: some post-create steps failed, queue manager %s is not fully functional\n", qmgr)
 	}
 
 	// clear env var secrets

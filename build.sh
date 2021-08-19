@@ -5,7 +5,7 @@
 registry=${1:-$MQIMGREG}
 
 if [[ -z $registry ]]; then
-echo output image registry parameter required
+echo mq image registry parameter required, either set MQIMGREG env or pass as argument: build.sh \<registry\>
 exit 1
 fi
 
