@@ -6,4 +6,6 @@ metadata:
     {{- include "mqchart.labels" . | nindent 4 }}
 data:
   webuser.yaml: |-
+    {{- if .Values.webuser }}
     {{- toYaml .Values.webuser | nindent 4 }}
+    {{- end }}

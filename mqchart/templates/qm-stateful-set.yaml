@@ -51,7 +51,7 @@ spec:
         {{- toYaml .Values.qmspec.annotations | nindent 8 }}
         {{- end }}
 
-        checksum/config: {{ include (print $.Template.BasePath "/mqsc-config-map.yaml") . | sha256sum }}
+        checksum/config: {{ cat "hello" (include (print $.Template.BasePath "/mqsc-config-map.yaml") .) (include (print $.Template.BasePath "/mqscic-config-map.yaml") .) (include (print $.Template.BasePath "/qmini-config-map.yaml") .) (include (print $.Template.BasePath "/webuser-config-map.yaml") .) | sha256sum }}
 
     spec:
       {{- with .Values.qmspec.affinity }}

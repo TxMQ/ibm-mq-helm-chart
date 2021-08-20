@@ -60,7 +60,7 @@ mq:
       - group: [devs]
         grant: [alladm]
     alter:
-      - ALTER CHANNEL(APP.SVRCONN) CHLTYPE(SVRCONN) SSLCAUTH(OPTIONAL)
+      - ALTER CHANNEL(APP.SVRCONN) CHLTYPE(SVRCONN) SSLCAUTH(REQUIRED)
 
   localqueue:
   - name: q.a
