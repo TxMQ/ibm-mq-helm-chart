@@ -3,6 +3,13 @@
 qmenv=$1
 qmname=$2
 
+ldaphost=${LDAP_HOST:-openldap}
+ldapport=${LDAP_PORT:-1389}
+ldaproot=${LDAP_ROOT:-dc=mqldap,dc=com}
+ldapuser=${LDAP_USER:-cn=admin,$ldaproot}
+basednu=${BASEDN_USERS:-ou=users,dc=$ldaproot}
+basedng=${BASEDN_GROUPS:-ou=groups,$ldaproot}
+
 cat <<EOF > $qmenv
 # queue manager
 MQ_QMGR_NAME=$qmname
@@ -35,6 +42,16 @@ MQRUNNER_DEBUG=1
 # tls
 MQ_ENABLE_TLS_NO_VAULT=1
 
-# ldap
-LDAP_BIND_PASSWORD=admin
+# ldap connection for webuser
+LDAP_HOST=$ldaphost
+LDAP_PORT=$ldapport
+LDAP_ROOT=$ldaproot
+LDAP_USER=$ldapuser
+
+# ldap connection for authinfo
+BASEDN_USERS=$basednu
+BASEDN_GROUPS=$basedng
+
+# ldap password
+LDAP_BIND_PASSWORD=${LDAP_BIND_PASSWORD:-admin}
 EOF

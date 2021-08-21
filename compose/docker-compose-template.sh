@@ -2,25 +2,42 @@
 
 . ../env.sh
 
-outdir=$1
-qmgrname=$2
+ldapenv=$1
+qmgrenv=$2
 
-cat <<EOF > $outdir/docker-compose-$qmgrname.yaml
+if [[ -z $ldapenv ]]; then
+echo ldap env file required: docker-compose-template.sh '<ldapenv> <qmgrenv>'
+exit 1
+fi
+
+if [[ -z $qmgrenv ]]; then
+echo qmgr env file required: docker-compose-template.sh '<ldapenv> <qmgrenv>'
+exit 1
+fi
+
+# load env
+. $ldapenv
+. $qmgrenv
+
+outdir=output
+qmname=$MQ_QMGR_NAME
+
+cat <<EOF > $outdir/docker-compose.yaml
 version: "3.9"
 
 services:
   openldap:
     image: docker.io/bitnami/openldap:latest
     ports:
-      - '1389:1389'
-      - '1636:1636'
+      - '$LDAP_TCP_PORT:1389'
+      - '$LDAP_SSL_PORT:1636'
     volumes:
       - ldif:/ldifs
     environment:
-      - LDAP_ROOT=dc=mqldap,dc=com
-      - LDAP_ADMIN_USERNAME=admin
-      - LDAP_ADMIN_PASSWORD=admin
-      - LDAP_ALLOW_ANON_BINDING=no
+      - LDAP_ROOT=$LDAP_ROOT
+      - LDAP_ADMIN_USERNAME=$LDAP_ADMIN_USERNAME
+      - LDAP_ADMIN_PASSWORD=$LDAP_ADMIN_PASSWORD
+      - LDAP_ALLOW_ANON_BINDING='no'
 
   mqrunner:
     image: $DC_MQIMGREG/txmq-mq-base-rpm-$MQVER:$MQIMGTAG
@@ -37,8 +54,8 @@ services:
       - qmtrust:/etc/mqm/pki/trust
       - webuser:/etc/mqm/webuser
     environment:
-      - MQ_QMGR_NAME=$qmgrname
-      - LDAP_BIND_PASSWORD=admin
+      - MQ_QMGR_NAME=$qmname
+      - LDAP_BIND_PASSWORD=$LDAP_BIND_PASSWORD
       - MQ_START_MQWEB=1
       - MQRUNNER_DEBUG=1
       - MQ_LOG_FILTER=

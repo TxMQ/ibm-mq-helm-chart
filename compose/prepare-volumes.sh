@@ -22,6 +22,8 @@ do
 sudo podman cp $f etcmqm:/etc/mqm/mqsc
 done
 
+# mqmodel volume
+
 # qmtls volume
 for f in `ls output/etc/mqm/pki/cert/*`
 do

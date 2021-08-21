@@ -4,19 +4,53 @@ mkdir -p output
 
 qmname=${1:-"qm1"}
 
-./docker-compose-template.sh output $qmname
+# network
+./create-network.sh
 
-qmenv=output/$qmname.env
-if [[ ! -f $qmenv ]];then
-./qm-env-template.sh $qmenv $qmname
+# ldap container environment
+ldapenv=output/ldap.env
+if [[ ! -f $ldapenv ]]; then
+./set-ldap-container-env.sh $ldapenv
 fi
 
-if [[ ! -d output/etc ]]; then
-cp -r etc output
+# mq container environment
+qmenv=output/$qmname.env
+if [[ ! -f $qmenv ]]; then
+./set-mq-container-env.sh $qmenv $qmname
+fi
+
+# webuser
+if [[ ! -d output/etc/mqm/webuser ]]; then
+mkdir -p output/etc/mqm/webuser
+./webuser-template.sh $qmenv
+fi
+
+# mqsc
+if [[ ! -d output/etc/mqm/mqsc ]]; then
+mkdir -p output/etc/mqm/mqsc
+./mqscic-template.sh $qmenv
+fi
+
+# mqmodel
+
+# ldif
+if [[ ! -d output/ldif ]]; then
+mkdir output/ldif
+./ldif-template.sh $ldapenv
+fi
+
+# tls certs
+if [[ ! -d output/etc/mqm/pki ]]; then
 mkdir -p output/etc/mqm/pki/cert
 mkdir -p output/etc/mqm/pki/trust
+if [[ ! -z $TLS_GEN_RESULT ]]; then
+./copy-certs.sh $TLS_GEN_RESULT
+else
+echo TLS_GEN_RESULT env var not set, certificates not copied\; copy certificates manually: copy-certs.sh '<tls-gen-result-dir>'
+fi
 fi
 
-if [[ ! -d output/ldif ]]; then
-cp -r ldif output
+# docker compose
+if [[ ! -f output/docker-compose.yaml ]]; then
+./docker-compose-template.sh $ldapenv $qmenv
 fi
