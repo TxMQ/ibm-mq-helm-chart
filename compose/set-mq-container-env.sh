@@ -7,7 +7,7 @@ ldaphost=${LDAP_HOST:-openldap}
 ldapport=${LDAP_PORT:-1389}
 ldaproot=${LDAP_ROOT:-dc=mqldap,dc=com}
 ldapuser=${LDAP_USER:-cn=admin,$ldaproot}
-basednu=${BASEDN_USERS:-ou=users,dc=$ldaproot}
+basednu=${BASEDN_USERS:-ou=users,$ldaproot}
 basedng=${BASEDN_GROUPS:-ou=groups,$ldaproot}
 
 cat <<EOF > $qmenv
