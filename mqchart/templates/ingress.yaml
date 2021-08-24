@@ -1,0 +1,33 @@
+{{- if .Values.qmspec.ingress.enable }}
+{{- if eq .Values.qmspec.ingress.ingressClass "nginx" }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-passthrough: "true"
+  name: {{ include "mqchart.fullname" . | trunc 54 }}-{{ .Values.qmspec.name | trunc 8 }}
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: {{ .Values.qmspec.ingress.webcHostname }}
+    http:
+      paths:
+      - backend:
+          service:
+            name: {{ include "mqchart.fullname" . | trunc 54 }}-{{ .Values.qmspec.name | trunc 8 }}
+            port:
+              number: {{ .Values.qmspec.service.httpswebcPort }}
+        path: /
+        pathType: Prefix
+  - host: {{ .Values.qmspec.ingress.qmgrHostname }}
+    http:
+      paths:
+      - backend:
+          service:
+            name: {{ include "mqchart.fullname" . | trunc 54 }}-{{ .Values.qmspec.name | trunc 8 }}
+            port:
+              number: {{ .Values.qmspec.service.qmgrPort }}
+        path: /
+        pathType: Prefix
+{{- end }}
+{{- end }}

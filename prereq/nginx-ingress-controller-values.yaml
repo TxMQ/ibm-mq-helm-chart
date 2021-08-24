@@ -1,0 +1,13 @@
+controller:
+  admissionWebhooks:
+    enabled: false
+
+  config:
+    sslProtocols: TLSv1.2,TLSv1.3
+
+  extraArgs:
+    enable-ssl-passthrough: "true"
+    v: 3
+
+  service:
+    type: LoadBalancer

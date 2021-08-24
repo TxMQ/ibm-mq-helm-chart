@@ -57,6 +57,41 @@ qmspec:
   # image pull policy IfNotPresent|Always
   imagePoolPolicy: Always
 
+  service:
+
+    # service type: ClusterIP, NodePort, LoadBalancer
+    # if service type is ClusterIP, set ingress.enable=true
+    # if service type is LoadBalancer, it is best to reserve ip address for the load balancer
+    serviceType: ClusterIP
+
+    qmgrPort: 1414
+    httpswebcPort: 9443
+
+  ingress:
+    enable: "true"
+    # nginx, openshift
+    ingressClass: "nginx"
+
+    # qmgr host name for the ingress.
+    # typically qmgr name and a qualifier will be prepended to the ingress domain name.
+    # qmgr host name must be unique for the chart release.
+    # qmgr host name must be resolvable in naming service.
+    # Ingress is configured in ssl passthrough mode. For this to work qmgr client code
+    # must support SNI TLS extension and include qmgr hostname in sni extension.
+    # if sni extension is not available, you can configure service type of LoadBalancer
+    # and bypass ingress.
+    qmgrHostname: ""
+
+    # web console hostname for the ingress.
+    # typically web console and a qualifier will be prepended to the ingress domain name.
+    # web console host name must be unique for the chart release.
+    # web console host name must be resolvable in naming service.
+    # Ingress is configured in ssl passthrough mode. For this to work web browser
+    # must support SNI TLS extension and include web console hostname in sni extension.
+    # If sni extension is not available, you can configure service type of LoadBalancer
+    # and bypass ingress.
+    webcHostname: ""
+
   #
   # set environment variables
   #
