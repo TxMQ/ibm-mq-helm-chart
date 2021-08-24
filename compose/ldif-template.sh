@@ -11,8 +11,10 @@ fi
 . $envfile
 
 # compute dc and o from ldap_root
-dc=mqldap
-o=mqldap
+# we assume 2 valued ldap root, eg: dc=mqldap,dc=com
+read -r -a dcarr <<<$(echo "$LDAP_ROOT" | tr "=," " ")
+dc=${dcarr[1]}
+o=${dcarr[1]}
 
 out=output/ldif
 
