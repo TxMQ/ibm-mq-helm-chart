@@ -1,5 +1,7 @@
 #!/bin/bash -x
 
+# install docker-compose
+
 # start podman socket
 sudo systemctl start podman.socket
 

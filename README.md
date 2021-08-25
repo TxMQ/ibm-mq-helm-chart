@@ -9,20 +9,142 @@ Clone build git repository to your local machine.<br>
 
 Each release is based on specific MQ version. MQ version is compiled into the chart release.<br>
 
-**Build custom image.**
+**Prerequisites**
+
+`prereq` directory contains a number of prerequisite scripts that you can run to install podman,
+and configure podman for docker-compose. There are also files for nginx ingress controller and nginx ingress controller helm chart customization file.
+
+**Build custom MQ image.**
+
+Custom image build is driven by environment variables defined in the `env.sh` file.
 
 ```
-git clone ...
-cd mq-operator && mkdir rpm
-tar xvf ... -C rpm
+export MQVER="9.2.3.0"
 
-sudo podman login docker.io
-build.sh docker-repo`
+export RPMDIR=rpm923/MQServer
+
+export MQIMGREG=$MQIMGREG
+
+export DC_MQIMGREG=localhost
 ```
 
-**Create image pull secret**
+Obtain MQ rpm archive, eg `IBM_MQ_9.2.3_LINUX_X86-64.tar.gz`.
 
-`oc create secret docker-registry image-pull-secret --docker-username=<u> --docker-password=<p> --docker-email=<e>`
+Match MQVER environment variable to the MQ version, eg: `MQVER=9.2.3.0`
+
+`RPMDIR` variable is a directory for the expanded MQ tar archive. Note that MQ rpm archive contains `MQServer` directory, so create just the first path segment of the `$RPMDIR` environment variable directory.<br>.
+
+Expand MQ rpm archive:<br>
+
+`mkdir rpm923; tar xzvf IBM_MQ_9.2.3_LINUX_X86-64.tar.gz -C rpm923`
+
+`MQIMGREG` environment variable is docker image registry for mq image. Login into  the`$MQIMGREG` docker registry:
+
+`podman login $MQIMGREG`
+
+`DC_MQIMGREG` environment variable is docker registry for MQ image for use by podman scripts and docker-compose. If we build image locally we can reuse local image for podman scripts and docker-compose. You can leave this value as is or set it to the value of `$MQIMGREG` environment variable.
+
+Run the build script: `./build.sh`<br>
+
+The build script will build MQ custom image, tag it and push it to the docker registry `$MQIMGREG`.<br>
+
+You can review images with: `sudo podman images`.
+
+```
+REPOSITORY                                     TAG         IMAGE ID      CREATED       SIZE
+$MQIMGREG/txmq-mq-base-rpm-9.2.3.0             206         2ba332a5d22d  5 days ago    2.53 GB
+localhost/txmq-mq-base-rpm-9.2.3.0             206         2ba332a5d22d  5 days ago    2.53 GB
+```
+
+**TLS certificates**
+
+TLS is required for MQ image. We use `tls-gen` project to generate mq container certificates and ca certificate. Mq container server and client certificates are signed by the ca key. If you have certificates from real ca, use them instead.<br>
+
+To clone `tls-gen` project:<br>
+`git clone https://github.com/michaelklishin/tls-gen`
+
+There are 2 use cases for certificate generation.
+
+One is 'local' use case, where mq container runs with podman script or docker-compose on alocal machine. In this case server CN is the name of a 'local' machine.
+
+Another is 'kubernetes' use case, when mq container runs on a kubernetes cluster. In this case, server CN is ingress endpoint hostname, and alt subject name is mq service name in the kubernetes cluster.
+
+*Generate TLS certificates for local podman scripts or docker-compose*
+Change to the `tls-gen/basic` directory.
+
+Run `make PASSWORD=password`<br>
+
+This will generate `result` directory with all crypto material. Note that server private key is encrypted with the password parameter.<br>
+
+To decrypt server private key:<br>
+`cd result; openssl rsa -in server_key.pem -out server_key_nopass.pem`<br>
+
+Note that `server_key_nopass.pem` is used later on by scripts loading queue manager container keystores.<br>
+
+Make a copy of a `result` directory:<br>
+`mv tls-gen/basic/result tls-gen/basic/result-local`.
+
+Set environment variable to point to this directory:<br>
+`export TLS_GEN_RESULT=/path/to/tls-gen/basic/result-local`
+
+**Running custom MQ image with podman scripts or docker-compose.**
+
+`compose` directory contains scripts to prepare and start using MQ image either with podman scripts or with docker-compose.
+
+Note that ldap directory is required for the queue manager container. When running with podman scripts or docker-compose bitnami ldap image is automatically pulled from docker io. You can configure ldap container with the bootstrap ldif file.
+
+Change to the `compose` directory: `cd compose`.
+
+If you did not set the `TLS_GEN_RESULT` environment variable as described above in the TLS section, you will need to run `copy-certs.sh` script as a separate step.
+
+Decide on the queue manager name and run the build script. Pass the queue manager name to the build script. Default queue manager name is `qm1`.
+
+`./build qm1`
+
+The build script creates `output` directory with the number of files that you can edit.
+
+```
+ls -l output
+-rw-rw-r--. docker-compose.yaml
+drwxrwxr-x. etc
+-rw-rw-r--. ldap.env
+drwxrwxr-x. ldif
+-rw-rw-r--. qm1.env
+```
+
+Ldap container configuration:<br>
+`ldap.env` is ldap container environment file.
+`ldif/bootstrap.ldif` is ldif bootstrap file loaded by the ldap container.
+
+Queue manager container configuration:<br>
+`qm1.env` is queue manager container environment file named after the queue manager.
+`etc/mqm/webuser/webuser.yaml` is mq web console configuration file for mq container.
+`etc/mqm/mqini` is a directory with mq ini file passed to mq container
+`etc/mqm/mqsc` is a directory with mqsc files passed to mq container.
+`etc/mqm/pki/cert` is a directory with key and certs passed to mq container to build key stores.
+`etc/mqm/pki/trust` is a directory with ca certs passed to mq container to build trust store.<br>
+
+Note that generated files are consistent with respect to queue manager environment file and ldap container environment file.<br>
+
+If you did not set `TLS_GEN_RESULT` environment variable, copy certificates to the output directory:
+`./copy-certs.sh path/to/tls-gen/basic/result-local`
+
+Prepare volumes for queue manager container and ldap container:<br>
+`./prepare-volumes.sh`
+
+*Run ldap container with the podman script.*
+The script takes ldap environment file as argument.<br>
+`./run-ldap-container.sh output/ldap.env`
+
+*Run mq container with the podman script.*
+The script take queue manager env file as argument.<br>
+`./run-mq-container.sh output/qm1.env`
+
+*Run ldap container with docker-compose*
+`cd output; sudo docker-compose up openldap`
+
+*Run qmgr container with docker compose*
+`cd output; sudo docker-compose up mqrunner`
 
 ### TxMQ MQ helm chart.
 
