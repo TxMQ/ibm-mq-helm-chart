@@ -49,6 +49,7 @@ services:
       - '40000:40000'
     volumes:
       - mqdata:/var/mqm
+      - qmini:/etc/mqm/qmini
       - mqsc:/etc/mqm/mqsc
       - qmtls:/etc/mqm/pki/cert 
       - qmtrust:/etc/mqm/pki/trust
@@ -71,6 +72,9 @@ services:
 
 volumes:
   mqdata:
+
+  qmini:
+    external: true
 
   mqsc:
     external: true

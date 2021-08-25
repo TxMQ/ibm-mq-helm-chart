@@ -31,6 +31,12 @@ mkdir -p output/etc/mqm/mqsc
 ./mqscic-template.sh $qmenv
 fi
 
+# qmini
+if [[ ! -d output/etc/mqm/qmini ]]; then
+mkdir -p output/etc/mqm/qmini
+./qmini-template.sh $qmenv
+fi
+
 # mqmodel
 
 # ldif

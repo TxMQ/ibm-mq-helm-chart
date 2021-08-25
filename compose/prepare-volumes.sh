@@ -10,9 +10,10 @@ sudo podman volume rm mqsc
 sudo podman volume rm qmtls
 sudo podman volume rm qmtrust
 sudo podman volume rm webuser
+sudo podman volume rm qmini
 sudo podman volume rm ldif
 
-sudo podman run --cidfile $cidfile --name etcmqm -v mqsc:/etc/mqm/mqsc -v qmtls:/etc/mqm/pki/cert -v qmtrust:/etc/mqm/pki/trust -v webuser:/etc/mqm/webuser -v ldif:/ldifs $img /bin/sh
+sudo podman run --cidfile $cidfile --name etcmqm -v mqsc:/etc/mqm/mqsc -v qmtls:/etc/mqm/pki/cert -v qmtrust:/etc/mqm/pki/trust -v webuser:/etc/mqm/webuser -v qmini:/etc/mqm/qmini -v ldif:/ldifs $img /bin/sh
 
 cid=$(cat $cidfile)
 
@@ -40,6 +41,12 @@ done
 for f in `ls output/etc/mqm/webuser/webuser.yaml`
 do
 sudo podman cp $f etcmqm:/etc/mqm/webuser
+done
+
+# qmini volume
+for f in `ls output/etc/mqm/qmini/*.yaml`
+do 
+sudo podman cp $f etcmqm:/etc/mqm/qmini
 done
 
 # openldap ldif volume
@@ -75,6 +82,13 @@ sudo chown 1001:1001 $voldir/$f
 done
 
 voldir="/var/lib/containers/storage/volumes/webuser/_data"
+for f in `sudo ls $voldir`
+do
+sudo chown 1001:1001 $voldir/$f
+#sudo cat $voldir/$f
+done
+
+voldir="/var/lib/containers/storage/volumes/qmini/_data"
 for f in `sudo ls $voldir`
 do
 sudo chown 1001:1001 $voldir/$f
