@@ -1,4 +1,11 @@
-#!/bin/bash -x
+#!/bin/bash
+
+if [[ ! -f output/ldap-config-map.yaml ]]; then
+echo Run \'./ldif-template.sh\' script to create \'output/ldap-config-map.yaml\' file.
+exit 1
+fi
+
+set -x
 
 kubectl apply -f output/ldap-config-map.yaml
 kubectl apply -f ./bitnami-sa.yaml
