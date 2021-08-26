@@ -11,8 +11,7 @@ Each release is based on specific MQ version. MQ version is compiled into the ch
 
 **Prerequisites**
 
-`prereq` directory contains a number of prerequisite scripts that you can run to install podman,
-and configure podman for docker-compose. There are also files for nginx ingress controller and nginx ingress controller helm chart customization file.
+The top level `prereq` directory contains prerequisite scripts that you can run to install podman, and configure podman for docker-compose. There are also files for nginx ingress controller and nginx ingress controller helm chart customization file.
 
 **Build custom MQ image.**
 
@@ -85,7 +84,11 @@ Make a copy of a `result` directory:<br>
 `mv tls-gen/basic/result tls-gen/basic/result-local`.
 
 Set environment variable to point to this directory:<br>
-`export TLS_GEN_RESULT=/path/to/tls-gen/basic/result-local`
+`export TLS_GEN_RESULT=/path/to/tls-gen/basic/result-local`  
+
+*Generate TLS certificates for kubernetes deployment*  
+
+
 
 **Running custom MQ image with podman scripts or docker-compose.**
 
@@ -133,74 +136,123 @@ Prepare volumes for queue manager container and ldap container:<br>
 `./prepare-volumes.sh`
 
 *Run ldap container with the podman script.*
-The script takes ldap environment file as argument.<br>
+The script takes ldap environment file as argument.  
 `./run-ldap-container.sh output/ldap.env`
 
 *Run mq container with the podman script.*
-The script take queue manager env file as argument.<br>
+The script take queue manager env file as argument.  
 `./run-mq-container.sh output/qm1.env`
 
-*Run ldap container with docker-compose*
+*Run ldap container with docker-compose*  
 `cd output; sudo docker-compose up openldap`
 
-*Run qmgr container with docker compose*
+*Run qmgr container with docker compose*  
 `cd output; sudo docker-compose up mqrunner`
 
 ### TxMQ MQ helm chart.
 
-To make it easier to work with the TxMQ chart configuration, yaml objects are grouped
-into a number of files and are available in the `values` directory.<br>
+**MQ helm chart dependencies**
 
-- qmgr.yaml
-- vault.yaml
-- qmini.yaml
-- mqscic.yaml
-- mq.yaml
+**Bitnami LDAP server image**
+LDAP server is required for queue manager authentication.
 
-*qmgr.yaml* defines basic kubernetes and queue manager configuration.<br>
+You can use bitnami ldap container deployment included in the top-level `openldap` directory.  
+Change to the `openldap` directory.  
 
-All other files are optional.<br>
+Before you create ldap deployment, run `ldif-template.sh` script to create bootstrap ldif config map.  
+You can customize bootstrap ldif data to match your requirements.  
 
-Use `helm` command to install TxMQ chart.<br>
+Apply yaml files:  
+```
+kubectl apply -f output/ldap-config-map.yaml
+kubectl apply -f bitnami-sa.yaml
+kubectl apply -f bitnami-service.yaml
+kubectl apply -f bitnami-deployment.yaml
+```
 
-`helm install -f qmgr.yaml [-f vault.yaml] [-f mqscic.yaml] [-f qmini.yaml] [-f mq.yaml] release mqchart/`
+You can run `apply-yaml.sh` script to apply above steps.
 
-**Dependencies**<br>
-Ldap server is required.<br>
-You can either use existing LDAP server or deploy openldap chart.<br>
+**Hashi Corp Vault**
+Vault integration feature is experimental.  
 
-Hashicorp vault is recommended. You can either use existing vault, or deploy hashicorp vault chart.<br>
+**Building MQ helm chart**
 
-**Configuring a chart**<br>
-Chart configuration contains many parameters and and be updated at any time.<br>
+MQ helm chart is located in the top-level git directory `mqchart` .  
 
-`values` directory contains starter configuration files.
+Since mq version can change with mq releases, build script in the `mqchart` directory creates `output` directory and reconsiles mq chart with correct mq version.  
 
-Look at the comments and update `values/values.yaml` file for the first configuration.<br>
+`cd mqchart; ./build.sh`
 
-That would include accepting a license, creating kubernetes secrets, naming queue manager, and ldap configuration.<br>
+All chart files will be copied to the `output` directory. When interacting with the chart point to the `output` directory location.  
 
-`helm install -f values/values.yaml <release-name> mqchart/`
+To use the chart we need to pass customization file (or files) to the `helm install` command.  
 
-It is recommended that Hashicorp vault integration is configured as next step.<br>
+Top-level `values` directory contains build script and templates to generate values files in the `output` directory. You can make changes to the values files in the `output` directory.  
 
-After vault is configured in `values/vault.yaml` pass it to the chart:<br>
-`helm install -f values/values.yaml -f values/vault.yaml <release-name> mqchart/`
+The build script in the `values` directory requires queue manager name parameter (qm1 default) and `MQIMGREG` environment variable to be set. The value of `MQIMGREG` environment variable is the name of the docker container registry for MQ image.  
 
-To configure queue manager at startup, place *mqsc* commands in `values/mqscic.yaml` file and pass it to the chart:
-`helm install -f values/values.yaml -f values/vault.yaml -f values/mqscic.yaml <release-name> mqchart/`
+From the top level change to the `values` directory and run the build script.  
+`cd values; export MQIMGREG=...; ./build.sh qm1`  
 
-To update queue manager ini parameters, place them in the `values/qmini.yaml` file and pass it to the chart:
-`helm install -f values/values.yaml -f values/vault.yaml -f values/mqscic.yaml -f values/qmini.yaml <release-name> mqchart/`
+The build script creates `values/output` directory.  
+```
+ls values/output:
+mqmodel.yaml
+mqscic.yaml
+qm1.env
+qmini.yaml
+qmspec.yaml
+vault.yaml
+webuser.yaml
+```
 
-To use higher-level mq configuration abstraction, put it in the `values/mq.yaml` file and pass it to the chart:<br>
-`helm install -f values/values.yaml -f values/vault.yaml -f values/mqscic.yaml -f values/qmini.yaml -f values/mq.yaml <release-name> mqchart/`
+`qm1.env` is queue manager environment file. It is used by the build script to create yaml files.
 
-The first file is required. Any combination of files can be passed to the chart.<br>
+Other files are input to to the chart grouped by functionality.  
 
-** Mq git configuration **<br>
+`qmspec.yaml` is required input for the chart. It configures core chart parameters.
+`webuser.yaml` configures mq web console users. It is required if mq web console is enabled, otherwise optional.  
+`qmini.yaml` is optional queue manager initialization file.
+`qmscic.yaml` is opiontal mqsc command file applied to the queue manager on startup.
+`mqmodel.yaml` is optional queue manager configuration file that is transformed to mqsc commands and applied at queue manager startup. Experimental.
+`vault.yaml` is optional Hashi Corp vault integration configuration. Experimental.
 
-**Examples and Reference**<br>
+**Values files customization**
+Customize values files in the `values/output` directory.
+
+Set ingress hostname parameters in the `qmspec.yaml` file.  
+```
+qmspec:
+  ingress:
+    qmgrHostname: "queue-manager-ingress-hostname"
+    webcHostname: "web-console-ingress-hostname"
+```
+
+Note that there must be one to one correspondence between hostnames and chart release names.
+
+**Required secrets and config maps**
+
+MQ image pool secret:  
+`kubectl create secret docker-registry image-pull-secret --docker-username=<u> --docker-password=<p> --docker-email=<e>`  
+
+TLS secret:  
+`kubectl create secret generic qm-tls --from-file=tls.key=</path/to/tls.key> --from-file=tls.crt=</path/to/tls.crt> --from-file=ca.crt=</path/to/ca.crt>`
+
+Trust config map:  
+`kubeclt create configmap qm-trust --from-file=ca1.crt=</path/to/ca1.crt> --from-file=ca2.crt=</path/to/ca2.crt> ...`
+
+Ldap credentials secret:  
+`kubectl create secret generic ldapcreds --from-literal=password=<ldappassword>`
+
+**Chart installation**
+
+Install mq helm chart with the `helm install` command from the top level git directory:  
+
+`helm install -f values/output/qmspec.yaml [-f values/output/webuser.yaml] [-f values/output/mqscic.yaml] [-f values/output/qmini.yaml] [-f values/output/mqmodel.yaml] <release-name> mqchart/output`  
+
+**Mqsc git integration**
+
+**Examples and Reference**
 
 Use examples as a starting point for chart configuration.
 
