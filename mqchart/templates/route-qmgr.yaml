@@ -1,0 +1,17 @@
+{{- if .Values.qmspec.ingress.enable }}
+{{- if eq .Values.qmspec.ingress.ingressClass "openshift" }}
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: {{ include "mqchart.fullname" . | trunc 50 }}-{{ .Values.qmspec.name | trunc 8 }}-qmr
+spec:
+  host: {{ .Values.qmspec.ingress.qmgrHostname }}
+  to:
+    kind: Service
+    name: {{ include "mqchart.fullname" . | trunc 54 }}-{{ .Values.qmspec.name | trunc 8 }}
+  port:
+    targetPort: {{ .Values.qmspec.service.qmgrPort }}
+  tls:
+    termination: passthrough
+{{- end }}
+{{- end }}
