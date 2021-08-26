@@ -12,6 +12,37 @@ fi
 
 outdir=output/etc/mqm/webuser
 
+groupdef=""
+userdef=""
+
+if [[ $LDAP_TYPE == "activedirectory" ]]; then
+# active directory
+groupdef="
+  groupdef:
+    objectclass: GROUP
+    groupnameattr: sAMAccountName
+    groupmembershipattr: member
+"
+userdef="
+  userdef:
+    objectclass: USER
+    usernameattr: sAMAccountName
+"
+else
+# default: openldap
+groupdef="
+  groupdef:
+    objectclass: groupOfNames
+    groupnameattr: cn
+    groupmembershipattr: member
+"
+userdef="
+  userdef:
+    objectclass: inetOrgPerson
+    usernameattr: uid
+"
+fi
+
 cat <<EOF > $outdir/webuser.yaml
 webroles:
 - name: MQWebAdmin
@@ -39,16 +70,8 @@ ldapregistry:
     bindpassword: $LDAP_BIND_PASSWORD
     basedn: $LDAP_ROOT
     sslenabled: false
-
-  groupdef:
-    objectclass: groupOfNames
-    groupnameattr: cn
-    groupmembershipattr: member
-
-  userdef:
-    objectclass: inetOrgPerson
-    usernameattr: uid
-
+$groupdef
+$userdef
 allowedhosts: []
 
 clientauth:

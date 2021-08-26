@@ -3,6 +3,8 @@
 qmenv=$1
 qmname=$2
 
+# ldaptype: openldap, activedirectory
+ldaptype=${LDAP_TYPE:-openldap}
 ldaphost=${LDAP_HOST:-openldap}
 ldapport=${LDAP_PORT:-1389}
 ldaproot=${LDAP_ROOT:-dc=mqldap,dc=com}
@@ -43,6 +45,7 @@ MQRUNNER_DEBUG=1
 MQ_ENABLE_TLS_NO_VAULT=1
 
 # ldap connection for webuser
+LDAP_TYPE=$ldaptype
 LDAP_HOST=$ldaphost
 LDAP_PORT=$ldapport
 LDAP_ROOT=$ldaproot

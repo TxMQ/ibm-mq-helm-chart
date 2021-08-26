@@ -6,6 +6,7 @@ mkdir -p output
 
 qmname=${1:-qm1}
 
+ldaptype=${LDAP_TYPE:openldap}
 ldapns=${LDAP_NS:-default}
 ldaphost=${LDAP_HOST:-openldap.$ldapns.svc.cluster.local}
 ldapport=${LDAP_PORT:-389}
@@ -26,6 +27,7 @@ MQVER=$MQVER
 MQIMGREG=$MQIMGREG
 
 # ldap params
+LDAP_TYPE=$ldaptype
 LDAP_HOST=$ldaphost
 LDAP_PORT=$ldapport
 LDAP_ROOT=$ldaproot

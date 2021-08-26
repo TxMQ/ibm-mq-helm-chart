@@ -8,6 +8,23 @@ fi
 # load environment
 . $qmenv
 
+if [[ $LDAP_TYPE == "activedirectory" ]]; then
+userobjectclass="USER"
+usernameattr="sAMAccountName"
+shortuser="employeeID"
+groupobjectclass="GROUP"
+groupnameattr="sAMAccountName"
+groupmembershipattr="member"
+else
+# default: openldap
+userobjectclass="inetOrgPerson"
+usernameattr="uid"
+shortuser="cn"
+groupobjectclass="groupOfNames"
+groupnameattr="cn"
+groupmembershipattr="member"
+fi
+
 out=output/etc/mqm/mqsc
 
 cat <<EOF > $out/qa.mqsc
@@ -27,21 +44,21 @@ ADOPTCTX(YES) +
 AUTHORMD(SEARCHGRP) + 
 BASEDNG('$BASEDN_GROUPS') + 
 BASEDNU('$BASEDN_USERS') + 
-CLASSGRP(groupOfNames) + 
-CLASSUSR(inetOrgPerson) + 
+CLASSGRP($groupobjectclass) + 
+CLASSUSR($userobjectclass) + 
 CONNAME('$LDAP_HOST($LDAP_PORT)') + 
 CHCKCLNT(required) + 
 CHCKLOCL(optional) + 
 DESCR('ldap authinfo') + 
 FAILDLAY(1) + 
-FINDGRP(member) + 
-GRPFIELD(cn) + 
+FINDGRP($groupmembershipattr) + 
+GRPFIELD($groupnameattr) + 
 LDAPPWD('admin') + 
 LDAPUSER('$LDAP_USER') + 
 NESTGRP(yes) + 
 SECCOMM(no) + 
-SHORTUSR(cn) + 
-USRFIELD(uid) + 
+SHORTUSR($shortuser) + 
+USRFIELD($usernameattr) + 
 REPLACE
 
 REFRESH SECURITY TYPE(CONNAUTH)
