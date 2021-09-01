@@ -15,6 +15,22 @@ const _qmgrrunning = "running"
 const _qmgrnotrunning = "notrunning"
 const _qmgrnotknown = "notknown"
 
+func IsMultiInstance1() bool {
+	inst1 := os.Getenv("MULTI_INSTANCE_QMGR_1")
+	if len(inst1) > 0 && (strings.ToLower(inst1) == "true" || inst1 == "1") {
+		return true
+	}
+	return false
+}
+
+func IsMultiInstance2() bool {
+	inst2 := os.Getenv("MULTI_INSTANCE_QMGR_2")
+	if len(inst2) > 0 && (strings.ToLower(inst2) == "true" || inst2 == "1") {
+		return true
+	}
+	return false
+}
+
 func ApplyStartupConfig(qmgr string) error {
 
 	cmdfile := GetMqscic()
@@ -95,6 +111,35 @@ func DeleteQmgr(qmgr string) error {
 }
 
 func CreateQmgr(qmgr string, icignore bool) error {
+	var err error = nil
+
+	if IsMultiInstance1() {
+		err = createQmgrCmd(qmgr, icignore)
+
+	} else if IsMultiInstance2() {
+		err = addMqinfCmd(qmgr)
+
+	} else {
+		err = createQmgrCmd(qmgr, icignore)
+	}
+
+	if err == nil && (IsMultiInstance1() || IsMultiInstance2()) {
+		// todo: check file system for locking semantics
+		// This checks basic POSIX file locking behavior: amqmfsck /shared/qmdata
+		// Use on two machines at the same time to ensure that locks are handed off correctly when a
+		// process ends: amqmfsck –w /shared/qmdata
+		// Use on two machines at the same time to attempt concurrent writes: amqmfsck –c /shared/qmdata
+	}
+
+	return err
+}
+
+func addMqinfCmd(qmgr string) error {
+	// addmqinf -s QueueManager -v Name=qm1 -v Directory=qm1 -v Prefix=/var/mqm
+	return nil
+}
+
+func createQmgrCmd(qmgr string, icignore bool) error {
 
 	debug := GetDebugFlag()
 
@@ -194,8 +239,16 @@ func StartMqweb() error {
 
 func StartQmgr(qmgr string) error {
 
-	// start queue manager
-	out, err := exec.Command("/opt/mqm/bin/strmqm", qmgr).CombinedOutput()
+	var out []byte
+	var err error
+
+	if IsMultiInstance1() || IsMultiInstance2() {
+		// add -x argument for the multi-instance start
+		out, err = exec.Command("/opt/mqm/bin/strmqm", "-x", qmgr).CombinedOutput()
+	} else {
+		// start queue manager
+		out, err = exec.Command("/opt/mqm/bin/strmqm", qmgr).CombinedOutput()
+	}
 
 	if err != nil {
 		if out != nil {
@@ -210,8 +263,16 @@ func StartQmgr(qmgr string) error {
 }
 
 func StopQmgr(qmgr string) error {
+
+	var out []byte
+	var err error
+
 	// stop queue manager
-	out, err := exec.Command("/opt/mqm/bin/endmqm", qmgr).CombinedOutput()
+	if IsMultiInstance1() || IsMultiInstance2() {
+		out, err = exec.Command("/opt/mqm/bin/endmqm", "-x", qmgr).CombinedOutput()
+	} else {
+		out, err = exec.Command("/opt/mqm/bin/endmqm", qmgr).CombinedOutput()
+	}
 
 	if err != nil {
 		if out != nil {
