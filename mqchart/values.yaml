@@ -182,6 +182,9 @@ qmspec:
   logFormat: {} # env
   metrics: true # prometeus metrics env
 
+  # high availability
+  multiInstance: 'false'
+
   # queue manager storage
   storage:
 

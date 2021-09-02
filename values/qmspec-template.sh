@@ -117,13 +117,17 @@ qmspec:
     #
     value: ""
 
-#  resources:
-#    limits:
-#      cpu: "250m"
-#      memory: "512Mi"
-#    requests:
-#      cpu: "250m"
-#      memory: "512Mi"
+  resources:
+    limits:
+      cpu: "250m"
+      memory: "512Mi"
+      ephemeral-storage:  1Gi
+    requests:
+      cpu: "250m"
+      memory: "512Mi"
+      ephemeral-storage:  1Gi
+
+  multiInstance: 'false'
 
   storage:
     usePvc: 'true'

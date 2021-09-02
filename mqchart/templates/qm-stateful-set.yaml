@@ -9,7 +9,12 @@ metadata:
     {{- toYaml .Values.qmspec.labels | nindent 4 }}
     {{- end }}
 spec:
+  {{- if or (eq .Values.qmspec.multiInstance "true") (eq .Values.qmspec.multiInstance "1") }}
+  replicas: 2
+  {{- else }}
   replicas: 1
+  {{- end }}
+
   serviceName: qmgr
   podManagementPolicy: Parallel
   updateStrategy:
@@ -143,6 +148,9 @@ spec:
               value: {{ .tls.cainjectpath }}              
             {{- end }}
             {{- end }}
+
+            - name: MULTI_INSTANCE_QMGR
+              value: {{ .Values.qmspec.multiInstance | quote }}
 
             {{- with .Values.qmspec.env }}
             {{- toYaml . | nindent 12 }}

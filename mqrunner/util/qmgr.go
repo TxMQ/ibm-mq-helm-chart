@@ -12,22 +12,61 @@ import (
 )
 
 const _qmgrrunning = "running"
+const _qmrunningstandby = "runningstandby"
 const _qmgrnotrunning = "notrunning"
 const _qmgrnotknown = "notknown"
 
-func IsMultiInstance1() bool {
-	inst1 := os.Getenv("MULTI_INSTANCE_QMGR_1")
-	if len(inst1) > 0 && (strings.ToLower(inst1) == "true" || inst1 == "1") {
+func isEnvTrueValue(envvar string) bool {
+	if value := os.Getenv(envvar); len(value) > 0 && (strings.ToLower(value) == "true" || value == "1") {
 		return true
 	}
 	return false
 }
 
-func IsMultiInstance2() bool {
-	inst2 := os.Getenv("MULTI_INSTANCE_QMGR_2")
-	if len(inst2) > 0 && (strings.ToLower(inst2) == "true" || inst2 == "1") {
+func getEnv(envvar string) (bool, string) {
+	if value := os.Getenv(envvar); len(value) > 0 {
+		return true, value
+	}
+	return false, ""
+}
+
+func IsMultiInstance1() bool {
+	// kubernetes
+	if isEnvTrueValue("MULTI_INSTANCE_QMGR") {
+		if isset, hostname := getEnv("HOSTNAME"); isset {
+			if strings.HasSuffix(hostname, "-0") {
+				return true
+			} else if strings.HasSuffix(hostname, "-1") {
+				return false
+			}
+		}
+	}
+
+	// plain docker
+	if isEnvTrueValue("MULTI_INSTANCE_QMGR_1") {
 		return true
 	}
+
+	return false
+}
+
+func IsMultiInstance2() bool {
+	// kubernetes
+	if isEnvTrueValue("MULTI_INSTANCE_QMGR") {
+		if isset, hostname := getEnv("HOSTNAME"); isset {
+			if strings.HasSuffix(hostname, "-0") {
+				return false
+			} else if strings.HasSuffix(hostname, "-1") {
+				return true
+			}
+		}
+	}
+
+	// plain docker
+	if isEnvTrueValue("MULTI_INSTANCE_QMGR_2") {
+		return true
+	}
+
 	return false
 }
 
@@ -113,6 +152,14 @@ func DeleteQmgr(qmgr string) error {
 func CreateQmgr(qmgr string, icignore bool) error {
 	var err error = nil
 
+	if IsMultiInstance1() || IsMultiInstance2() {
+		// check file system for locking semantics
+		// This checks basic POSIX file locking behavior: amqmfsck /shared/qmdata
+		// Use on two machines at the same time to ensure that locks are handed off correctly when a
+		// process ends: amqmfsck –w /shared/qmdata
+		// Use on two machines at the same time to attempt concurrent writes: amqmfsck –c /shared/qmdata
+	}
+
 	if IsMultiInstance1() {
 		err = createQmgrCmd(qmgr, icignore)
 
@@ -123,19 +170,40 @@ func CreateQmgr(qmgr string, icignore bool) error {
 		err = createQmgrCmd(qmgr, icignore)
 	}
 
-	if err == nil && (IsMultiInstance1() || IsMultiInstance2()) {
-		// todo: check file system for locking semantics
-		// This checks basic POSIX file locking behavior: amqmfsck /shared/qmdata
-		// Use on two machines at the same time to ensure that locks are handed off correctly when a
-		// process ends: amqmfsck –w /shared/qmdata
-		// Use on two machines at the same time to attempt concurrent writes: amqmfsck –c /shared/qmdata
-	}
-
 	return err
 }
 
 func addMqinfCmd(qmgr string) error {
+
 	// addmqinf -s QueueManager -v Name=qm1 -v Directory=qm1 -v Prefix=/var/mqm
+
+	args := []string {"-s", "QueueManager"}
+	args = append(args, "-v", fmt.Sprintf("Directory=%s", qmgr))
+	args = append(args, "-v", fmt.Sprintf("Prefix=%s", "/var/mqm"))
+
+	if GetDebugFlag() {
+		log.Printf("add-mq-inf: running command: /opt/mqm/bin/addmqinf %s\n", strings.Join(args, " "))
+	}
+
+	out, err := exec.Command("/opt/mqm/bin/addmqinf", args...).CombinedOutput()
+
+	if GetDebugFlag() {
+		if len(string(out)) > 0 {
+			log.Printf("add-mq-inf: out: %s, err: %v\n", string(out), err)
+		} else {
+			log.Printf("add-mq-inf: err: %v\n", err)
+		}
+	}
+
+	if err != nil {
+		if out != nil {
+			cerr := string(out)
+			return fmt.Errorf("%v\n", cerr)
+		} else {
+			return err
+		}
+	}
+
 	return nil
 }
 
@@ -286,14 +354,27 @@ func StopQmgr(qmgr string) error {
 	return nil
 }
 
-func IsQmgrRunning(qmgr string) (bool, error) {
+func IsQmgrRunning(qmgr string, silent bool) (bool, error) {
 
-	st, err := QmgrStatus(qmgr)
+	st, err := QmgrStatus(qmgr, silent)
 	if err != nil {
 		return false, err
 	}
 
 	if st == _qmgrrunning {
+		return true, nil
+	}
+
+	return false,nil
+}
+
+func IsQmgrRunningStandby(qmgr string, silent bool) (bool, error) {
+	st, err := QmgrStatus(qmgr, silent)
+	if err != nil {
+		return false, err
+	}
+
+	if st == _qmrunningstandby {
 		return true, nil
 	}
 
@@ -326,7 +407,7 @@ func QmgrExists(qmgr string) (bool, error) {
 		log.Printf("qmgr-exists: check if queue manager %s exists\n", qmgr)
 	}
 
-	st, err := QmgrStatus(qmgr)
+	st, err := QmgrStatus(qmgr, false)
 	if err != nil {
 		return false, err
 	}
@@ -352,20 +433,31 @@ func parseParenValue(input, keyword string) (bool, string) {
 	return true, value
 }
 
-func QmgrStatus(qmgr string) (string, error) {
+func QmgrStatus(qmgr string, silent bool) (string, error) {
 
 	debug := GetDebugFlag()
 
-	if debug {
-		log.Printf("qmgr-status: running command: /opt/mqm/bin/dspmq -m %s", qmgr)
+	args := []string{"-m", qmgr}
+
+	if IsMultiInstance1() || IsMultiInstance2() {
+		args = append(args, "-x")
 	}
 
-	out, err := exec.Command("/opt/mqm/bin/dspmq", "-m", qmgr).CombinedOutput()
+	if debug && !silent {
+		log.Printf("qmgr-status: running command: /opt/mqm/bin/dspmq %s\n", strings.Join(args, " "))
+	}
+
+	out, err := exec.Command("/opt/mqm/bin/dspmq", args...).CombinedOutput()
 
 	if debug {
 		if len(string(out)) > 0 {
-			log.Printf("qmgr-status: out: %s, err: %v\n", string(out), err)
-		} else {
+			if err != nil {
+				log.Printf("qmgr-status: out: %s => err: %v\n", string(out), err)
+			} else if !silent {
+				log.Printf("qmgr-status: out: %s", string(out))
+			}
+
+		} else if err != nil {
 			log.Printf("qmgr-status: err: %v\n", err)
 		}
 	}
@@ -389,22 +481,30 @@ func QmgrStatus(qmgr string) (string, error) {
 	cout := strings.TrimSpace(string(out))
 
 	// QMNAME(qm) STATUS(Running)
+	// QMNAME(qm) STATUS(Running as standby)
 	if strings.HasPrefix(cout, "QMNAME") {
 
-		ok, status := parseParenValue(cout, "STATUS")
+		if ok, status := parseParenValue(cout, "STATUS"); ok {
+			if strings.ToLower(status) == "running" {
 
-		if ok && strings.ToLower(status) == "running" {
+				if debug && !silent {
+					log.Printf("qmgr-status: qmgr %s status is '%s'\n", qmgr, _qmgrrunning)
+				}
 
-			if debug {
-				log.Printf("qmgr-status: qmgr %s status is '%s'\n", qmgr, _qmgrrunning)
+				return _qmgrrunning, nil
+
+			} else if strings.ToLower(status) == "running as standby" {
+				if debug && !silent {
+					log.Printf("qmgr-status: qmgr %s status is '%s'\n", qmgr, _qmrunningstandby)
+				}
+
+				return _qmrunningstandby, nil
 			}
-
-			return _qmgrrunning, nil
 		}
 	}
 
 	// QMNAME(qm)  STATUS(Ended normally|immediately)
-	if debug {
+	if debug && !silent {
 		log.Printf("qmgr-status: qmgr %s status is '%s'\n", qmgr, _qmgrnotrunning)
 	}
 

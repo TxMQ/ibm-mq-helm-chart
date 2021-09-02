@@ -204,7 +204,7 @@ func Runmain() {
 
 	// start mq runner
 	log.Printf("mq runner '%s' starting...\n", qmgr)
-	ctl := util.StartRunner()
+	ctl := util.StartRunner(qmgr)
 	<-ctl
 
 	// create queue manager

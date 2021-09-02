@@ -8,34 +8,114 @@ import (
 )
 
 type Probe struct {
+	qmgr string
 	srv *http.Server
 }
 
 var _showready = 5
 var _showhealthy = 5
 
+func qmgrReadyProbe(qmgr string, silent bool) bool {
+
+	// if stdby qmgr in multi-instance qmgr, then not ready
+	// --- stdby
+	// dspmq -x -m qm1
+	// QMNAME(qm1) STATUS(Running as standby)
+	// INSTANCE(qm1-ibm-mq-0) MODE(Active)
+	// INSTANCE(qm1-ibm-mq-1) MODE(Standby)
+
+	if isstandby, err := IsQmgrRunningStandby(qmgr, silent); err != nil {
+		// log error
+		log.Printf("is-qmgr-ready-probe: %v\n", err)
+		return false
+
+	} else if isstandby {
+		// running as standby, not ready
+		return false
+	}
+
+	// --- active
+	// QMNAME(qm1) STATUS(Running)
+	// INSTANCE(qm1-ibm-mq-0) MODE(Active)
+	// INSTANCE(qm1-ibm-mq-1) MODE(Standby)
+	//
+
+	if isrunning, err := IsQmgrRunning(qmgr, silent); err != nil {
+		// log error
+		log.Printf("is-qmgr-ready-probe: %v\n", err)
+		return false
+
+	} else if isrunning {
+		// running active, ready
+		return true
+	}
+
+	return false
+}
+
+func qmgrHealthyProbe(qmgr string, silent bool) bool {
+	return true
+}
+
 func (p *Probe) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
+	silent := true
+	statusCode := http.StatusOK
+
 	if r.RequestURI == "/ready" {
-		// todo
-		if  _showready > 0 {
+
+		if _showready > 0 {
 			_showready--
-			log.Printf("probe: %s\n", "ready probe called... return 200")
+			silent = false
+		}
+
+		if qmgrReadyProbe(p.qmgr, silent) {
+			statusCode = http.StatusOK
+
+			w.WriteHeader(statusCode)
+			_, _ = w.Write([]byte("ok"))
+
+		} else {
+			statusCode = http.StatusServiceUnavailable
+
+			w.WriteHeader(statusCode)
+			_, _ = w.Write([]byte("ServiceUnavailable"))
+		}
+
+		if !silent {
+			log.Printf("probe: ready probe called, status code %d\n", statusCode)
 		}
 
 	} else if r.RequestURI == "/healthy" {
-		// todo
+
 		if _showhealthy > 0 {
 			_showhealthy--
-			log.Printf("probe: %s\n", "healthy probe called... return 200")
+			silent = false
+		}
+
+		if qmgrHealthyProbe(p.qmgr, silent) {
+			statusCode = http.StatusOK
+
+			w.WriteHeader(statusCode)
+			_, _ = w.Write([]byte("ok"))
+
+		} else {
+			statusCode = http.StatusServiceUnavailable
+			w.WriteHeader(statusCode)
+			_, _ = w.Write([]byte("ServiceUnavailable"))
+		}
+
+		if ! silent {
+			log.Printf("probe: healthy probe called, status code %d\n", statusCode)
 		}
 
 	} else {
-		log.Printf("probe: %s\n", "probe called... return 200")
-	}
+		statusCode = http.StatusOK
+		log.Printf("probe: unregistered probe called, status code %d\n", statusCode)
 
-	w.WriteHeader(200)
-	_, _ = w.Write([]byte("ok"))
+		w.WriteHeader(statusCode)
+		_, _ = w.Write([]byte("ok"))
+	}
 }
 
 func (p* Probe) Shutdown() error {
@@ -46,10 +126,14 @@ func (p* Probe) Shutdown() error {
 	return nil
 }
 
-func StartProbe(ctl chan int) *Probe {
+func StartProbe(qmgr string, ctl chan int) *Probe {
 
 	probe := &Probe{}
 
+	// set qmgr on the probe
+	probe.qmgr = qmgr
+
+	// configure server
 	probe.srv = &http.Server{
 		Addr:           ":40000",
 		Handler:        probe,

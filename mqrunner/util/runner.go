@@ -10,7 +10,7 @@ import (
 
 //var _stopctl chan int
 
-func StartRunner() chan int {
+func StartRunner(qmgr string) chan int {
 
 	// output control channel
 	var ctl chan int
@@ -19,7 +19,7 @@ func StartRunner() chan int {
 	//_stopctl = make(chan int)
 
 	// start probe
-	probe := StartProbe(ctl)
+	probe := StartProbe(qmgr, ctl)
 	<- ctl
 
 	// setup signals
