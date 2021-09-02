@@ -6,4 +6,4 @@ mkdir -p output
 
 ./chart-template.sh output
 cp values.yaml output
-cp templates -r output
+cp -r templates output
