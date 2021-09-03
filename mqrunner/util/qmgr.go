@@ -172,10 +172,12 @@ func CreateQmgr(qmgr string, icignore bool) error {
 		err = createQmgrCmd(qmgr, icignore)
 
 	} else if IsMultiInstance2() {
-		if GetDebugFlag() {
-			log.Printf("create-qmgr: creating qmgr '%s' multi-instance-2\n", qmgr)
-		}
-		err = addMqinfCmd(qmgr)
+		// we need it only if shared data and shared logs are different from /var/mqm
+		//
+		//if GetDebugFlag() {
+		//	log.Printf("create-qmgr: creating qmgr '%s' multi-instance-2\n", qmgr)
+		//}
+		//err = addMqinfCmd(qmgr)
 
 	} else {
 		if GetDebugFlag() {

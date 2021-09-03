@@ -84,6 +84,12 @@ func prepareQueueManagerActive(qmgr string) error {
 }
 
 func createQueueManager(qmgr string) error {
+
+	if util.IsMultiInstance2() {
+		log.Printf("create-qmgr: %s multi-instance-2, skip create...\n", qmgr)
+		return nil
+	}
+
 	debug := util.GetDebugFlag()
 
 	// check if qmgr already configured
