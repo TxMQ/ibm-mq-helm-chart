@@ -72,6 +72,11 @@ func IsMultiInstance2() bool {
 
 func ApplyStartupConfig(qmgr string) error {
 
+	if IsMultiInstance2() {
+		log.Printf("apply-startup-conf: '%s' multi-instance-2, skip apply startup config\n", qmgr)
+		return nil
+	}
+
 	cmdfile := GetMqscic()
 
 	_, err := os.Stat(cmdfile)
@@ -161,12 +166,21 @@ func CreateQmgr(qmgr string, icignore bool) error {
 	}
 
 	if IsMultiInstance1() {
+		if GetDebugFlag() {
+			log.Printf("create-qmgr: creating qmgr '%s' multi-instance-1\n", qmgr)
+		}
 		err = createQmgrCmd(qmgr, icignore)
 
 	} else if IsMultiInstance2() {
+		if GetDebugFlag() {
+			log.Printf("create-qmgr: creating qmgr '%s' multi-instance-2\n", qmgr)
+		}
 		err = addMqinfCmd(qmgr)
 
 	} else {
+		if GetDebugFlag() {
+			log.Printf("create-qmgr: creating qmgr '%s'\n", qmgr)
+		}
 		err = createQmgrCmd(qmgr, icignore)
 	}
 

@@ -17,15 +17,26 @@ func isConfigureMqweb() bool {
 }
 
 func prepareQueueManager(qmgr string) error {
+	if util.IsMultiInstance2() {
+		log.Printf("prepare-qmgr: qmgr '%s' multi-instance standby, skip prepare\n", qmgr)
+		return nil
+	} else if util.IsMultiInstance1() {
+		return prepareQueueManagerActive(qmgr)
+	} else {
+		return prepareQueueManagerActive(qmgr)
+	}
+}
+
+func prepareQueueManagerActive(qmgr string) error {
 
 	debug := util.GetDebugFlag()
 
 	if debug {
-		log.Printf("run-main: qmgr name: '%s'\n", qmgr)
+		log.Printf("prepare-qmgr: qmgr name: '%s'\n", qmgr)
 	}
 
 	if debug {
-		log.Printf("run-main: debug flag set")
+		log.Printf("prepare-qmgr: debug flag set")
 	}
 
 	//if debug {
@@ -123,12 +134,17 @@ func postCreateQueueManager(qmgr string) error {
 	util.TailQmgrLog(qmgr)
 
 	if util.IsEnableTls() {
-		// import certs into the keystore
-		if err := util.ImportCertificates(qmgr); err != nil {
-			// log error
-			log.Printf("import-certificates: %v\n", err)
+		if util.IsMultiInstance2() {
+			// skip cert import
+			log.Printf("post-create-qmgr: '%s' multi-instance-2 skip tls cert import\n", qmgr)
+		} else {
+			// import certs into the keystore
+			if err := util.ImportCertificates(qmgr); err != nil {
+				// log error
+				log.Printf("import-certificates: %v\n", err)
 
-			// return error?
+				// return error?
+			}
 		}
 
 	} else {
