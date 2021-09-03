@@ -14,7 +14,7 @@ RUN microdnf --disableplugin=subscription-manager install shadow-utils bc tar pr
     libgcc libstdc++ git
 
 # mqm user and group
-RUN groupadd -g 1001 mqm && useradd -u 1001 -g 1001 -d /var/mqm -M -e "" -K PASS_MAX_DAYS=-1  mqm
+RUN groupadd -g 1001 mqm && useradd -u 1001 -g 1001 -d /home/mqm -e "" -K PASS_MAX_DAYS=-1  mqm
 RUN mkdir -p /etc/security && echo "mqm hard nofile 10240" >> /etc/security/limits.conf && echo "mqm soft nofile 10240" >> /etc/security/limits.conf
 
 # copy rpm files

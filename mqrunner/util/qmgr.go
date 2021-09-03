@@ -453,7 +453,10 @@ func QmgrStatus(qmgr string, silent bool) (string, error) {
 	if debug {
 		if len(string(out)) > 0 {
 			if err != nil {
-				log.Printf("qmgr-status: out: %s => err: %v\n", string(out), err)
+				// do not log spurios errors
+				if ! strings.HasPrefix(fmt.Sprintf("%v", err), "wait: no child processes") {
+					log.Printf("qmgr-status: out: %s => err: %v\n", string(out), err)
+				}
 			} else if !silent {
 				log.Printf("qmgr-status: out: %s", string(out))
 			}
@@ -474,6 +477,20 @@ func QmgrStatus(qmgr string, silent bool) (string, error) {
 			}
 
 			return _qmgrnotknown, nil
+		}
+
+		// spurios error reported with the status 'running'
+		// wait: no child processes
+		if strings.HasPrefix(fmt.Sprintf("%v", err), "wait: no child processes") {
+			// parse status
+			if ok, status := parseParenValue(cerr, "STATUS"); ok {
+				if strings.ToLower(status) == "running" {
+					if debug && !silent {
+						log.Printf("qmgr-status: qmgr %s status is '%s'\n", qmgr, _qmgrrunning)
+					}
+					return _qmgrrunning, nil
+				}
+			}
 		}
 
 		return "", err

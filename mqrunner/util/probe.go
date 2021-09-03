@@ -54,7 +54,7 @@ func qmgrReadyProbe(qmgr string, silent bool) bool {
 }
 
 func qmgrHealthyProbe(qmgr string, silent bool) bool {
-	return true
+	return qmgrReadyProbe(qmgr, silent)
 }
 
 func (p *Probe) ServeHTTP(w http.ResponseWriter, r *http.Request) {

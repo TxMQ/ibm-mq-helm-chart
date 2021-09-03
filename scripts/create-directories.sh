@@ -5,12 +5,8 @@ uid=$1
 
 # create mout points
 install -d -m 0755 -o $uid -g root /mnt
-install -d -m 0755 -o $uid -g root /mnt/mqm
-install -d -m 0755 -o $uid -g root /mnt/mqm/data
-#install -d -m 0755 -o $uid -g root /mnt/mqm-log
-#install -d -m 0755 -o $uid -g root /mnt/mqm-log/log
-#install -d -m 0755 -o $uid -g root /mnt/mqm-data
-#install -d -m 0755 -o $uid -g root /mnt/mqm-data/qmgrs
+install -d -m 0755 -o $uid -g root /mnt/data
+install -d -m 0755 -o $uid -g root /mnt/data/mqm
 
 # mq init and config directories
 install -d -m 0775 -o $uid -g root /etc/mqm
@@ -33,5 +29,9 @@ touch /run/termination-log && chown $uid:root /run/termination-log
 # see if this works
 cp /opt/mqm/bin/crtmqdir /opt/mqm/bin/crtmqdir_setuid && chown root:mqm /opt/mqm/bin/crtmqdir_setuid && chmod u+s /opt/mqm/bin/crtmqdir_setuid && chmod o+x /opt/mqm/bin/crtmqdir_setuid 
 
-# link
-#ln -s /mnt/mqm/data /var/mqm
+# link to /mnt/data/mqm from /var/mqm
+rm -fr /var/mqm
+ln -s /mnt/data/mqm /var
+
+# change link owner
+chown $uid:root /var/mqm

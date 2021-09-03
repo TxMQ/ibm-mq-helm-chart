@@ -48,7 +48,7 @@ services:
       - '9443:9443'
       - '40000:40000'
     volumes:
-      - mqdata:/var/mqm
+      - mqdata:/mnt/data/mqm
       - qmini:/etc/mqm/qmini
       - mqsc:/etc/mqm/mqsc
       - qmtls:/etc/mqm/pki/cert 
