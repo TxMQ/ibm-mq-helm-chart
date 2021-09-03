@@ -178,6 +178,7 @@ func addMqinfCmd(qmgr string) error {
 	// addmqinf -s QueueManager -v Name=qm1 -v Directory=qm1 -v Prefix=/var/mqm
 
 	args := []string {"-s", "QueueManager"}
+	args = append(args, "-v", fmt.Sprintf("Name=%s", qmgr))
 	args = append(args, "-v", fmt.Sprintf("Directory=%s", qmgr))
 	args = append(args, "-v", fmt.Sprintf("Prefix=%s", "/var/mqm"))
 
