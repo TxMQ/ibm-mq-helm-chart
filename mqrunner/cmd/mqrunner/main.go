@@ -26,10 +26,41 @@ func main() {
 	probe.StartProbes(qmname)
 
 	if qmgr.IsStartupLeader() {
-		// new package
 		if err := qmgr.CreateDirectories(); err != nil {
 			logger.Logmsg(err)
 		}
+	}
+
+	mqrunner.StartMqrunner()
+	mqrunner.WaitForRunnerReady()
+
+	if qmgr.IsStartupLeader() {
+		// create qmgr
+		if err := qmgr.CreateQmgr(qmname); err != nil {
+			logger.Logmsg(err)
+		}
+
+	} else {
+		// wait for qmgr to be created by the leader
+		_ = qmgr.WaitForQmgrCreate(qmname)
+	}
+
+	// tail logs
+	qmgr.TailLogs(qmname)
+
+	// start qmgr
+	if err := qmgr.StartQmgr(qmname); err != nil {
+		logger.Logmsg(err)
+	}
+
+	// let qmgr start...
+	logger.Logmsg(fmt.Sprintf("pausing for %d seconds for qmgr '%s' to start", 5, qmname))
+	time.Sleep(5 * time.Second)
+
+	// get running role (active, standby)
+	if qmgr.IsRunningRoleActive(qmname) {
+
+		logger.Logmsg(fmt.Sprintf("qmgr '%s' running role is 'active'", qmname))
 
 		if err := util.MergeMqscFiles(); err != nil {
 			logger.Logmsg(err)
@@ -39,42 +70,9 @@ func main() {
 			logger.Logmsg(err)
 		}
 
-		mqrunner.StartMqrunner()
-		mqrunner.WaitForRunnerReady()
-
-		if err := qmgr.CreateQmgr(qmname); err != nil {
-			logger.Logmsg(err)
-		}
-
-		// tail logs
-		qmgr.TailLogs(qmname)
-
 		if err := qmgr.ImportQmgrKeystore(qmname); err != nil {
 			logger.Logmsg(err)
 		}
-
-		if err := qmgr.StartQmgr(qmname); err != nil {
-			logger.Logmsg(err)
-		}
-
-	} else {
-		mqrunner.StartMqrunner()
-		mqrunner.WaitForRunnerReady()
-
-		// wait for qmgr to be created by the leader
-		_ = qmgr.WaitForQmgrCreate(qmname)
-
-		// tail logs
-		qmgr.TailLogs(qmname)
-
-		if err := qmgr.StartQmgr(qmname); err != nil {
-			logger.Logmsg(err)
-		}
-	}
-
-	// get running role (active, standby)
-	if qmgr.IsRunningRoleActive(qmname) {
-		logger.Logmsg(fmt.Sprintf("qmgr '%s' running role is 'active'", qmname))
 
 		// apply startup config
 		if err := util.ApplyStartupConfig(qmname); err != nil {
