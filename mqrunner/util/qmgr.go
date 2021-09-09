@@ -8,6 +8,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"szesto.com/mqrunner/logger"
 	"szesto.com/mqrunner/mqsc"
 )
 
@@ -72,16 +73,16 @@ func IsMultiInstance2() bool {
 
 func ApplyStartupConfig(qmgr string) error {
 
-	if IsMultiInstance2() {
-		log.Printf("apply-startup-conf: '%s' multi-instance-2, skip apply startup config\n", qmgr)
-		return nil
-	}
+	//if IsMultiInstance2() {
+	//	log.Printf("apply-startup-conf: '%s' multi-instance-2, skip apply startup config\n", qmgr)
+	//	return nil
+	//}
 
 	cmdfile := GetMqscic()
 
 	_, err := os.Stat(cmdfile)
 	if err != nil && os.IsNotExist(err) {
-		log.Printf("apply-startup-config: command file '%s' does not exist\n", cmdfile)
+		logger.Logmsg(fmt.Sprintf("command file '%s' does not exist", cmdfile))
 		return nil
 
 	} else if err != nil {
@@ -103,7 +104,7 @@ func ApplyStartupConfig(qmgr string) error {
 	//}
 
 	if GetDebugFlag() {
-		log.Printf("apply-startup-config: run mqsc commands from '%s'\n", cmdfile)
+		logger.Logmsg(fmt.Sprintf("run mqsc commands from '%s'\n", cmdfile))
 	}
 
 	out, err := RunmqscFromFile(qmgr, cmdfile)
@@ -112,7 +113,7 @@ func ApplyStartupConfig(qmgr string) error {
 	}
 
 	if len(out) > 0 {
-		log.Printf("apply-startup-config: %s\n", out)
+		logger.Logmsg(out)
 	}
 
 	// parse out syntax message
@@ -155,38 +156,7 @@ func DeleteQmgr(qmgr string) error {
 }
 
 func CreateQmgr(qmgr string, icignore bool) error {
-	var err error = nil
-
-	if IsMultiInstance1() || IsMultiInstance2() {
-		// check file system for locking semantics
-		// This checks basic POSIX file locking behavior: amqmfsck /shared/qmdata
-		// Use on two machines at the same time to ensure that locks are handed off correctly when a
-		// process ends: amqmfsck –w /shared/qmdata
-		// Use on two machines at the same time to attempt concurrent writes: amqmfsck –c /shared/qmdata
-	}
-
-	if IsMultiInstance1() {
-		if GetDebugFlag() {
-			log.Printf("create-qmgr: creating qmgr '%s' multi-instance-1\n", qmgr)
-		}
-		err = createQmgrCmd(qmgr, icignore)
-
-	} else if IsMultiInstance2() {
-		// we need it only if shared data and shared logs are different from /var/mqm
-		//
-		//if GetDebugFlag() {
-		//	log.Printf("create-qmgr: creating qmgr '%s' multi-instance-2\n", qmgr)
-		//}
-		//err = addMqinfCmd(qmgr)
-
-	} else {
-		if GetDebugFlag() {
-			log.Printf("create-qmgr: creating qmgr '%s'\n", qmgr)
-		}
-		err = createQmgrCmd(qmgr, icignore)
-	}
-
-	return err
+	return createQmgrCmd(qmgr, icignore)
 }
 
 func addMqinfCmd(qmgr string) error {
@@ -279,23 +249,28 @@ func createQmgrCmd(qmgr string, icignore bool) error {
 	//	"-u", deadLetterQeueue, "-p", qmgrPort, "-q", qmgr).CombinedOutput()
 
 	if debug {
-		log.Printf("create-qmgr: running command: /opt/mqm/bin/crtmqm %s\n", strings.Join(args, " "))
+		logger.Logmsg(fmt.Sprintf("running command: /opt/mqm/bin/crtmqm %s", strings.Join(args, " ")))
 	}
 
 	out, err := exec.Command("/opt/mqm/bin/crtmqm", args...).CombinedOutput()
 
 	if debug {
 		if len(string(out)) > 0 {
-			log.Printf("create-qmgr: out: %s, err: %v\n", string(out), err)
+			if err == nil {
+				logger.Logmsg(fmt.Sprintf("%s", string(out)))
+			} else {
+				logger.Logmsg(fmt.Sprintf("%s%v", string(out), err))
+			}
+
 		} else {
-			log.Printf("create-qmgr: err: %v\n", err)
+			logger.Logmsg(err)
 		}
 	}
 
 	if err != nil {
 		if out != nil {
 			cerr := string(out)
-			return fmt.Errorf("%v\n", cerr)
+			return fmt.Errorf("%v", cerr)
 		} else {
 			return err
 		}
@@ -307,16 +282,24 @@ func createQmgrCmd(qmgr string, icignore bool) error {
 func StartMqweb() error {
 
 	// start mq web console
-	out, err := exec.Command("/opt/mqm/bin/strmqweb").CombinedOutput()
-
+	out, err := runcmd("/opt/mqm/bin/strmqweb")
 	if err != nil {
-		if out != nil {
-			cerr := string(out)
-			return fmt.Errorf("%v\n", cerr)
-		} else {
-			return err
-		}
+		return err
+
+	} else if len(out) > 0 {
+		logger.Logmsg(out)
 	}
+
+	//out, err := exec.Command("/opt/mqm/bin/strmqweb").CombinedOutput()
+	//
+	//if err != nil {
+	//	if out != nil {
+	//		cerr := string(out)
+	//		return fmt.Errorf("%v\n", cerr)
+	//	} else {
+	//		return err
+	//	}
+	//}
 
 	return nil
 
@@ -401,20 +384,26 @@ func IsQmgrRunningStandby(qmgr string, silent bool) (bool, error) {
 func QmgrConf(qmgr string) (bool, string, error) {
 
 	if GetDebugFlag() {
-		log.Printf("qmgr-conf: check if qmgr '%s' already configured\n", qmgr)
+		logger.Logmsg(fmt.Sprintf("checking if qmgr '%s' already configured", qmgr))
 	}
 
-	out, err := runcmd("/opt/mqm/bin/dspmqinf", "-s", "QueueManager", qmgr)
+	cout, err := runcmd("/opt/mqm/bin/dspmqinf", "-s", "QueueManager", qmgr)
 	if err != nil {
-		if len(out) > 0 {
-			cerr := string(out)
-			return false, "", fmt.Errorf("out: %s, err: %v\n", cerr, err)
-		} else {
-			return false, "", err
-		}
+		return false, "", err
 	}
 
-	cout := string(out)
+	//out, err := runcmd("/opt/mqm/bin/dspmqinf", "-s", "QueueManager", qmgr)
+	//if err != nil {
+	//	if len(out) > 0 {
+	//		cerr := string(out)
+	//		return false, "", fmt.Errorf("out: %s, err: %v\n", cerr, err)
+	//	} else {
+	//		return false, "", err
+	//	}
+	//}
+	//
+	//cout := string(out)
+
 	return true, cout, nil
 }
 

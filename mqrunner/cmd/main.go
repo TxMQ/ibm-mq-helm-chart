@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"szesto.com/mqrunner/logger"
 	"szesto.com/mqrunner/util"
 	"szesto.com/mqrunner/webmq"
 )
@@ -212,6 +213,8 @@ func postCreateQueueManager(qmgr string) error {
 }
 
 func Runmain() {
+
+	logger.Runlogger()
 
 	// get queue manager name
 	qmgr := os.Getenv("MQ_QMGR_NAME")

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
-	"log"
 	"strings"
 	"szesto.com/mqrunner/mqsc"
 	"szesto.com/mqrunner/util"
@@ -323,11 +322,10 @@ func ConfigureWebconsole() error {
 	// todo: use env var for directory path
 	const webuserxmlpath = "/var/mqm/web/installations/Installation1/servers/mqweb/mqwebuser.xml"
 
-	if util.IsMultiInstance2() {
-		log.Printf("conf-web-console: multi-instance-2, not merging web xml '%s' to '%s'",
-			webconfigpath, webuserxmlpath)
-		return nil
-	}
+	//if util.IsMultiInstance2() {
+	//	logger.Logmsg(fmt.Sprintf("p-2, not merging web xml '%s' to '%s'", webconfigpath, webuserxmlpath))
+	//	return nil
+	//}
 
 	err = OutputWebuserxml(webconfigpath, webuserxmlpath, p12path, encpass)
 	if err != nil {

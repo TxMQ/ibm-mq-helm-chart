@@ -3,9 +3,9 @@ package util
 import (
 	"fmt"
 	"github.com/nxadm/tail"
-	"log"
 	"os"
 	"strings"
+	"szesto.com/mqrunner/logger"
 )
 
 func TailMqLog() {
@@ -65,7 +65,7 @@ func TailFile(file string, config tail.Config, filters []string) {
 	const mqLogNoFilter = "NO_FILTER"
 
 	if GetDebugFlag() {
-		log.Printf("tail-file: applying log filters: %v to log file: %s\n", filters, file)
+		logger.Logmsg(fmt.Sprintf("applying log filters: %v to log file: %s", filters, file))
 	}
 
 	// open file

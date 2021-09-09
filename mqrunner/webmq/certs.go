@@ -2,12 +2,13 @@ package webmq
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"szesto.com/mqrunner/logger"
 	"szesto.com/mqrunner/util"
+	"time"
 )
 
 const _keyfile = "tls.key"
@@ -32,6 +33,8 @@ func RecreateWebmqKeystore(ssldir, keypath, certpath, capath string) (string, st
 }
 
 func CreateWebmqKeystore(ssldir, keypath, certpath, capath string, deleteExistingKeystore bool) (string, string, error) {
+	t := time.Now()
+	defer logger.Logmsg(fmt.Sprintf("time to import webc keystore: %v", time.Since(t)))
 
 	debug := util.GetDebugFlag()
 
@@ -63,23 +66,23 @@ func CreateWebmqKeystore(ssldir, keypath, certpath, capath string, deleteExistin
 	p12path := filepath.Join(ssldir, "webmq.p12")
 
 	if debug {
-		log.Printf("create-web-keystore-1: re-creating keystore %s\n", p12path)
+		logger.Logmsg(fmt.Sprintf("p-1: re-creating keystore %s", p12path))
 	}
 
 	if deleteExistingKeystore {
 		if debug {
-			log.Printf("create-web-keystore-2: deleting keystore %s\n", p12path)
+			logger.Logmsg(fmt.Sprintf("p-2: deleting keystore %s", p12path))
 		}
 
 		_, err := os.Stat(p12path)
 		if err != nil && os.IsNotExist(err) {
-			log.Printf("create-web-keystore-20: keystore %s does not exist\n", p12path)
+			logger.Logmsg(fmt.Sprintf("p-3: keystore %s does not exist", p12path))
 		} else if err != nil {
 			return "", "", err
 		} else {
 			if debug {
-				log.Printf("create-web-keystore-3: deleting keystore '%s'\n", p12path)
-				log.Printf("create-web-keystore-4: rm -f %s\n", p12path)
+				logger.Logmsg(fmt.Sprintf("p-4: deleting keystore '%s'", p12path))
+				logger.Logmsg(fmt.Sprintf("p-5: rm -f %s", p12path))
 			}
 
 			out, err := exec.Command("rm", "-f", p12path).CombinedOutput()
@@ -92,7 +95,7 @@ func CreateWebmqKeystore(ssldir, keypath, certpath, capath string, deleteExistin
 			}
 
 			if out != nil {
-				log.Printf("create-web-keystore-5: %s\n", out)
+				logger.Logmsg(fmt.Sprintf("p-6: %s", out))
 			}
 		}
 	}
@@ -103,7 +106,7 @@ func CreateWebmqKeystore(ssldir, keypath, certpath, capath string, deleteExistin
 	// generate random password
 	// openssl rand -base64 14 > keystore.password
 	if debug {
-		log.Printf("create-web-keystore-6: %s\n", "openssl rand -base64 14")
+		logger.Logmsg("openssl rand -base64 14")
 	}
 
 	passbytes, err := exec.Command("openssl", "rand", "-base64", "14").CombinedOutput()
@@ -115,7 +118,7 @@ func CreateWebmqKeystore(ssldir, keypath, certpath, capath string, deleteExistin
 	password := strings.TrimSuffix(string(passbytes), "\n")
 
 	if debug {
-		log.Printf("create-web-keystore-7: %s\n", "/opt/mqm/web/bin/securityUtility encode password")
+		logger.Logmsg(fmt.Sprintf("p-7: %s", "/opt/mqm/web/bin/securityUtility encode password"))
 	}
 
 	// encode password
@@ -137,8 +140,8 @@ func CreateWebmqKeystore(ssldir, keypath, certpath, capath string, deleteExistin
 	if iscapath {
 
 		if debug {
-			log.Printf("create-web-keystore-8: /usr/bin/openssl pkcs12 -export -name %s -out %s -inkey %s -in %s -certfile %s -password pass:password\n",
-				_certlabel, p12path, keypath, certpath, capath)
+			logger.Logmsg(fmt.Sprintf("/usr/bin/openssl pkcs12 -export -name %s -out %s -inkey %s -in %s -certfile %s -password pass:password",
+				_certlabel, p12path, keypath, certpath, capath))
 		}
 
 		out, err := exec.Command("/usr/bin/openssl", "pkcs12", "-export", "-name", _certlabel, "-out", p12path,
@@ -155,8 +158,8 @@ func CreateWebmqKeystore(ssldir, keypath, certpath, capath string, deleteExistin
 	} else {
 
 		if debug {
-			log.Printf("create-web-keystore-9: /usr/bin/openssl pkcs12 -export -name %s -out %s -inkey %s -in %s -password pass:password\n",
-				_certlabel, p12path, keypath, certpath)
+			logger.Logmsg(fmt.Sprintf("p-9: /usr/bin/openssl pkcs12 -export -name %s -out %s -inkey %s -in %s -password pass:password",
+				_certlabel, p12path, keypath, certpath))
 		}
 
 		out, err := exec.Command("/usr/bin/openssl", "pkcs12", "-export", "-name", _certlabel, "-out", p12path,
@@ -173,7 +176,7 @@ func CreateWebmqKeystore(ssldir, keypath, certpath, capath string, deleteExistin
 
 	// change p12 file mode
 	if debug {
-		log.Printf("create-web-keystore-10: chmod 0666 %s\n", p12path)
+		logger.Logmsg(fmt.Sprintf("p-10: chmod 0666 %s", p12path))
 	}
 
 	err = os.Chmod(p12path, 0666)

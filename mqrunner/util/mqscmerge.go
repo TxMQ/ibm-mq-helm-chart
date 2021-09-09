@@ -3,11 +3,11 @@ package util
 import (
 	"fmt"
 	"io/ioutil"
-	"log"
 	"os"
 	"path"
 	"path/filepath"
 	"strings"
+	"szesto.com/mqrunner/logger"
 	"szesto.com/mqrunner/mqsc"
 )
 
@@ -25,7 +25,7 @@ func FetchMergeConfigFiles(fetchconf FetchConfig, mqscicpath, qminipath string) 
 		return err
 	}
 
-	log.Printf("fetched git repo %s to %s\n", fetchconf.Url, fetchdir)
+	logger.Logmsg(fmt.Sprintf("fetched git repo %s to %s", fetchconf.Url, fetchdir))
 
 	dir := fetchdir
 	if len(fetchconf.Dir) > 0 {
@@ -59,6 +59,10 @@ func FetchMergeConfigFiles(fetchconf FetchConfig, mqscicpath, qminipath string) 
 
 func QminiMerge(dir, outfile string) error {
 
+	if GetDebugFlag() {
+		logger.Logmsg(fmt.Sprintf("looking for ini files in '%s'", dir))
+	}
+
 	// find *.ini files
 	mqinifiles, err := ReadDir(dir, "ini")
 	if err != nil {
@@ -74,7 +78,7 @@ func QminiMerge(dir, outfile string) error {
 		err = AppendFile(mqinifile, outfile, "#*")
 		if err != nil {
 			// print error message and continue
-			log.Printf("mqini-merge error, file %s : %v\n", mqinifile, err)
+			logger.Logmsg(fmt.Sprintf("mqini-merge error, file %s : %v", mqinifile, err))
 		}
 	}
 
@@ -86,7 +90,7 @@ func MqscMerge(dir string, outfile string) error {
 	debug := GetDebugFlag()
 
 	if debug {
-		log.Printf("looking for mqsc files in '%s'\n", dir)
+		logger.Logmsg(fmt.Sprintf("looking for mqsc files in '%s'", dir))
 	}
 
 	// find *.mqsc files in input directory
@@ -97,7 +101,7 @@ func MqscMerge(dir string, outfile string) error {
 
 	if len(mqscfiles) == 0 {
 		if debug {
-			log.Printf("mqsc-merge: no mqsc files in '%s'\n", dir)
+			logger.Logmsg(fmt.Sprintf("mqsc-merge: no mqsc files in '%s'", dir))
 		}
 		return nil
 	}
@@ -107,7 +111,7 @@ func MqscMerge(dir string, outfile string) error {
 		err = AppendFile(mqscfile, outfile, "*")
 		if err != nil {
 			// print error message and continue
-			log.Printf("mqsc-merge error, file %s : %v\n", mqscfile, err)
+			logger.Logmsg(fmt.Sprintf("mqsc-merge error, file %s : %v", mqscfile, err))
 		}
 	}
 
@@ -124,6 +128,10 @@ func MqscMerge(dir string, outfile string) error {
 }
 
 func MqYamlMerge(dir string, outfile string) error {
+
+	if GetDebugFlag() {
+		logger.Logmsg(fmt.Sprintf("looking for yaml files in '%s'", dir))
+	}
 
 	// find *.yaml files
 	yamlfiles, err := ReadDir(dir, "yaml")
@@ -151,7 +159,7 @@ func MqYamlMerge(dir string, outfile string) error {
 		// output mqsc file
 		err = mqsc.Outputmqsc(yamlfile, yamlout)
 		if err != nil {
-			log.Printf("mq-yaml-merge, error converting mq yaml file to mqsc, file %s, %v\n", yamlfile, err)
+			logger.Logmsg(fmt.Sprintf("mq-yaml-merge, error converting mq yaml file to mqsc, file %s, %v", yamlfile, err))
 			continue
 		}
 
@@ -159,7 +167,7 @@ func MqYamlMerge(dir string, outfile string) error {
 		err = AppendFile(yamlout, outfile, "*")
 		if err != nil {
 			// print error message and continue
-			log.Printf("mq-yaml-merge error, file %s : %v\n", yamlout, err)
+			logger.Logmsg(fmt.Sprintf("mq-yaml-merge error, file %s : %v", yamlout, err))
 		}
 	}
 
@@ -170,7 +178,7 @@ func AppendFile(infile, outfile, separator string) error {
 
 	debug := GetDebugFlag()
 	if debug {
-		log.Printf("append-file: merging file '%s' into '%s'\n", infile, outfile)
+		logger.Logmsg(fmt.Sprintf("merging file '%s' into '%s'", infile, outfile))
 	}
 
 	databytes, err := os.ReadFile(infile)

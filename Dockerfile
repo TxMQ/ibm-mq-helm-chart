@@ -3,7 +3,9 @@ USER 0
 RUN mkdir /go/src/mqrunner
 WORKDIR /go/src/mqrunner
 COPY mqrunner .
-RUN go install ./cmd
+#RUN go install ./cmd
+WORKDIR /go/src/mqrunner/cmd/mqrunner
+RUN go install
 
 FROM registry.access.redhat.com/ubi8/ubi-minimal:8.4
 USER 0
@@ -43,7 +45,8 @@ COPY scripts/*.sh .
 RUN ./create-directories.sh 1001 && ./accept-license.sh
 
 # copy mqrunner from go builder
-COPY --from=mqrunner /go/bin/cmd /opt/mqm/bin/mqrunner
+#COPY --from=mqrunner /go/bin/cmd /opt/mqm/bin/mqrunner
+COPY --from=mqrunner /go/bin/mqrunner /opt/mqm/bin/mqrunner
 RUN chown 1001:root /opt/mqm/bin/mqrunner & chmod u+x,g+x,o+x /opt/mqm/bin/mqrunner
 
 EXPOSE 1414 9157 9443

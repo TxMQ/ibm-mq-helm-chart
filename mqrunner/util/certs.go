@@ -2,11 +2,11 @@ package util
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"szesto.com/mqrunner/logger"
 )
 
 const _keyDatabaseStem = "key"
@@ -170,9 +170,9 @@ func CreateCMSKeyStore(ssldir string, deleteExistingKeystore bool) (string, erro
 	rdbpath := filepath.Join(ssldir, rdb)
 	sthpath := filepath.Join(ssldir, sth)
 
-	log.Printf("create-cms-keystore-1: keydbpath = %s, rdbpath = %s, sthpath = %s\n", keydbpath, rdbpath, sthpath)
+	logger.Logmsg(fmt.Sprintf("p-1: keydbpath = %s, rdbpath = %s, sthpath = %s", keydbpath, rdbpath, sthpath))
 
-	log.Printf("%s\n", "create-cms-keystore-2: deleting existing keystore")
+	logger.Logmsg("p-2: deleting existing keystore")
 
 	if deleteExistingKeystore {
 		for _, fpath := range []string {keydbpath, rdbpath, sthpath} {
@@ -188,7 +188,7 @@ func CreateCMSKeyStore(ssldir string, deleteExistingKeystore bool) (string, erro
 	//-rw-------. 1 1000680000 root  80 Jun 23 17:28 key.rdb
 	//-rw-------. 1 1000680000 root 193 Jun 23 17:28 key.sth
 
-	log.Printf("%s\n", "create-cms-keystore-3: generating keystore password")
+	logger.Logmsg("p-3: generating keystore password")
 
 	// generate password
 	password, err := exec.Command("openssl", "rand", "-base64", "14").CombinedOutput()
@@ -196,7 +196,7 @@ func CreateCMSKeyStore(ssldir string, deleteExistingKeystore bool) (string, erro
 		return "", err
 	}
 
-	log.Printf("create-cms-keystore-4: creating keystore %s\n", keydbpath)
+	logger.Logmsg(fmt.Sprintf("p-4: creating keystore %s", keydbpath))
 
 	// create keystore
 	out, err := exec.Command("/opt/mqm/bin/runmqckm", "-keydb", "-create", "-db", keydbpath,
@@ -216,7 +216,7 @@ func CreateCMSKeyStore(ssldir string, deleteExistingKeystore bool) (string, erro
 	//-rw-rw----. 1 1000680000 root  80 Jun 23 17:28 key.rdb
 	//-rw-rw----. 1 1000680000 root 193 Jun 23 17:28 key.sth
 
-	log.Printf("create-cms-keystore-5: changing keystore permissions\n")
+	logger.Logmsg("p-5: changing keystore permissions")
 
 	for _, fpath := range []string {keydbpath, rdbpath, sthpath} {
 		err = os.Chmod(fpath, 0660)
@@ -225,7 +225,7 @@ func CreateCMSKeyStore(ssldir string, deleteExistingKeystore bool) (string, erro
 		}
 	}
 
-	log.Printf("create-cms-keystore-6: keystore %s created\n", keydbpath)
+	logger.Logmsg(fmt.Sprintf("p-6: keystore %s created", keydbpath))
 
 	return keydbpath, nil
 }
@@ -259,7 +259,7 @@ func IsSelfSigned(certpath string) (string, string, bool, error) {
 func ImportTrustCerts(keydbpath, certpath, capath, trustdir string) error {
 
 	// check if cert path exists
-	log.Printf("import-trust-chains-1: expecting certificate %s\n", certpath)
+	logger.Logmsg(fmt.Sprintf("p-1: expecting certificate at %s", certpath))
 
 	_, err := os.Stat(certpath)
 	if err != nil {
@@ -271,13 +271,11 @@ func ImportTrustCerts(keydbpath, certpath, capath, trustdir string) error {
 		return err
 	}
 
-	log.Printf("import-trust-chains-2: found certificate %s. subject='%s', issuer='%s'\n",
-		certpath, subject, issuer)
+	logger.Logmsg(fmt.Sprintf("p-2: found certificate %s. subject='%s', issuer='%s'", certpath, subject, issuer))
 
 	if selfsigned {
 
-		log.Printf("import-trust-chains-3: certificate %s is self-signed, importing into key db %s\n",
-			certpath, keydbpath)
+		logger.Logmsg(fmt.Sprintf("p-3: certificate %s is self-signed, importing into key db %s", certpath, keydbpath))
 
 		// add self-signed certificate:
 
@@ -299,8 +297,7 @@ func ImportTrustCerts(keydbpath, certpath, capath, trustdir string) error {
 
 		label := "ca"
 
-		log.Printf("import-trust-chains-4: importing ca cert %s into key db %s, label %s\n",
-			capath, keydbpath, label)
+		logger.Logmsg(fmt.Sprintf("p-4: importing ca cert %s into key db %s, label %s", capath, keydbpath, label))
 
 		if err = addcert(keydbpath, label, capath); err != nil {
 			return nil
@@ -323,8 +320,7 @@ func ImportTrustCerts(keydbpath, certpath, capath, trustdir string) error {
 
 				label := fmt.Sprintf("trust%d", idx)
 
-				log.Printf("import-trust-chains-5: importing ca cert %s into key db %s, label %s\n",
-					trustpem, keydbpath, label)
+				logger.Logmsg(fmt.Sprintf("p-5: importing ca cert %s into key db %s, label %s", trustpem, keydbpath, label))
 
 				if err = addcert(keydbpath, label, trustpem); err != nil {
 					return err
@@ -381,7 +377,7 @@ func PemToP12(keypath, certpath, ssldir, certlabel string) (string, error) {
 	// -keypbe NONE -certpbe NONE -nomaciter -passout pass:
 	// note that we do not include cert chain because cert chains are imported separately
 
-	log.Printf("pem-to-p12-1: converting key %s and cert %s into p12 %s\n", keypath, certpath, p12path)
+	logger.Logmsg(fmt.Sprintf("p-1: converting key %s and cert %s into p12 %s", keypath, certpath, p12path))
 
 	out, err := exec.Command("/usr/bin/openssl", "pkcs12", "-export", "-name", certlabel, "-out", p12path,
 		"-inkey", keypath, "-in", certpath, "-keypbe", "NONE", "-certpbe", "NONE", "-nomaciter",
@@ -395,7 +391,7 @@ func PemToP12(keypath, certpath, ssldir, certlabel string) (string, error) {
 		}
 	}
 
-	log.Printf("pem-to-p12-2: changing %s permissions", p12path)
+	logger.Logmsg(fmt.Sprintf("p-2: changing %s permissions", p12path))
 
 	// chanage p12 mode
 	err = os.Chmod(p12path, 0660)
@@ -421,8 +417,7 @@ func ImportP12(p12path, kdbpath, certlabel string) error {
 	// runmqckm -cert -import -file ./qm.p12 -pw "" -type pkcs12 -target ./zorro.kdb -target_pw password
 	// -target_type cms -label label -new_label qm
 
-	log.Printf("import-p12-1: importing p12 file %s into key db %s with cert label '%s'\n",
-		p12path, kdbpath, certlabel)
+	logger.Logmsg(fmt.Sprintf("p-1: importing p12 file %s into key db %s with cert label '%s'", p12path, kdbpath, certlabel))
 
 	out, err := exec.Command("/opt/mqm/bin/runmqckm", "-cert", "-import", "-file", p12path,
 		"-pw", "", "-type", "pkcs12", "-target", kdbpath, "-target_stashed",
@@ -436,8 +431,7 @@ func ImportP12(p12path, kdbpath, certlabel string) error {
 		}
 	}
 
-	log.Printf("import-p12-2: imported p12 file %s into key db %s with cert label '%s'\n",
-		p12path, kdbpath, certlabel)
+	logger.Logmsg(fmt.Sprintf("p-2: imported p12 file %s into key db %s with cert label '%s'", p12path, kdbpath, certlabel))
 
 	return nil
 }

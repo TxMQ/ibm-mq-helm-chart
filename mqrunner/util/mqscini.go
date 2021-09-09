@@ -1,8 +1,10 @@
 package util
 
 import (
-	"log"
+	"fmt"
 	"os"
+	"szesto.com/mqrunner/logger"
+	"time"
 )
 
 const _mqscic = "/etc/mqm/mqscic.mqsc"
@@ -17,6 +19,12 @@ func GetQmini() string {
 }
 
 func MergeMqscFiles() error {
+	if GetDebugFlag() {
+		logger.Logmsg("merging mqsc, ini, and yaml files")
+	}
+
+	t := time.Now()
+	defer logger.Logmsg(fmt.Sprintf("time to merge files: %v", time.Since(t)))
 
 	// mq yaml file is mounted on /etc/mqm/mqyaml
 	mqyamlDir := "/etc/mqm/mqyaml"
@@ -25,8 +33,7 @@ func MergeMqscFiles() error {
 	// delete existing mqscic file
 	err := deleteFile(mqyamlOutFile)
 	if err != nil {
-		// log error message
-		log.Printf("merge-mqsc-files: %v\n", err)
+		logger.Logmsg(err)
 	}
 
 	err = MqYamlMerge(mqyamlDir, mqyamlOutFile)
@@ -47,7 +54,7 @@ func MergeMqscFiles() error {
 	qminiDir := "/etc/mqm/qmini"
 	qminiOutFile := GetQmini()
 
-	err =QminiMerge(qminiDir, qminiOutFile)
+	err = QminiMerge(qminiDir, qminiOutFile)
 	if err != nil {
 		return err
 	}
@@ -58,7 +65,7 @@ func MergeMqscFiles() error {
 func MergeGitConfigFiles2(fc FetchConfig) error {
 
 	if GetDebugFlag() {
-		log.Printf("run-main: giturl '%s', gitref '%s', gitdir '%s'\n", fc.Url, fc.ReferenceName, fc.Dir)
+		logger.Logmsg(fmt.Sprintf("giturl '%s', gitref '%s', gitdir '%s'", fc.Url, fc.ReferenceName, fc.Dir))
 	}
 
 	// protect againts "''" case
@@ -78,6 +85,12 @@ func MergeGitConfigFiles2(fc FetchConfig) error {
 }
 
 func MergeGitConfigFiles() error {
+	if GetDebugFlag() {
+		logger.Logmsg("merging git config files")
+	}
+
+	t := time.Now()
+	defer logger.Logmsg(fmt.Sprintf("time to merge git config files: %v", time.Since(t)))
 
 	fc := FetchConfig{
 		Url:           os.Getenv("GIT_CONFIG_URL"),
