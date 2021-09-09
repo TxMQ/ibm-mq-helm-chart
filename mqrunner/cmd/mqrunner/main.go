@@ -57,10 +57,6 @@ func main() {
 			logger.Logmsg(err)
 		}
 
-		if err := util.ApplyStartupConfig(qmname); err != nil {
-			logger.Logmsg(err)
-		}
-
 	} else {
 		mqrunner.StartMqrunner()
 		mqrunner.WaitForRunnerReady()
@@ -77,12 +73,27 @@ func main() {
 	}
 
 	// get running role (active, standby)
+	if qmgr.IsRunningRoleActive(qmname) {
+		logger.Logmsg(fmt.Sprintf("qmgr '%s' running role is 'active'", qmname))
+
+		// apply startup config
+		if err := util.ApplyStartupConfig(qmname); err != nil {
+			logger.Logmsg(err)
+		}
+
+		// start webc
+		mqwebc.StartWebconsole()
+
+	} else if qmgr.IsRunningRoleStandby(qmname) {
+		logger.Logmsg(fmt.Sprintf("qmgr '%s' running role is 'standby'", qmname))
+
+	} else {
+		// uknown state
+		logger.Logmsg(fmt.Sprintf("qmgr '%s' running role (active|standby) is 'unknown'", qmname))
+	}
 
 	// start perf-monitor
 	perfmon.StartPerfMonitor()
-
-	// start webc
-	mqwebc.StartWebconsole()
 
 	// wait for mq runner to stop
 	logger.Logmsg(fmt.Sprintf("startup time: %v", time.Since(startup)))

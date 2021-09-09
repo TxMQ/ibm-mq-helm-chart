@@ -17,6 +17,22 @@ const _qmrunningstandby = "runningstandby"
 const _qmgrnotrunning = "notrunning"
 const _qmgrnotknown = "notknown"
 
+func QmgrStatusEnumRunning() string {
+	return _qmgrrunning
+}
+
+func QmgrStatusEnumStandby() string {
+	return _qmrunningstandby
+}
+
+func QmgrStatusEnumNotRunning() string {
+	return _qmgrnotrunning
+}
+
+func QmgrStatusEnumNotKnown() string {
+	return _qmgrnotknown
+}
+
 func isEnvTrueValue(envvar string) bool {
 	if value := os.Getenv(envvar); len(value) > 0 && (strings.ToLower(value) == "true" || value == "1") {
 		return true
@@ -450,7 +466,7 @@ func QmgrStatus(qmgr string, silent bool) (string, error) {
 	}
 
 	if debug && !silent {
-		log.Printf("qmgr-status: running command: /opt/mqm/bin/dspmq %s\n", strings.Join(args, " "))
+		logger.Logmsg(fmt.Sprintf("running command: /opt/mqm/bin/dspmq %s", strings.Join(args, " ")))
 	}
 
 	out, err := exec.Command("/opt/mqm/bin/dspmq", args...).CombinedOutput()
@@ -460,14 +476,14 @@ func QmgrStatus(qmgr string, silent bool) (string, error) {
 			if err != nil {
 				// do not log spurios errors
 				if ! strings.HasPrefix(fmt.Sprintf("%v", err), "wait: no child processes") {
-					log.Printf("qmgr-status: out: %s => err: %v\n", string(out), err)
+					logger.Logmsg(fmt.Sprintf("%s%v", string(out), err))
 				}
 			} else if !silent {
-				log.Printf("qmgr-status: out: %s", string(out))
+				logger.Logmsg(string(out))
 			}
 
 		} else if err != nil {
-			log.Printf("qmgr-status: err: %v\n", err)
+			logger.Logmsg(err)
 		}
 	}
 
@@ -478,7 +494,7 @@ func QmgrStatus(qmgr string, silent bool) (string, error) {
 		if strings.HasPrefix(cerr, "AMQ7048E") {
 
 			if debug {
-				log.Printf("qmgr-status: qmgr %s status is '%s'\n", qmgr, _qmgrnotknown)
+				logger.Logmsg(fmt.Sprintf("qmgr '%s' status is '%s'", qmgr, _qmgrnotknown))
 			}
 
 			return _qmgrnotknown, nil
@@ -491,7 +507,7 @@ func QmgrStatus(qmgr string, silent bool) (string, error) {
 			if ok, status := parseParenValue(cerr, "STATUS"); ok {
 				if strings.ToLower(status) == "running" {
 					if debug && !silent {
-						log.Printf("qmgr-status: qmgr %s status is '%s'\n", qmgr, _qmgrrunning)
+						logger.Logmsg(fmt.Sprintf("qmgr-status: qmgr %s status is '%s'\n", qmgr, _qmgrrunning))
 					}
 					return _qmgrrunning, nil
 				}
@@ -511,14 +527,14 @@ func QmgrStatus(qmgr string, silent bool) (string, error) {
 			if strings.ToLower(status) == "running" {
 
 				if debug && !silent {
-					log.Printf("qmgr-status: qmgr %s status is '%s'\n", qmgr, _qmgrrunning)
+					logger.Logmsg(fmt.Sprintf("qmgr '%s' status is '%s'", qmgr, _qmgrrunning))
 				}
 
 				return _qmgrrunning, nil
 
 			} else if strings.ToLower(status) == "running as standby" {
 				if debug && !silent {
-					log.Printf("qmgr-status: qmgr %s status is '%s'\n", qmgr, _qmrunningstandby)
+					logger.Logmsg(fmt.Sprintf("qmgr '%s' status is '%s'", qmgr, _qmrunningstandby))
 				}
 
 				return _qmrunningstandby, nil
@@ -528,7 +544,7 @@ func QmgrStatus(qmgr string, silent bool) (string, error) {
 
 	// QMNAME(qm)  STATUS(Ended normally|immediately)
 	if debug && !silent {
-		log.Printf("qmgr-status: qmgr %s status is '%s'\n", qmgr, _qmgrnotrunning)
+		logger.Logmsg(fmt.Sprintf("qmgr '%s' status is '%s'", qmgr, _qmgrnotrunning))
 	}
 
 	return _qmgrnotrunning, nil

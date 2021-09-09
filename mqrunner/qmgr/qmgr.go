@@ -34,6 +34,22 @@ func StartupRole() string {
 	}
 }
 
+func IsRunningRoleActive(qmgr string) bool {
+	status, err := util.QmgrStatus(qmgr, false)
+	if err != nil {
+		logger.Logmsg(err)
+	}
+	return status == util.QmgrStatusEnumRunning()
+}
+
+func IsRunningRoleStandby(qmgr string) bool {
+	status, err := util.QmgrStatus(qmgr, false)
+	if err != nil {
+		logger.Logmsg(err)
+	}
+	return status == util.QmgrStatusEnumStandby()
+}
+
 func CreateDirectories() error {
 	if util.GetDebugFlag() {
 		logger.Logmsg("creating directories")
