@@ -3,6 +3,7 @@ package qmgr
 import (
 	"fmt"
 	"szesto.com/mqrunner/logger"
+	"szesto.com/mqrunner/mqwebc"
 	"szesto.com/mqrunner/util"
 	"time"
 )
@@ -33,6 +34,12 @@ func runmonitor(qmgr string) {
 
 			// display current status
 			_, _ = util.QmgrStatus(qmgr, false)
+
+			// if transition into running state start web console
+			if currstatus == util.QmgrStatusEnumRunning() {
+				// webc is starting async; web keystore is local file in /etc/mqm
+				mqwebc.StartWebconsole()
+			}
 		}
 	}
 }

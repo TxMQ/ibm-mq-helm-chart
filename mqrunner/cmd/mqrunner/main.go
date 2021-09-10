@@ -57,9 +57,6 @@ func main() {
 		logger.Logmsg(err)
 	}
 
-	// start webc, web is starting async; web keystore is local file in /etc/mqm
-	mqwebc.StartWebconsole()
-
 	// let qmgr start...
 	logger.Logmsg(fmt.Sprintf("pausing for %d seconds for qmgr '%s' to start", 5, qmname))
 	time.Sleep(5 * time.Second)
@@ -69,10 +66,12 @@ func main() {
 
 		logger.Logmsg(fmt.Sprintf("qmgr '%s' running role is 'active'", qmname))
 
-		// todo: import qmgr keystore into local file system (not /var/mqm)
 		if err := qmgr.ImportQmgrKeystore(qmname); err != nil {
 			logger.Logmsg(err)
 		}
+
+		// start web console
+		mqwebc.StartWebconsole()
 
 		// cat autoconfig file
 
