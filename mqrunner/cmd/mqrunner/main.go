@@ -10,6 +10,7 @@ import (
 	"szesto.com/mqrunner/probe"
 	"szesto.com/mqrunner/qmgr"
 	"szesto.com/mqrunner/util"
+	"szesto.com/mqrunner/webmq"
 	"time"
 )
 
@@ -44,6 +45,10 @@ func main() {
 			logger.Logmsg(err)
 		}
 
+		if err := qmgr.ImportQmgrKeystore(qmname); err != nil {
+			logger.Logmsg(err)
+		}
+
 	} else {
 		// wait for qmgr to be created by the leader
 		_ = qmgr.WaitForQmgrCreate(qmname)
@@ -57,21 +62,33 @@ func main() {
 		logger.Logmsg(err)
 	}
 
-	// let qmgr start...
-	logger.Logmsg(fmt.Sprintf("pausing for %d seconds for qmgr '%s' to start", 5, qmname))
-	time.Sleep(5 * time.Second)
+	// configure web console, local /etc/mqm directory
+	if mqwebc.IsStartMqweb() || mqwebc.IsConfigureMqweb() {
+		if err := webmq.ConfigureWebconsole(); err != nil {
+			logger.Logmsg(err)
+		}
+	}
 
-	// get running role (active, standby)
+	// let qmgr start...
+	//logger.Logmsg(fmt.Sprintf("pausing for %d seconds for qmgr '%s' to start", 5, qmname))
+	//time.Sleep(5 * time.Second)
+
+	// running role (active, standby)
 	if qmgr.IsRunningRoleActive(qmname) {
 
 		logger.Logmsg(fmt.Sprintf("qmgr '%s' running role is 'active'", qmname))
 
-		if err := qmgr.ImportQmgrKeystore(qmname); err != nil {
-			logger.Logmsg(err)
-		}
-
 		// start web console
-		mqwebc.StartWebconsole()
+		if mqwebc.IsStartMqweb() {
+			if util.IsMultiInstance1() || util.IsMultiInstance2() {
+				if err := util.StopMqweb(); err != nil {
+					logger.Logmsg(err)
+				}
+			}
+			if err := util.StartMqweb(); err != nil {
+				logger.Logmsg(err)
+			}
+		}
 
 		// cat autoconfig file
 

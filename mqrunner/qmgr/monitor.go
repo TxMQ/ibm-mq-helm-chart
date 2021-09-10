@@ -37,8 +37,12 @@ func runmonitor(qmgr string) {
 
 			// if transition into running state start web console
 			if currstatus == util.QmgrStatusEnumRunning() {
-				// webc is starting async; web keystore is local file in /etc/mqm
-				mqwebc.StartWebconsole()
+				if util.IsMultiInstance1() || util.IsMultiInstance2() {
+					if mqwebc.IsStartMqweb() {
+						_ = util.StopMqweb()
+						_ = util.StartMqweb()
+					}
+				}
 			}
 		}
 	}

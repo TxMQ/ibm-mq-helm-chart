@@ -290,9 +290,18 @@ func createQmgrCmd(qmgr string, icignore bool) error {
 	return nil
 }
 
-func StartMqweb() error {
+func StopMqweb() error {
+	out, err := runcmd("/opt/mqm/bin/endmqweb")
+	if err != nil {
+		return err
 
-	// start mq web console
+	} else if len(out) > 0 {
+		logger.Logmsg(out)
+	}
+	return nil
+}
+
+func StartMqweb() error {
 	out, err := runcmd("/opt/mqm/bin/strmqweb")
 	if err != nil {
 		return err
@@ -300,20 +309,7 @@ func StartMqweb() error {
 	} else if len(out) > 0 {
 		logger.Logmsg(out)
 	}
-
-	//out, err := exec.Command("/opt/mqm/bin/strmqweb").CombinedOutput()
-	//
-	//if err != nil {
-	//	if out != nil {
-	//		cerr := string(out)
-	//		return fmt.Errorf("%v\n", cerr)
-	//	} else {
-	//		return err
-	//	}
-	//}
-
 	return nil
-
 }
 
 func StartQmgr(qmgr string) error {
