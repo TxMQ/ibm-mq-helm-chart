@@ -5,7 +5,6 @@ import (
 	"os"
 	"szesto.com/mqrunner/logger"
 	"szesto.com/mqrunner/mqrunner"
-	"szesto.com/mqrunner/mqwebc"
 	"szesto.com/mqrunner/perfmon"
 	"szesto.com/mqrunner/probe"
 	"szesto.com/mqrunner/qmgr"
@@ -19,22 +18,26 @@ func main() {
 	qmname := os.Getenv("MQ_QMGR_NAME")
 	logger.Logmsg(fmt.Sprintf("queue manager '%s' starting in startup role '%s'", qmname, qmgr.StartupRole()))
 
-	// startup role: 0/1
-	// from the hostname (k8s) or command line arg (docker)
-
 	logger.Runlogger()
 	probe.StartProbes(qmname)
-
-	if qmgr.IsStartupLeader() {
-		if err := qmgr.CreateDirectories(); err != nil {
-			logger.Logmsg(err)
-		}
-	}
-
 	mqrunner.StartMqrunner()
 	mqrunner.WaitForRunnerReady()
 
+	// config files are merged into local /etc/mqm directory
+	if err := util.MergeMqscFiles(); err != nil {
+		logger.Logmsg(err)
+	}
+
+	if err := util.MergeGitConfigFiles(); err != nil {
+		logger.Logmsg(err)
+	}
+
 	if qmgr.IsStartupLeader() {
+		// create /var/mqm directories
+		if err := qmgr.CreateDirectories(); err != nil {
+			logger.Logmsg(err)
+		}
+
 		// create qmgr
 		if err := qmgr.CreateQmgr(qmname); err != nil {
 			logger.Logmsg(err)
@@ -62,25 +65,18 @@ func main() {
 
 		logger.Logmsg(fmt.Sprintf("qmgr '%s' running role is 'active'", qmname))
 
-		if err := util.MergeMqscFiles(); err != nil {
-			logger.Logmsg(err)
-		}
-
-		if err := util.MergeGitConfigFiles(); err != nil {
-			logger.Logmsg(err)
-		}
-
+		// todo: import qmgr keystore into local file system (not /var/mqm)
 		if err := qmgr.ImportQmgrKeystore(qmname); err != nil {
 			logger.Logmsg(err)
 		}
 
 		// apply startup config
-		if err := util.ApplyStartupConfig(qmname); err != nil {
-			logger.Logmsg(err)
-		}
+		//if err := util.ApplyStartupConfig(qmname); err != nil {
+		//	logger.Logmsg(err)
+		//}
 
 		// start webc
-		mqwebc.StartWebconsole()
+		//mqwebc.StartWebconsole()
 
 	} else if qmgr.IsRunningRoleStandby(qmname) {
 		logger.Logmsg(fmt.Sprintf("qmgr '%s' running role is 'standby'", qmname))

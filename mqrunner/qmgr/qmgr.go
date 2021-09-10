@@ -117,7 +117,7 @@ func CreateQmgr(qmgr string) error {
 		}
 
 		// create queue manager, ignore ic file
-		if err = util.CreateQmgr(qmgr, true); err != nil {
+		if err = util.CreateQmgr(qmgr, false); err != nil {
 			// log error
 			logger.Logmsg(err)
 
