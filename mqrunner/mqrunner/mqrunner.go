@@ -7,14 +7,15 @@ import (
 	"os/signal"
 	"syscall"
 	"szesto.com/mqrunner/logger"
+	"szesto.com/mqrunner/util"
 )
 
 var runnerchan chan int
 
-func StartMqrunner() {
-	logger.Logmsg("starting mq runner")
+func StartMqrunner(qmgr string) {
+	logger.Logmsg(fmt.Sprintf("starting mq runner for qmgr '%s'", qmgr))
 	runnerchan = make(chan int)
-	go mqrunner()
+	go mqrunner(qmgr)
 }
 
 func runnerReady() {
@@ -30,7 +31,7 @@ func runnerStopped() {
 	runnerchan <- 1
 }
 
-func mqrunner() {
+func mqrunner(qmgr string) {
 
 	sigterm := make(chan os.Signal)
 	signal.Notify(sigterm, syscall.SIGINT, syscall.SIGTERM)
@@ -51,7 +52,8 @@ func mqrunner() {
 			logger.Logmsg(fmt.Sprintf("%s", "received sigterm, exiting"))
 
 			// shutdown queue manager
-			logger.Logmsg(fmt.Sprintf("%s", "shutting down queue manager"))
+			logger.Logmsg(fmt.Sprintf("shutting down queue manager '%s'", qmgr))
+			_ = util.StopQmgr(qmgr)
 
 			logger.Logmsg("mq runner stopped")
 			runnerStopped()

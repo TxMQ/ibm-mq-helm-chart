@@ -5,6 +5,7 @@ import (
 	"os"
 	"szesto.com/mqrunner/logger"
 	"szesto.com/mqrunner/mqrunner"
+	"szesto.com/mqrunner/mqwebc"
 	"szesto.com/mqrunner/perfmon"
 	"szesto.com/mqrunner/probe"
 	"szesto.com/mqrunner/qmgr"
@@ -20,7 +21,7 @@ func main() {
 
 	logger.Runlogger()
 	probe.StartProbes(qmname)
-	mqrunner.StartMqrunner()
+	mqrunner.StartMqrunner(qmname)
 	mqrunner.WaitForRunnerReady()
 
 	// config files are merged into local /etc/mqm directory
@@ -56,6 +57,9 @@ func main() {
 		logger.Logmsg(err)
 	}
 
+	// start webc, web is starting async; web keystore is local file in /etc/mqm
+	mqwebc.StartWebconsole()
+
 	// let qmgr start...
 	logger.Logmsg(fmt.Sprintf("pausing for %d seconds for qmgr '%s' to start", 5, qmname))
 	time.Sleep(5 * time.Second)
@@ -70,13 +74,7 @@ func main() {
 			logger.Logmsg(err)
 		}
 
-		// apply startup config
-		//if err := util.ApplyStartupConfig(qmname); err != nil {
-		//	logger.Logmsg(err)
-		//}
-
-		// start webc
-		//mqwebc.StartWebconsole()
+		// cat autoconfig file
 
 	} else if qmgr.IsRunningRoleStandby(qmname) {
 		logger.Logmsg(fmt.Sprintf("qmgr '%s' running role is 'standby'", qmname))
@@ -85,6 +83,9 @@ func main() {
 		// uknown state
 		logger.Logmsg(fmt.Sprintf("qmgr '%s' running role (active|standby) is 'unknown'", qmname))
 	}
+
+	// start state monitor
+	qmgr.StartMonitor(qmname)
 
 	// start perf-monitor
 	perfmon.StartPerfMonitor()

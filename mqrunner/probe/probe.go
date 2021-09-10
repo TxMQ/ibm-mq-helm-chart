@@ -14,11 +14,14 @@ type probe struct {
 
 func qmgrReady(qmgr string) bool {
 
-	if util.IsMultiInstance2() {
+	if running, err := util.IsQmgrRunning(qmgr, true); err != nil {
 		return false
 
-	} else {
+	} else if running {
 		return true
+
+	} else {
+		return false
 	}
 }
 
