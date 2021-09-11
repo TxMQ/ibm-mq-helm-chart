@@ -7,9 +7,7 @@ import (
 	"time"
 )
 
-func ImportQmgrKeystore(qmgr string) error {
-	t := time.Now()
-	defer logger.Logmsg(fmt.Sprintf("time to import qmgr keystore: %v", time.Since(t)))
+func ImportQmgrKeystore(qmgr string) (bool, string, error) {
 
 	if util.IsEnableTls() {
 		// import certs into the keystore
@@ -17,16 +15,30 @@ func ImportQmgrKeystore(qmgr string) error {
 			logger.Logmsg(fmt.Sprintf("importing certificates into qmgr '%s' keystore", qmgr))
 		}
 
-		if err := util.ImportCertificates(qmgr); err != nil {
+		if keypath, err := util.ImportCertificates(qmgr); err != nil {
+			// 2021/09/11 00:15:49 [qmgr.ImportQmgrKeystore:18] wait: no child processes
 			logger.Logmsg(err)
-			return fmt.Errorf("error importing certificates, %v", err)
+
+			// retry
+			time.Sleep(2 * time.Second)
+			if keypath, err := util.ImportCertificates(qmgr); err != nil {
+				logger.Logmsg(err)
+				return true, "", fmt.Errorf("error importing certificates, %v", err)
+
+			} else {
+				return true, keypath, nil
+			}
+
+		} else {
+			// tls enabled and keypath
+			return  true, keypath, nil
 		}
 
 	} else {
 		if util.GetDebugFlag() {
 			logger.Logmsg("TLS is not enabled")
 		}
+		// tls is not enabled
+		return false, "", nil
 	}
-
-	return nil
 }
