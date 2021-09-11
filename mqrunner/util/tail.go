@@ -8,10 +8,18 @@ import (
 	"szesto.com/mqrunner/logger"
 )
 
+func mqErrlogPath() string {
+	return "/var/mqm/errors/AMQERR01.LOG"
+}
+
+func qmrgErrlogPath(qmgr string) string {
+	return fmt.Sprintf("/var/md/%s/errors/AMQERR01.LOG", qmgr)
+}
+
 func TailMqLog() {
 	// all current error messages are written to this log file
 	// periodically this file is copied over to 02.log and truncated
-	mqlog := "/var/mqm/errors/AMQERR01.LOG"
+	mqlog := mqErrlogPath()
 
 	config := tail.Config{
 		Location:    nil,
@@ -32,7 +40,7 @@ func TailMqLog() {
 func TailQmgrLog(qmgr string) {
 	// all current error messages are written to this log file
 	// periodically this file is copied over to 02.log and truncated
-	qmgrlog := fmt.Sprintf("/var/mqm/qmgrs/%s/errors/AMQERR01.LOG", qmgr)
+	qmgrlog := qmrgErrlogPath(qmgr)
 
 	config := tail.Config{
 		Location:    nil, 	// Tail from this location. If nil, start at the beginning of the file

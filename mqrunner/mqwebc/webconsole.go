@@ -1,10 +1,12 @@
 package mqwebc
 
 import (
+	"fmt"
 	"os"
 	"szesto.com/mqrunner/logger"
 	"szesto.com/mqrunner/util"
 	"szesto.com/mqrunner/webmq"
+	"time"
 )
 
 func IsStartMqweb() bool {
@@ -18,7 +20,7 @@ func IsConfigureMqweb() bool {
 func StartWebconsole() {
 	// configure webconsole
 	if IsStartMqweb() || IsConfigureMqweb() {
-		go startwebc()
+		startwebc()
 
 	} else {
 		logger.Logmsg("webconsole is off")
@@ -26,6 +28,8 @@ func StartWebconsole() {
 }
 
 func startwebc() {
+	t := time.Now()
+
 	logger.Logmsg("configuring webconsole")
 
 	err := webmq.ConfigureWebconsole()
@@ -49,4 +53,7 @@ func startwebc() {
 			}
 		}
 	}
+
+	// log elapse time
+	logger.Logmsg(fmt.Sprintf("time to import qmgr keystore: %v", time.Since(t)))
 }

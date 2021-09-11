@@ -7,6 +7,8 @@ uid=$1
 install -d -m 0755 -o $uid -g root /mnt
 install -d -m 0755 -o $uid -g root /mnt/data
 install -d -m 0755 -o $uid -g root /mnt/data/mqm
+install -d -m 0755 -o $uid -g root /mnt/data/md
+install -d -m 0755 -o $uid -g root /mnt/data/ld
 
 # mq init and config directories
 install -d -m 0775 -o $uid -g root /etc/mqm
@@ -32,6 +34,10 @@ cp /opt/mqm/bin/crtmqdir /opt/mqm/bin/crtmqdir_setuid && chown root:mqm /opt/mqm
 # link to /mnt/data/mqm from /var/mqm
 rm -fr /var/mqm
 ln -s /mnt/data/mqm /var
+ln -s /mnt/data/md /var
+ln -s /mnt/data/ld /var
 
 # change link owner
 chown $uid:root /var/mqm
+chown $uid:root /var/md
+chown $uid:root /var/ld

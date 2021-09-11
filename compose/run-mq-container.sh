@@ -51,4 +51,5 @@ qmgr="-e MQ_QMGR_NAME=$qmname"
 envars="$qmgr $debug $tls $web $vault $git $ldap $logfilter"
 
 # run
-sudo podman run --rm --name $qmname --network $net -v mqdata:/mnt/data/mqm -v qmini:/etc/mqm/qmini -v mqsc:/etc/mqm/mqsc -v qmtls:/etc/mqm/pki/cert -v qmtrust:/etc/mqm/pki/trust -v webuser:/etc/mqm/webuser $envars -p 1414:1414 -p 9443:9443 -p 40000:40000 $img
+# -v mqdata:/mnt/data/mqm
+sudo podman run --rm --name $qmname --network $net -v mqmq:/mnt/data/mqm -v mqmd:/mnt/data/md -v mqld:/mnt/data/ld -v qmini:/etc/mqm/qmini -v mqsc:/etc/mqm/mqsc -v qmtls:/etc/mqm/pki/cert -v qmtrust:/etc/mqm/pki/trust -v webuser:/etc/mqm/webuser $envars -p 1414:1414 -p 9443:9443 -p 40000:40000 $img

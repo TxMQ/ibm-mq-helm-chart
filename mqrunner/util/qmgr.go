@@ -167,29 +167,38 @@ func DeleteQmgr(qmgr string) error {
 }
 
 func CreateQmgr(qmgr string, icignore bool) error {
-	return createQmgrCmd(qmgr, icignore)
+	if IsMultiInstance1() {
+		return createQmgrCmd(qmgr, icignore)
+
+	} else if IsMultiInstance2() {
+		return addMqinfCmd(qmgr)
+
+	} else {
+		return createQmgrCmd(qmgr, icignore)
+	}
 }
 
 func addMqinfCmd(qmgr string) error {
-
-	// addmqinf -s QueueManager -v Name=qm1 -v Directory=qm1 -v Prefix=/var/mqm
+	// dspmqinf -o command qm1
+	// addmqinf -s QueueManager -v Name=qm1 -v Directory=qm1 -v Prefix=/var/mqm -v DataPath=/var/md/qm1
 
 	args := []string {"-s", "QueueManager"}
 	args = append(args, "-v", fmt.Sprintf("Name=%s", qmgr))
 	args = append(args, "-v", fmt.Sprintf("Directory=%s", qmgr))
 	args = append(args, "-v", fmt.Sprintf("Prefix=%s", "/var/mqm"))
+	args = append(args, "-v", fmt.Sprintf("DataPath=/var/md/%s", qmgr))
 
 	if GetDebugFlag() {
-		log.Printf("add-mq-inf: running command: /opt/mqm/bin/addmqinf %s\n", strings.Join(args, " "))
+		logger.Logmsg(fmt.Sprintf("running command: /opt/mqm/bin/addmqinf %s", strings.Join(args, " ")))
 	}
 
 	out, err := exec.Command("/opt/mqm/bin/addmqinf", args...).CombinedOutput()
 
 	if GetDebugFlag() {
 		if len(string(out)) > 0 {
-			log.Printf("add-mq-inf: out: %s, err: %v\n", string(out), err)
+			logger.Logmsg(fmt.Sprintf("%s%v", string(out), err))
 		} else {
-			log.Printf("add-mq-inf: err: %v\n", err)
+			logger.Logmsg(err)
 		}
 	}
 
@@ -234,7 +243,8 @@ func createQmgrCmd(qmgr string, icignore bool) error {
 	// -lc - circular logging
 	// -ii qm.ini file
 	// -ic mqsc file
-	// -md - qmgr data path, /var/mqm/qmgrs
+	// -ld - log path /mnt/data/ld -> /var/ld
+	// -md - qmgr data path, /var/mqm/qmgrs; /mnt/data/md -> /var/md
 	// -oa group - (default) authorization mode
 
 	args := []string {"-c", "queue manager"}
@@ -249,6 +259,8 @@ func createQmgrCmd(qmgr string, icignore bool) error {
 		args = append(args, "-ii", qmini)
 	}
 
+	args = append(args, "-ld", "/var/ld")
+	args = append(args, "-md", "/var/md")
 	args = append(args, "-u", deadLetterQeueue)
 	args = append(args, "-p", qmgrPort)
 	args = append(args, "-q")
@@ -399,25 +411,13 @@ func QmgrConf(qmgr string) (bool, string, error) {
 		return false, "", err
 	}
 
-	//out, err := runcmd("/opt/mqm/bin/dspmqinf", "-s", "QueueManager", qmgr)
-	//if err != nil {
-	//	if len(out) > 0 {
-	//		cerr := string(out)
-	//		return false, "", fmt.Errorf("out: %s, err: %v\n", cerr, err)
-	//	} else {
-	//		return false, "", err
-	//	}
-	//}
-	//
-	//cout := string(out)
-
 	return true, cout, nil
 }
 
 func QmgrExists(qmgr string) (bool, error) {
 
 	if GetDebugFlag() {
-		log.Printf("qmgr-exists: check if queue manager %s exists\n", qmgr)
+		logger.Logmsg(fmt.Sprintf("check if queue manager %s exists", qmgr))
 	}
 
 	st, err := QmgrStatus(qmgr, false)
@@ -542,6 +542,8 @@ func QmgrStatus(qmgr string, silent bool) (string, error) {
 }
 
 func Runmqsc(qmgr, command string) (string, error) {
+	logger.Logmsg(fmt.Sprintf("running mqsc command: %s", command))
+
 	var cmdfile = filepath.Join(os.TempDir(), "cmd.mqsc")
 
 	err := ioutil.WriteFile(cmdfile, []byte(command), 0777)
@@ -616,13 +618,19 @@ func GetQmgrParam(qmgr, param string) (string, error) {
 	return "", fmt.Errorf("qmgr parameter %s not found", param)
 }
 
-func RefreshSsl() error {
-	// todo
+func RefreshSsl(qmgr string) error {
+	// refresh security type(ssl)
+	out, err := Runmqsc(qmgr, "refresh security type(ssl)")
+	if err != nil {
+		return err
+	} else {
+		logger.Logmsg(out)
+	}
 	return nil
 }
 
 func SetSslKeyRepo(qmgr, sslkeyr string) error {
-	return SetQmgrParam(qmgr,"SSLKEYR", sslkeyr)
+	return SetQmgrParam(qmgr,"SSLKEYR", fmt.Sprintf("'%s'", sslkeyr))
 }
 
 func GetSslKeyRepo(qmgr string) (string, error) {

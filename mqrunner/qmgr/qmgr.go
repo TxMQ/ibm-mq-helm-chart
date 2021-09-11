@@ -103,6 +103,7 @@ func CreateQmgr(qmgr string) error {
 
 	// check if qmgr already configured
 	qmconf, msg, err := util.QmgrConf(qmgr)
+	//qmconf, err := util.QmgrExists(qmgr)
 	if err != nil {
 		// log error message, continue as if qmgr does not exist
 		logger.Logmsg(err)

@@ -70,6 +70,8 @@ spec:
       schedulerName: default-scheduler
       terminationGracePeriodSeconds: 30
       dnsPolicy: ClusterFirst
+      securityContext:
+        fsGroup: 0
 
       {{- with .Values.qmspec.imagePullSecrets }}
       imagePullSecrets:
@@ -168,10 +170,12 @@ spec:
               protocol: TCP
           volumeMounts:
             {{- if eq .Values.qmspec.storage.usePvc "true" }}
-            - name: mqmdata
+            - name: mqmq
               mountPath: /mnt/data/mqm
-              # mount directly into /var/mqm
-              # mountPath: /var/mqm
+            - name: mqmd
+              mountPath: /mnt/data/md
+            - name: mqld
+              mountPath: /mnt/data/ld
             {{- end }}
             {{- if .Values.mq }}
             - name: mqsc-yaml
@@ -205,9 +209,14 @@ spec:
 
       volumes:
         {{- if eq .Values.qmspec.storage.usePvc "true" }}
-        - name: mqmdata
+        {{- if eq .Values.qmspec.multiInstance "true" }}
+        - name: mqmd
           persistentVolumeClaim:
-            claimName: {{ .Release.Name }}-{{ .Values.qmspec.storage.pvcName }}
+            claimName: {{ .Release.Name }}-{{ .Values.qmspec.storage.qmDataPvc }}
+        - name: mqld
+          persistentVolumeClaim:
+            claimName: {{ .Release.Name }}-{{ .Values.qmspec.storage.qmLogPvc }}
+        {{- end }}
         {{- end }}
         {{- if .Values.mq }}
         - name: mqsc-yaml
@@ -240,3 +249,33 @@ spec:
           configMap:
             name: {{ .Values.qmspec.pki.trustMapName }}
         {{- end }}
+
+  volumeClaimTemplates:
+    {{- if eq .Values.qmspec.storage.usePvc "true" }}
+    - metadata:
+        name: mqmq
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        storageClassName: {{ .Values.qmspec.storage.storageClass}}
+        resources:
+          requests:
+            storage: {{ .Values.qmspec.storage.size }}
+    {{- if not (eq .Values.qmspec.multiInstance "true") }}
+    - metadata:
+        name: mqmd
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        storageClassName: {{ .Values.qmspec.storage.storageClass}}
+        resources:
+          requests:
+            storage: {{ .Values.qmspec.storage.size }}
+    - metadata:
+        name: mqld
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        storageClassName: {{ .Values.qmspec.storage.storageClass}}
+        resources:
+          requests:
+            storage: {{ .Values.qmspec.storage.size }}
+    {{- end }}
+    {{- end }}

@@ -55,6 +55,10 @@ func mqrunner(qmgr string) {
 			logger.Logmsg(fmt.Sprintf("shutting down queue manager '%s'", qmgr))
 			_ = util.StopQmgr(qmgr)
 
+			// shutdown web console
+			//logger.Logmsg(fmt.Sprintf("shutting down web console '%s'", qmgr))
+			//_ = util.StopMqweb()
+
 			logger.Logmsg("mq runner stopped")
 			runnerStopped()
 			break
@@ -63,6 +67,6 @@ func mqrunner(qmgr string) {
 }
 
 func WaitForRunnerStop() {
-	logger.Logmsg("waiting for mq runner stop")
+	logger.Logmsg("mq runner forever")
 	<- runnerchan
 }

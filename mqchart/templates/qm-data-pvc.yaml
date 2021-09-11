@@ -1,0 +1,25 @@
+{{- if eq .Values.qmspec.storage.usePvc "true" }}
+{{- if eq .Values.qmspec.multiInstance "true" }}
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  annotations:
+    {{- if not .Values.qmspec.storage.deleteClaim }}
+    "helm.sh/resource-policy": keep
+    {{- end }}
+  labels:
+    {{- include "mqchart.labels" . | nindent 4 }}
+  name: {{ .Release.Name }}-{{ .Values.qmspec.storage.qmDataPvc }}
+  namespace: {{ .Release.Namespace }}
+  finalizers:
+    - kubernetes.io/pvc-protection
+spec:
+  accessModes:
+    - {{ .Values.qmspec.storage.accessMode }}
+  resources:
+    requests:
+      storage: {{ .Values.qmspec.storage.size }}
+  storageClassName: {{ .Values.qmspec.storage.storageClass}}
+  volumeMode: Filesystem
+{{- end }}
+{{- end }}

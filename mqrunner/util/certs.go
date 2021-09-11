@@ -53,7 +53,9 @@ func getTrustdir() string {
 func GetSsldir(qmgr string) string {
 	if len(qmgr) > 0 {
 		// queue manager default
-		return fmt.Sprintf("/var/mqm/qmgrs/%s/ssl", qmgr)
+		// SSLKEYR(/var/mqm/md/qm1/ssl/key)
+		// SSLKEYR(/etc/mqm/ssl)
+		return fmt.Sprintf("/etc/mqm/ssl")
 
 	} else {
 		// web console
@@ -88,7 +90,7 @@ func GetTlsCaPath() string {
 //
 // ImportCertificates from certdir into keyrepo in ssldir
 //
-func ImportCertificates(qmgr string) error {
+func ImportCertificates(qmgr string) (string, error) {
 
 	// cert dir with key, cert, ca cert
 	//certdir := getCertdir()
@@ -113,13 +115,13 @@ func ImportCertificates(qmgr string) error {
 	// re-create cms keystore
 	kdbpath, err := RecreateCMSKeyStore(ssldir)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	// import ca certs into the keystore. ca-certs include self-signed certs.
 	err = ImportTrustCerts(kdbpath, certpath, capath, trustdir)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	// format cert label
@@ -128,22 +130,22 @@ func ImportCertificates(qmgr string) error {
 	// convert pem key and cert files into p12 format
 	p12path, err := PemToP12(keypath, certpath, ssldir, certlabel)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	// import p12 file into the keystore
 	err = ImportP12(p12path, kdbpath, certlabel)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	// delete p12 file
 	err = deleteFile(p12path)
 	if err != nil {
-		return err
+		return "", err
 	}
 
-	return nil
+	return strings.TrimSuffix(kdbpath, ".kdb"), nil
 }
 
 func RecreateCMSKeyStore(ssldir string) (string, error) {

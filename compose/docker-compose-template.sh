@@ -48,7 +48,9 @@ services:
       - '9443:9443'
       - '40000:40000'
     volumes:
-      - mqdata:/mnt/data/mqm
+      - mqmq:/mnt/data/mqm
+      - mqmd:/mnt/data/md
+      - mqld:/mnt/data/ld
       - qmini:/etc/mqm/qmini
       - mqsc:/etc/mqm/mqsc
       - qmtls:/etc/mqm/pki/cert 
@@ -71,7 +73,9 @@ services:
       - VAULT_TLS_CA_INJECT_PATH=
 
 volumes:
-  mqdata:
+  mqmq:
+  mqmd:
+  mqld:
 
   qmini:
     external: true

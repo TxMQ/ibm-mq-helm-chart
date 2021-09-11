@@ -59,6 +59,13 @@ func FetchMergeConfigFiles(fetchconf FetchConfig, mqscicpath, qminipath string) 
 
 func QminiMerge(dir, outfile string) error {
 
+	// create output file
+	if f, err := os.OpenFile(outfile, os.O_CREATE | os.O_WRONLY, 0777); err != nil {
+		return err
+	} else {
+		_ = f.Close()
+	}
+
 	if GetDebugFlag() {
 		logger.Logmsg(fmt.Sprintf("looking for ini files in '%s'", dir))
 	}
@@ -86,6 +93,13 @@ func QminiMerge(dir, outfile string) error {
 }
 
 func MqscMerge(dir string, outfile string) error {
+
+	// create output file
+	if f, err := os.OpenFile(outfile, os.O_CREATE | os.O_WRONLY, 0777); err != nil {
+		return err
+	} else {
+		_ = f.Close()
+	}
 
 	debug := GetDebugFlag()
 
@@ -128,6 +142,13 @@ func MqscMerge(dir string, outfile string) error {
 }
 
 func MqYamlMerge(dir string, outfile string) error {
+
+	// create output file
+	if f, err := os.OpenFile(outfile, os.O_CREATE | os.O_WRONLY, 0777); err != nil {
+		return err
+	} else {
+		_ = f.Close()
+	}
 
 	if GetDebugFlag() {
 		logger.Logmsg(fmt.Sprintf("looking for yaml files in '%s'", dir))

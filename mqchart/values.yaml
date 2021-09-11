@@ -195,12 +195,15 @@ qmspec:
 
     # pvc name is formed by appending this
     # value to the release name: {release}-{pvcname}
-    pvcName: 'qm-sts-pvc'
+    #pvcName: 'qm-sts-pvc'
+    qmDataPvc: 'qm-data-pvc'
+    qmLogPvc: 'qm-log-pvc'
 
     # pvc storage class
     storageClass: ''
 
-    # queue manager volume access mode ReadWriteOnce|ReadWriteMany
+    # queue manager volume access mode for qmdata and qmlog pvc ReadWriteOnce|ReadWriteMany
+    # for multi instance queue manager use ReadWriteMany because qmdata and qmlog are shared volumes
     accessMode: ReadWriteOnce
 
     # delete pvc when queue manager is deleted
