@@ -52,12 +52,10 @@ func mqrunner(qmgr string) {
 			logger.Logmsg(fmt.Sprintf("%s", "received sigterm, exiting"))
 
 			// shutdown queue manager
-			logger.Logmsg(fmt.Sprintf("shutting down queue manager '%s'", qmgr))
-			_ = util.StopQmgr(qmgr)
-
-			// shutdown web console
-			//logger.Logmsg(fmt.Sprintf("shutting down web console '%s'", qmgr))
-			//_ = util.StopMqweb()
+			if running, err := util.IsQmgrRunning(qmgr, false); err == nil && running {
+				logger.Logmsg(fmt.Sprintf("shutting down queue manager '%s'", qmgr))
+				_ = util.StopQmgr(qmgr)
+			}
 
 			logger.Logmsg("mq runner stopped")
 			runnerStopped()

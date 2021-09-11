@@ -40,6 +40,13 @@ func main() {
 
 	if err := qmgr.CreateQmgr(qmname); err != nil {
 		logger.Logmsg(err)
+
+		if util.IsQmgrIniMissing(qmname, err) {
+			// multi-instance leader did not create qmgr
+			if err := qmgr.WaitForQmgrCreate(qmname); err != nil {
+				logger.Logmsg(err)
+			}
+		}
 	}
 
 	// start qmgr

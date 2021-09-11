@@ -2,6 +2,7 @@ package qmgr
 
 import (
 	"fmt"
+	"os"
 	"os/exec"
 	"strings"
 	"szesto.com/mqrunner/logger"
@@ -73,21 +74,15 @@ func WaitForQmgrCreate(qmgr string) error {
 
 	logger.Logmsg(fmt.Sprintf("waiting for the leader to create qmgr '%s'", qmgr))
 
+	// look for /var/md/<qm>/qm.ini file
+	qmini := fmt.Sprintf("/var/md/%s/qm.ini", qmgr)
+
 	for {
-		qmconf, msg, err := util.QmgrConf(qmgr)
-
-		if err == nil && len(msg) > 0 {
-			logger.Logmsg(msg)
-
-		} else if err != nil {
-			logger.Logmsg(err)
-		}
-
-		if qmconf == false {
-			time.Sleep(5*time.Second)
+		if _, err := os.Stat(qmini); err != nil {
+			// put upper limit on total wait time
+			time.Sleep(5 * time.Second)
 
 		} else {
-			logger.Logmsg(fmt.Sprintf("wait complete for qmgr '%s' to be created by the leader", qmgr))
 			return nil
 		}
 	}
@@ -97,7 +92,7 @@ func CreateQmgr(qmgr string) error {
 	logger.Logmsg(fmt.Sprintf("creating queue manager '%s'", qmgr))
 
 	t := time.Now()
-	defer logger.Logmsg(fmt.Sprintf("time to create queue manager: %v", time.Since(t)))
+	defer logger.Logmsg(fmt.Sprintf("create queue manager time: %v", time.Since(t)))
 
 	debug := util.GetDebugFlag()
 
@@ -114,15 +109,11 @@ func CreateQmgr(qmgr string) error {
 
 	if qmconf == false {
 		if debug {
-			logger.Logmsg(fmt.Sprintf("queue manager '%s' will be created", qmgr))
+			logger.Logmsg(fmt.Sprintf("creating queue manager '%s'", qmgr))
 		}
 
-		// create queue manager, ignore ic file
+		// create queue manager
 		if err = util.CreateQmgr(qmgr, false); err != nil {
-			// log error
-			logger.Logmsg(err)
-
-			logger.Logmsg(fmt.Sprintf("queue manager '%s' create failed", qmgr))
 			return err
 
 		} else {

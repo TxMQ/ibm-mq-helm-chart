@@ -188,30 +188,39 @@ func addMqinfCmd(qmgr string) error {
 	args = append(args, "-v", fmt.Sprintf("Prefix=%s", "/var/mqm"))
 	args = append(args, "-v", fmt.Sprintf("DataPath=/var/md/%s", qmgr))
 
-	if GetDebugFlag() {
-		logger.Logmsg(fmt.Sprintf("running command: /opt/mqm/bin/addmqinf %s", strings.Join(args, " ")))
-	}
-
-	out, err := exec.Command("/opt/mqm/bin/addmqinf", args...).CombinedOutput()
+	addmqinf := "/opt/mqm/bin/addmqinf"
 
 	if GetDebugFlag() {
-		if len(string(out)) > 0 {
-			logger.Logmsg(fmt.Sprintf("%s%v", string(out), err))
-		} else {
-			logger.Logmsg(err)
-		}
+		logger.Logmsg(fmt.Sprintf("running: %s %s", addmqinf, strings.Join(args, " ")))
 	}
 
+	out, err := exec.Command(addmqinf, args...).CombinedOutput()
 	if err != nil {
-		if out != nil {
-			cerr := string(out)
-			return fmt.Errorf("%v\n", cerr)
+		if len(out) > 0 {
+			return fmt.Errorf("%s%v", out, err)
 		} else {
 			return err
+		}
+
+	} else if len(out) > 0 {
+		cout := string(out)
+		logger.Logmsg(cout)
+
+		if isQmgrIniMissing(qmgr, cout) {
+			return fmt.Errorf("%s", cout)
 		}
 	}
 
 	return nil
+}
+
+func IsQmgrIniMissing(qmgr string, err error) bool {
+	return isQmgrIniMissing(qmgr, fmt.Sprintf("%v", err))
+}
+
+func isQmgrIniMissing(qmgr, out string) bool {
+	// AMQ5208E: File '/var/md/qm1/qm.ini' missing.
+	return strings.HasPrefix(out, "AMQ5208E")
 }
 
 func createQmgrCmd(qmgr string, icignore bool) error {
@@ -456,11 +465,13 @@ func QmgrStatus(qmgr string, silent bool) (string, error) {
 		args = append(args, "-x")
 	}
 
+	dspmq := "/opt/mqm/bin/dspmq"
+
 	if debug && !silent {
-		logger.Logmsg(fmt.Sprintf("running command: /opt/mqm/bin/dspmq %s", strings.Join(args, " ")))
+		logger.Logmsg(fmt.Sprintf("running: %s %s", dspmq, strings.Join(args, " ")))
 	}
 
-	out, err := exec.Command("/opt/mqm/bin/dspmq", args...).CombinedOutput()
+	out, err := exec.Command(dspmq, args...).CombinedOutput()
 
 	if debug {
 		if len(string(out)) > 0 {
