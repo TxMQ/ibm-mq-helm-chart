@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"szesto.com/mqrunner/logger"
 	"szesto.com/mqrunner/util"
-	"time"
 )
 
 func ImportQmgrKeystore(qmgr string) (bool, string, error) {
@@ -18,16 +17,7 @@ func ImportQmgrKeystore(qmgr string) (bool, string, error) {
 		if keypath, err := util.ImportCertificates(qmgr); err != nil {
 			// 2021/09/11 00:15:49 [qmgr.ImportQmgrKeystore:18] wait: no child processes
 			logger.Logmsg(err)
-
-			// retry
-			time.Sleep(2 * time.Second)
-			if keypath, err := util.ImportCertificates(qmgr); err != nil {
-				logger.Logmsg(err)
-				return true, "", fmt.Errorf("error importing certificates, %v", err)
-
-			} else {
-				return true, keypath, nil
-			}
+			return true, "", fmt.Errorf("error importing certificates, %v", err)
 
 		} else {
 			// tls enabled and keypath

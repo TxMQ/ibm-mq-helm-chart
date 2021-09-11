@@ -50,20 +50,10 @@ func main() {
 	// tail logs
 	qmgr.TailLogs(qmname)
 
-	//import qmgr keystore, /etc/mqm/ssl directory
+	//import qmgr keystore
 	t := time.Now()
-	if tls, keypath, err := qmgr.ImportQmgrKeystore(qmname); err != nil {
+	if _, _, err := qmgr.ImportQmgrKeystore(qmname); err != nil {
 		logger.Logmsg(err)
-
-	} else if tls {
-		if err := util.SetSslKeyRepo(qmname, keypath); err != nil {
-			logger.Logmsg(err)
-
-		} else {
-			if err := util.RefreshSsl(qmname); err != nil {
-				logger.Logmsg(err)
-			}
-		}
 	}
 	logger.Logmsg(fmt.Sprintf("time to import qmgr keystore: %v", time.Since(t)))
 

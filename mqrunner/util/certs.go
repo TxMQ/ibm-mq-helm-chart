@@ -53,9 +53,9 @@ func getTrustdir() string {
 func GetSsldir(qmgr string) string {
 	if len(qmgr) > 0 {
 		// queue manager default
-		// SSLKEYR(/var/mqm/md/qm1/ssl/key)
-		// SSLKEYR(/etc/mqm/ssl)
-		return fmt.Sprintf("/etc/mqm/ssl")
+		// SSLKEYR(/var/md/<qm1>/ssl/key)
+		// SSLKEYR(/etc/mqm/ssl/key)
+		return fmt.Sprintf("/var/md/%s/ssl", qmgr)
 
 	} else {
 		// web console
