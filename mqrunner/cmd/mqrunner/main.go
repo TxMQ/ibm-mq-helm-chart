@@ -57,13 +57,6 @@ func main() {
 	// tail logs
 	qmgr.TailLogs(qmname)
 
-	//import qmgr keystore
-	t := time.Now()
-	if _, _, err := qmgr.ImportQmgrKeystore(qmname); err != nil {
-		logger.Logmsg(err)
-	}
-	logger.Logmsg(fmt.Sprintf("time to import qmgr keystore: %v", time.Since(t)))
-
 	// start web console, /var/mqm/web directory
 	mqwebc.StartWebconsole()
 
@@ -76,6 +69,13 @@ func main() {
 	// running role (active, standby)
 	if qmgr.IsRunningRoleActive(qmname) {
 		logger.Logmsg(fmt.Sprintf("qmgr '%s' running role is 'active'", qmname))
+
+		//import qmgr keystore
+		t := time.Now()
+		if _, _, err := qmgr.ImportQmgrKeystore(qmname); err != nil {
+			logger.Logmsg(err)
+		}
+		logger.Logmsg(fmt.Sprintf("time to import qmgr keystore: %v", time.Since(t)))
 
 		// cat autoconfig file
 
