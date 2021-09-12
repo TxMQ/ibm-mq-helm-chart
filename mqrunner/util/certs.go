@@ -193,7 +193,14 @@ func CreateCMSKeyStore(ssldir string, deleteExistingKeystore bool) (string, erro
 	logger.Logmsg("p-3: generating keystore password")
 
 	// generate password
-	password, err := exec.Command("openssl", "rand", "-base64", "14").CombinedOutput()
+	passwordcmd := "openssl"
+	passwordargs := []string {"rand", "-base64", "14"}
+
+	if GetDebugFlag() {
+		logger.Logmsg(fmt.Sprintf("running: %s %s", passwordcmd, strings.Join(passwordargs, " ")))
+	}
+
+	password, err := exec.Command(passwordcmd, passwordargs...).CombinedOutput()
 	if err != nil {
 		return "", err
 	}
@@ -201,12 +208,19 @@ func CreateCMSKeyStore(ssldir string, deleteExistingKeystore bool) (string, erro
 	logger.Logmsg(fmt.Sprintf("p-4: creating keystore %s", keydbpath))
 
 	// create keystore
-	out, err := exec.Command("/opt/mqm/bin/runmqckm", "-keydb", "-create", "-db", keydbpath,
-		"-pw", string(password), "-type", "cms", "-stash").CombinedOutput()
+	runmqckmcmd := "/opt/mqm/bin/runmqckm"
+	runmqckmargs := []string{"-keydb", "-create", "-db", keydbpath, "-pw", string(password), "-type", "cms", "-stash"}
+
+	if GetDebugFlag() {
+		showargs :=     []string{"-keydb", "-create", "-db", keydbpath, "-pw", "***",  "-type", "cms", "-stash"}
+		logger.Logmsg(fmt.Sprintf("running: %s %s", runmqckmcmd, strings.Join(showargs, " ")))
+	}
+
+	out, err := exec.Command(runmqckmcmd, runmqckmargs...).CombinedOutput()
 
 	if err != nil {
 		if out != nil {
-			return "", fmt.Errorf("%s\n", string(out))
+			return "", fmt.Errorf("%s%v", string(out), err)
 		} else {
 			return "", err
 		}
@@ -331,7 +345,7 @@ func ImportTrustCerts(keydbpath, certpath, capath, trustdir string) error {
 		}
 
 	} else if !os.IsNotExist(err) {
-		return nil
+		return err
 	}
 
 	return nil
@@ -340,13 +354,18 @@ func ImportTrustCerts(keydbpath, certpath, capath, trustdir string) error {
 func addcert(keydbpath, label, certpath string) error {
 
 	// runmqckm -cert -add -db filename -stashed -label label -file filename -format ascii
+	cmd := "/opt/mqm/bin/runmqckm"
+	args := []string{"-cert", "-add", "-db", keydbpath, "-stashed", "-label", label, "-file", certpath, "-format", "ascii"}
 
-	out, err := exec.Command("/opt/mqm/bin/runmqckm", "-cert", "-add", "-db", keydbpath, "-stashed",
-		"-label", label, "-file", certpath, "-format", "ascii").CombinedOutput()
+	if GetDebugFlag() {
+		logger.Logmsg(fmt.Sprintf("running: %s %s", cmd, strings.Join(args, " ")))
+	}
+
+	out, err := exec.Command(cmd, args...).CombinedOutput()
 
 	if err != nil {
 		if out != nil {
-			return fmt.Errorf("%s\n", string(out))
+			return fmt.Errorf("%s%v", string(out), err)
 		} else {
 			return err
 		}
@@ -381,13 +400,20 @@ func PemToP12(keypath, certpath, ssldir, certlabel string) (string, error) {
 
 	logger.Logmsg(fmt.Sprintf("p-1: converting key %s and cert %s into p12 %s", keypath, certpath, p12path))
 
-	out, err := exec.Command("/usr/bin/openssl", "pkcs12", "-export", "-name", certlabel, "-out", p12path,
+	cmd := "/usr/bin/openssl"
+	args := []string {"pkcs12", "-export", "-name", certlabel, "-out", p12path,
 		"-inkey", keypath, "-in", certpath, "-keypbe", "NONE", "-certpbe", "NONE", "-nomaciter",
-		"-passout", "pass:").CombinedOutput()
+		"-passout", "pass:"}
+
+	if GetDebugFlag() {
+		logger.Logmsg(fmt.Sprintf("running: %s %s", cmd, strings.Join(args, " ")))
+	}
+
+	out, err := exec.Command(cmd, args...).CombinedOutput()
 
 	if err != nil {
 		if out != nil {
-			return "", fmt.Errorf("%s\n", string(out))
+			return "", fmt.Errorf("%s%v", string(out), err)
 		} else {
 			return "", err
 		}
@@ -421,13 +447,20 @@ func ImportP12(p12path, kdbpath, certlabel string) error {
 
 	logger.Logmsg(fmt.Sprintf("p-1: importing p12 file %s into key db %s with cert label '%s'", p12path, kdbpath, certlabel))
 
-	out, err := exec.Command("/opt/mqm/bin/runmqckm", "-cert", "-import", "-file", p12path,
+	cmd := "/opt/mqm/bin/runmqckm"
+	args := []string {"-cert", "-import", "-file", p12path,
 		"-pw", "", "-type", "pkcs12", "-target", kdbpath, "-target_stashed",
-		"-target_type", "cms", "-label", certlabel, "-new_label", certlabel).CombinedOutput()
+		"-target_type", "cms", "-label", certlabel, "-new_label", certlabel}
+
+	if GetDebugFlag() {
+		logger.Logmsg(fmt.Sprintf("running: %s %s", cmd, strings.Join(args, " ")))
+	}
+
+	out, err := exec.Command(cmd, args...).CombinedOutput()
 
 	if err != nil {
 		if out != nil {
-			return fmt.Errorf("%s\n", string(out))
+			return fmt.Errorf("%s%v", string(out), err)
 		} else {
 			return err
 		}
