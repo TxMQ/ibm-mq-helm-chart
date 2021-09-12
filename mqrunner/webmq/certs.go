@@ -82,13 +82,12 @@ func CreateWebmqKeystore(ssldir, keypath, certpath, capath string, deleteExistin
 		} else {
 			if debug {
 				logger.Logmsg(fmt.Sprintf("p-4: deleting keystore '%s'", p12path))
-				logger.Logmsg(fmt.Sprintf("p-5: rm -f %s", p12path))
 			}
 
 			out, err := exec.Command("rm", "-f", p12path).CombinedOutput()
 			if err != nil {
 				if out != nil {
-					return "", "", fmt.Errorf("create-web-keystore: %s\n", out)
+					return "", "", fmt.Errorf("create-web-keystore: %s", out)
 				} else {
 					return "", "", err
 				}
@@ -105,11 +104,14 @@ func CreateWebmqKeystore(ssldir, keypath, certpath, capath string, deleteExistin
 
 	// generate random password
 	// openssl rand -base64 14 > keystore.password
+	cmd := "openssl"
+	args := []string{"rand", "-base64", "14"}
+
 	if debug {
-		logger.Logmsg("openssl rand -base64 14")
+		logger.Logmsg(fmt.Sprintf("running: %s %s", cmd, strings.Join(args, " ")))
 	}
 
-	passbytes, err := exec.Command("openssl", "rand", "-base64", "14").CombinedOutput()
+	passbytes, err := exec.Command(cmd, args...).CombinedOutput()
 	if err != nil {
 		return "","", err
 	}
@@ -117,15 +119,19 @@ func CreateWebmqKeystore(ssldir, keypath, certpath, capath string, deleteExistin
 	// strip newline character at the end of the password
 	password := strings.TrimSuffix(string(passbytes), "\n")
 
+	cmd = "/opt/mqm/web/bin/securityUtility"
+	args = []string{"encode", string(password)}
+
 	if debug {
-		logger.Logmsg(fmt.Sprintf("p-7: %s", "/opt/mqm/web/bin/securityUtility encode password"))
+		logargs := []string{"encode", "password"}
+		logger.Logmsg(fmt.Sprintf("running: %s %s", cmd, strings.Join(logargs, " ")))
 	}
 
 	// encode password
-	encbytes, err := exec.Command("/opt/mqm/web/bin/securityUtility", "encode", string(password)).CombinedOutput()
+	encbytes, err := exec.Command(cmd, args...).CombinedOutput()
 	if err != nil {
 		if encbytes != nil {
-			return "","", fmt.Errorf("%s\n", string(encbytes))
+			return "","", fmt.Errorf("%s %v", string(encbytes), err)
 		} else {
 			return "","", err
 		}
@@ -138,36 +144,46 @@ func CreateWebmqKeystore(ssldir, keypath, certpath, capath string, deleteExistin
 	// openssl pkcs12 -export -name name -out p12path -inkey tls.key -in tls.crt [-certfile ca.crt] -password pass:password
 
 	if iscapath {
+		cmd := "/usr/bin/openssl"
+
+		args := []string{"pkcs12", "-export", "-name", _certlabel, "-out", p12path,
+			"-inkey", keypath, "-in", certpath, "-certfile", capath, "-password", "pass:" + string(password)}
 
 		if debug {
-			logger.Logmsg(fmt.Sprintf("/usr/bin/openssl pkcs12 -export -name %s -out %s -inkey %s -in %s -certfile %s -password pass:password",
-				_certlabel, p12path, keypath, certpath, capath))
+			logargs := []string{"pkcs12", "-export", "-name", _certlabel, "-out", p12path,
+				"-inkey", keypath, "-in", certpath, "-certfile", capath, "-password", "pass:" + "password"}
+
+			logger.Logmsg(fmt.Sprintf("running: %s %s", cmd, strings.Join(logargs, " ")))
 		}
 
-		out, err := exec.Command("/usr/bin/openssl", "pkcs12", "-export", "-name", _certlabel, "-out", p12path,
-			"-inkey", keypath, "-in", certpath, "-certfile", capath, "-password", "pass:" + string(password)).CombinedOutput()
+		out, err := exec.Command(cmd, args...).CombinedOutput()
 
 		if err != nil {
 			if out != nil {
-				return "","", fmt.Errorf("%s\n", string(out))
+				return "","", fmt.Errorf("%s %v", string(out), err)
 			} else {
 				return "","", err
 			}
 		}
 
 	} else {
+		cmd := "/usr/bin/openssl"
+
+		args := []string{"pkcs12", "-export", "-name", _certlabel, "-out", p12path,
+			"-inkey", keypath, "-in", certpath, "-password", "pass:" + string(password)}
 
 		if debug {
-			logger.Logmsg(fmt.Sprintf("p-9: /usr/bin/openssl pkcs12 -export -name %s -out %s -inkey %s -in %s -password pass:password",
-				_certlabel, p12path, keypath, certpath))
+			logargs := []string{"pkcs12", "-export", "-name", _certlabel, "-out", p12path,
+				"-inkey", keypath, "-in", certpath, "-password", "pass:" + "***"}
+
+			logger.Logmsg(fmt.Sprintf("running: %s %s", cmd, strings.Join(logargs, " ")))
 		}
 
-		out, err := exec.Command("/usr/bin/openssl", "pkcs12", "-export", "-name", _certlabel, "-out", p12path,
-			"-inkey", keypath, "-in", certpath, "-password", "pass:" + string(password)).CombinedOutput()
+		out, err := exec.Command(cmd, args...).CombinedOutput()
 
 		if err != nil {
 			if out != nil {
-				return "","", fmt.Errorf("%s\n", string(out))
+				return "","", fmt.Errorf("%s %v", string(out), err)
 			} else {
 				return "","", err
 			}

@@ -212,8 +212,8 @@ func CreateCMSKeyStore(ssldir string, deleteExistingKeystore bool) (string, erro
 	runmqckmargs := []string{"-keydb", "-create", "-db", keydbpath, "-pw", string(password), "-type", "cms", "-stash"}
 
 	if GetDebugFlag() {
-		showargs :=     []string{"-keydb", "-create", "-db", keydbpath, "-pw", "***",  "-type", "cms", "-stash"}
-		logger.Logmsg(fmt.Sprintf("running: %s %s", runmqckmcmd, strings.Join(showargs, " ")))
+		logargs :=     []string{"-keydb", "-create", "-db", keydbpath, "-pw", "password",  "-type", "cms", "-stash"}
+		logger.Logmsg(fmt.Sprintf("running: %s %s", runmqckmcmd, strings.Join(logargs, " ")))
 	}
 
 	out, err := exec.Command(runmqckmcmd, runmqckmargs...).CombinedOutput()
