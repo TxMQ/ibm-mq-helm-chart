@@ -67,12 +67,12 @@ func main() {
 	perfmon.StartPerfMonitor()
 
 	// running role (active, standby)
-	tries := 0
-	maxtries := 3
-	isrunrole := false
-	for tries < maxtries && !isrunrole {
-		if qmgr.IsRunningRoleActive(qmname) {
-			isrunrole = true
+	if status, err := util.QmgrStatus(qmname, false); err != nil {
+		logger.Logmsg(err)
+
+	} else {
+		switch status {
+		case util.QmgrStatusEnumRunning():
 			logger.Logmsg(fmt.Sprintf("qmgr '%s' running role is 'active'", qmname))
 
 			//import qmgr keystore
@@ -84,15 +84,15 @@ func main() {
 
 			// cat autoconfig file
 
-		} else if qmgr.IsRunningRoleStandby(qmname) {
-			isrunrole = true
+		case util.QmgrStatusEnumStandby():
 			logger.Logmsg(fmt.Sprintf("qmgr '%s' running role is 'standby'", qmname))
 
-		} else {
-			// uknown state, retry
+		case util.QmgrStatusEnumElsewhere():
+			logger.Logmsg(fmt.Sprintf("qmgr '%s' running role is 'running elsewhere', exiting", qmname))
+			os.Exit(1)
+
+		default:
 			logger.Logmsg(fmt.Sprintf("qmgr '%s' running role (active|standby) is 'unknown'", qmname))
-			tries++
-			time.Sleep(5*time.Second)
 		}
 	}
 

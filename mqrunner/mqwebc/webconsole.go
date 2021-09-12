@@ -35,6 +35,7 @@ func startwebc() {
 	err := webmq.ConfigureWebconsole()
 	if err != nil {
 		// log error
+		// todo: waitid: no child processes
 		logger.Logmsg(err)
 
 		if IsStartMqweb() {

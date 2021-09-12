@@ -48,8 +48,15 @@ func IsRunningRoleStandby(qmgr string) bool {
 	if err != nil {
 		logger.Logmsg(err)
 	}
-	standby := status == util.QmgrStatusEnumStandby() || status == util.QmgrStatusEnumElsewhere()
-	return standby
+	return status == util.QmgrStatusEnumStandby()
+}
+
+func IsRunningRoleRunningElsewhere(qmgr string) bool {
+	status, err := util.QmgrStatus(qmgr, false)
+	if err != nil {
+		logger.Logmsg(err)
+	}
+	return status == util.QmgrStatusEnumElsewhere()
 }
 
 func CreateDirectories() error {
@@ -147,7 +154,15 @@ func StartQmgr(qmgr string) error {
 
 	if err != nil {
 		logger.Logmsg(err)
-		return fmt.Errorf("failed to start qmgr %s", qmgr)
+		cerr := strings.TrimSpace(fmt.Sprintf("%v", err))
+
+		// standby instance started, exit status 30
+		if strings.HasSuffix(cerr, "exit status 30") {
+			return nil
+
+		} else {
+			return fmt.Errorf("failed to start qmgr %s", qmgr)
+		}
 
 	} else if len(out) > 0 && util.GetDebugFlag() {
 		logger.Logmsg(out)
