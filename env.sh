@@ -6,4 +6,4 @@ export MQIMGREG=$MQIMGREG
 
 export DC_MQIMGREG=localhost
 
-export MQIMGTAG="361"
+export MQIMGTAG="362"

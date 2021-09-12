@@ -15,6 +15,7 @@ import (
 const _qmgrstarting = "starting"
 const _qmgrrunning = "running"
 const _qmrunningstandby = "runningstandby"
+const _qmrunningelsewhere = "runningelsewhere"
 const _qmgrnotrunning = "notrunning"
 const _qmgrnotknown = "notknown"
 const _qmgrstatusnotavailable = "statusnotavailable"
@@ -25,6 +26,10 @@ func QmgrStatusEnumRunning() string {
 
 func QmgrStatusEnumStandby() string {
 	return _qmrunningstandby
+}
+
+func QmgrStatusEnumElsewhere() string {
+	return _qmrunningelsewhere
 }
 
 func isEnvTrueValue(envvar string) bool {
@@ -449,6 +454,7 @@ func parseParenValue(input, keyword string) (bool, string) {
 func parseQmgrStatusValue(cout string) string {
 	// QMNAME(qm) STATUS(Running)
 	// QMNAME(qm) STATUS(Running as standby)
+	// QMNAME(qm) STATUS(Running elsewhere)
 	// QMNAME(qm) STATUS(Starting)
 	// QMNAME(qm) STATUS(Ended normally|immediately|unexpectedly)
 	// QMNAME(qm) STATUS(Status not available)
@@ -457,6 +463,7 @@ func parseQmgrStatusValue(cout string) string {
 		switch strings.ToLower(status) {
 		case "running": return _qmgrrunning
 		case "running as standby": return _qmrunningstandby
+		case "running elsewhere": return _qmrunningelsewhere
 		case "starting": return _qmgrstarting
 		case "status not available": return _qmgrstatusnotavailable
 		case "ended normally": return _qmgrnotrunning

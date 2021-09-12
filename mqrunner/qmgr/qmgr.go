@@ -48,7 +48,8 @@ func IsRunningRoleStandby(qmgr string) bool {
 	if err != nil {
 		logger.Logmsg(err)
 	}
-	return status == util.QmgrStatusEnumStandby()
+	standby := status == util.QmgrStatusEnumStandby() || status == util.QmgrStatusEnumElsewhere()
+	return standby
 }
 
 func CreateDirectories() error {
