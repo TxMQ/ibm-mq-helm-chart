@@ -30,7 +30,7 @@ func StartWebconsole() {
 func startwebc() {
 	t := time.Now()
 
-	logger.Logmsg("configuring webconsole")
+	logger.Logmsg("configuring web console")
 
 	err := webmq.ConfigureWebconsole()
 	if err != nil {
@@ -55,5 +55,5 @@ func startwebc() {
 	}
 
 	// log elapse time
-	logger.Logmsg(fmt.Sprintf("time to import qmgr keystore: %v", time.Since(t)))
+	logger.Logmsg(fmt.Sprintf("time to import web console keystore: %v", time.Since(t)))
 }

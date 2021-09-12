@@ -67,24 +67,33 @@ func main() {
 	perfmon.StartPerfMonitor()
 
 	// running role (active, standby)
-	if qmgr.IsRunningRoleActive(qmname) {
-		logger.Logmsg(fmt.Sprintf("qmgr '%s' running role is 'active'", qmname))
+	tries := 0
+	maxtries := 3
+	isrunrole := false
+	for tries < maxtries && !isrunrole {
+		if qmgr.IsRunningRoleActive(qmname) {
+			isrunrole = true
+			logger.Logmsg(fmt.Sprintf("qmgr '%s' running role is 'active'", qmname))
 
-		//import qmgr keystore
-		t := time.Now()
-		if _, _, err := qmgr.ImportQmgrKeystore(qmname); err != nil {
-			logger.Logmsg(err)
+			//import qmgr keystore
+			t := time.Now()
+			if _, _, err := qmgr.ImportQmgrKeystore(qmname); err != nil {
+				logger.Logmsg(err)
+			}
+			logger.Logmsg(fmt.Sprintf("time to import qmgr keystore: %v", time.Since(t)))
+
+			// cat autoconfig file
+
+		} else if qmgr.IsRunningRoleStandby(qmname) {
+			isrunrole = true
+			logger.Logmsg(fmt.Sprintf("qmgr '%s' running role is 'standby'", qmname))
+
+		} else {
+			// uknown state, retry
+			logger.Logmsg(fmt.Sprintf("qmgr '%s' running role (active|standby) is 'unknown'", qmname))
+			tries++
+			time.Sleep(5*time.Second)
 		}
-		logger.Logmsg(fmt.Sprintf("time to import qmgr keystore: %v", time.Since(t)))
-
-		// cat autoconfig file
-
-	} else if qmgr.IsRunningRoleStandby(qmname) {
-		logger.Logmsg(fmt.Sprintf("qmgr '%s' running role is 'standby'", qmname))
-
-	} else {
-		// uknown state
-		logger.Logmsg(fmt.Sprintf("qmgr '%s' running role (active|standby) is 'unknown'", qmname))
 	}
 
 	logger.Logmsg(fmt.Sprintf("startup time: %v", time.Since(startup)))
