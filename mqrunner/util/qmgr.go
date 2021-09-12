@@ -446,8 +446,33 @@ func parseParenValue(input, keyword string) (bool, string) {
 	return true, value
 }
 
-func QmgrStatus(qmgr string, silent bool) (string, error) {
+func parseQmgrStatusValue(cout string) string {
+	// QMNAME(qm) STATUS(Running)
+	// QMNAME(qm) STATUS(Running as standby)
+	// QMNAME(qm) STATUS(Starting)
+	// QMNAME(qm) STATUS(Ended normally|immediately|unexpectedly)
+	// QMNAME(qm) STATUS(Status not available)
 
+	if ok, status := parseParenValue(cout, "STATUS"); ok {
+		switch strings.ToLower(status) {
+		case "running": return _qmgrrunning
+		case "running as standby": return _qmrunningstandby
+		case "starting": return _qmgrstarting
+		case "status not available": return _qmgrstatusnotavailable
+		case "ended normally": return _qmgrnotrunning
+		case "ended immediately": return _qmgrnotrunning
+		case "ended unexpectedly": return _qmgrnotrunning
+		default:
+			logger.Logmsg(cout)
+			return _qmgrstatusnotavailable
+		}
+
+	} else {
+		return _qmgrstatusnotavailable
+	}
+}
+
+func QmgrStatus(qmgr string, silent bool) (string, error) {
 	debug := GetDebugFlag()
 
 	args := []string{"-m", qmgr}
@@ -465,13 +490,24 @@ func QmgrStatus(qmgr string, silent bool) (string, error) {
 	out, err := exec.Command(dspmq, args...).CombinedOutput()
 
 	if err != nil && len(out) > 0 {
+		cerr := strings.TrimSpace(fmt.Sprintf("%v", err))
+		cout := strings.TrimSpace(string(out))
+
 		// AMQ7048E: The queue manager name is either not valid or not known.
-		if strings.HasPrefix(string(out), "AMQ7048E") {
+		if strings.HasPrefix(cout, "AMQ7048E") {
 			return _qmgrnotknown, nil
+
+		} else if strings.HasPrefix(cerr,"wait" ) {
+			// sometimes valid status is reported with an error: waitid|wait: no child processes
+			if strings.HasPrefix(cout, "QMNAME") {
+				return parseQmgrStatusValue(cout), nil
+			}
+
 		} else {
 			logger.Logmsg(fmt.Sprintf("%s%v", out, err))
 			return _qmgrstatusnotavailable, err
 		}
+
 	} else if err != nil {
 		logger.Logmsg(err)
 		return _qmgrstatusnotavailable, err
@@ -481,31 +517,11 @@ func QmgrStatus(qmgr string, silent bool) (string, error) {
 		logger.Logmsg(string(out))
 	}
 
-	// QMNAME(qm) STATUS(Running)
-	// QMNAME(qm) STATUS(Running as standby)
-	// QMNAME(qm) STATUS(Starting)
-	// QMNAME(qm) STATUS(Ended normally|immediately|unexpectedly)
-	// QMNAME(qm) STATUS(Status not available)
-
 	qmstatus := _qmgrstatusnotavailable
 	cout := strings.TrimSpace(string(out))
 
 	if strings.HasPrefix(cout, "QMNAME") {
-
-		if ok, status := parseParenValue(cout, "STATUS"); ok {
-			switch strings.ToLower(status) {
-			case "running": qmstatus = _qmgrrunning
-			case "running as standby": qmstatus = _qmrunningstandby
-			case "starting": qmstatus = _qmgrstarting
-			case "status not available": qmstatus = _qmgrstatusnotavailable
-			case "ended normally": qmstatus = _qmgrnotrunning
-			case "ended immediately": qmstatus = _qmgrnotrunning
-			case "ended unexpectedly": qmstatus = _qmgrnotrunning
-			default:
-				qmstatus = _qmgrstatusnotavailable
-				logger.Logmsg(cout)
-			}
-		}
+		qmstatus = parseQmgrStatusValue(cout)
 	}
 
 	return qmstatus, nil
