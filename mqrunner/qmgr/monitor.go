@@ -25,9 +25,8 @@ func runmonitor(qmgr string) {
 		status, err := util.QmgrStatus(qmgr, true)
 		if err != nil {
 			// alert?
-		}
 
-		if status != currstatus {
+		} else if status != currstatus {
 			logger.Logmsg(fmt.Sprintf("qmgr '%s' status changed from '%s' to '%s'", qmgr, currstatus, status))
 			currstatus = status
 
