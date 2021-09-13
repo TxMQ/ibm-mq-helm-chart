@@ -218,8 +218,16 @@ func IsQmgrIniMissing(qmgr string, err error) bool {
 }
 
 func isQmgrIniMissing(qmgr, out string) bool {
+	// replace possible new lines
+	errs := strings.ReplaceAll(out, "\n", " ")
+
 	// AMQ5208E: File '/var/md/qm1/qm.ini' missing.
-	return strings.HasPrefix(out, "AMQ5208E")
+	amq5208e := strings.HasPrefix(errs, "AMQ5208E")
+
+	// an expected stanza in an ini file is missing or contains errors, exit status 71
+	status71 := strings.HasSuffix(errs, "exit status 71")
+
+	return amq5208e || status71
 }
 
 func createQmgrCmd(qmgr string, icignore bool) error {

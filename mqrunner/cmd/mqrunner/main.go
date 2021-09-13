@@ -79,6 +79,8 @@ func main() {
 			t := time.Now()
 			if _, _, err := qmgr.ImportQmgrKeystore(qmname); err != nil {
 				logger.Logmsg(err)
+			} else {
+				_ = util.RefreshSsl(qmname)
 			}
 			logger.Logmsg(fmt.Sprintf("time to import qmgr keystore: %v", time.Since(t)))
 
