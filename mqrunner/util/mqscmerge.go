@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 	"szesto.com/mqrunner/logger"
-	"szesto.com/mqrunner/mqsc"
+	"szesto.com/mqrunner/mqmodel"
 )
 
 func FetchMergeConfigFiles(fetchconf FetchConfig, mqscicpath, qminipath string) error {
@@ -178,7 +178,7 @@ func MqYamlMerge(dir string, outfile string) error {
 		yamlout := fmt.Sprintf("%s.mqsc", filepath.Join(yamloutdir, path.Base(yamlfile)))
 
 		// output mqsc file
-		err = mqsc.Outputmqsc(yamlfile, yamlout)
+		err = mqmodel.Outputmqsc(yamlfile, yamlout)
 		if err != nil {
 			logger.Logmsg(fmt.Sprintf("mq-yaml-merge, error converting mq yaml file to mqsc, file %s, %v", yamlfile, err))
 			continue

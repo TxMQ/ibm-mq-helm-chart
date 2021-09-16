@@ -1,8 +1,9 @@
-package mqsc
+package mqmodel
 
 import (
 	"fmt"
 	"log"
+	mqsc2 "szesto.com/mqrunner/mqsc"
 	"testing"
 )
 import "gopkg.in/yaml.v2"
@@ -45,12 +46,12 @@ alter:
 
 	qm1 := Qmgr{
 		Name:      "qm1",
-		Access:  Chlauth {
+		Access:  mqsc2.Chlauth{
 			Defaultuser: "",
 			Blockip:     []string{"10.5.*"},
 			Blockuser:   []string{"zorro"},
 		},
-		Authority: []Authrec{{
+		Authority: []mqsc2.Authrec{{
 			Group:  []string{"devs"},
 			Principal: []string{"karson"},
 			Grant:     []string{"connect"},

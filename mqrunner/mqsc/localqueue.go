@@ -3,6 +3,7 @@ package mqsc
 import (
 	"fmt"
 	"strings"
+	"szesto.com/mqrunner/mqmodel"
 )
 
 type Qalter struct {
@@ -197,7 +198,7 @@ func (lq *Localqueue) Mqsc() string {
 	//
 	//mqsc = append(mqsc, s)
 
-	t := "define qlocal(%s)" + endl // qname
+	t := "define qlocal(%s)" + mqmodel.endl // qname
 	s := fmt.Sprintf(t, lq.Name)
 	mqsc = append(mqsc, s)
 

@@ -1,4 +1,4 @@
-package mqsc
+package mqmodel
 
 import (
 	"fmt"
@@ -91,9 +91,10 @@ func (ldap *LdapAuthinfo) Mqsc() string {
 
 	t :=
 		"alter qmgr connauth(use.ldap)" + endl +
-		star +
+			star +
 		"define authinfo(use.ldap)" + cont +
 		"authtype(IDPWLDAP)" + cont +
+		"replace" + cont +
 		"adoptctx(yes)" + cont +
 		"authormd(searchgrp)" + cont +
 		"basedng('%s')" + cont + // groups.groupSearchBaseDn
@@ -109,11 +110,11 @@ func (ldap *LdapAuthinfo) Mqsc() string {
 		"GRPFIELD(%s)" + cont + // {{ .groups.groupNameAttr }}) +
 		"LDAPPWD('%s')" + cont + // {{ .connect.bindPasswordSecret | squote }}) +
 		"LDAPUSER('%s')" + cont + // {{ .connect.bindDn | squote }}) +
-		"NESTGRP(yes)" + cont  +
+		"NESTGRP(yes)" + cont +
 		"SECCOMM(no)" + cont + // todo: parameterize, ssl to ldap
 		"SHORTUSR(%s)" + cont + // {{ .users.shortUserNameAttr }}) +
 		"USRFIELD(%s)" + endl + // {{ .users.userNameAttr }});
-		star +
+			star +
 		"REFRESH SECURITY TYPE(CONNAUTH)" + endl
 
 	bindPassword := GetLdapBindPassword(ldap.Connect.BindPassword)

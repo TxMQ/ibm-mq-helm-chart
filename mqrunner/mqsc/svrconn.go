@@ -3,6 +3,7 @@ package mqsc
 import (
 	"fmt"
 	"strings"
+	"szesto.com/mqrunner/mqmodel"
 )
 
 type Tls struct {
@@ -49,17 +50,17 @@ func (props *SvrconnProperties) mqsc() string {
 		props.Descr = fmt.Sprintf("srvconn channel %s", strings.ToUpper(props.Name))
 	}
 
-	t :=	"define channel('%s')" + cont + // name
-			"chltype(svrconn)" + cont +
-			"descr('%s')" + cont + // descr
-			"trptype(tcp)" + cont +
-			"monchl(qmgr)" + cont +
-			"discint(%d)" + cont + // discint
-			"hbint(%d)" + cont + // hbint
-			"maxinst(%d)" + cont + // maxinst
-			"maxinstc(%d)" + cont + // maxinstc
-			"maxmsgl(%d)" + cont + // maxmsgl
-			"sharecnv(%d)" + endl // sharecnv
+	t :=	"define channel('%s')" + mqmodel.cont + // name
+			"chltype(svrconn)" + mqmodel.cont +
+			"descr('%s')" + mqmodel.cont + // descr
+			"trptype(tcp)" + mqmodel.cont +
+			"monchl(qmgr)" + mqmodel.cont +
+			"discint(%d)" + mqmodel.cont + // discint
+			"hbint(%d)" + mqmodel.cont + // hbint
+			"maxinst(%d)" + mqmodel.cont + // maxinst
+			"maxinstc(%d)" + mqmodel.cont + // maxinstc
+			"maxmsgl(%d)" + mqmodel.cont + // maxmsgl
+			"sharecnv(%d)" + mqmodel.endl // sharecnv
 
 	s := fmt.Sprintf(t, strings.ToUpper(props.Name), props.Descr,
 		props.discint, props.hbint, props.maxinst, props.maxinstc, props.Maxmsgl, props.sharecnv)

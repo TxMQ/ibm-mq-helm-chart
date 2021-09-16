@@ -6,80 +6,79 @@ import (
 	"log"
 	"os"
 	"path/filepath"
-	"szesto.com/mqrunner/mqsc"
 	"testing"
 )
 
 func TestMq_Mqsc(t *testing.T) {
 
 	mq := Mq{
-		Qmgr:       mqsc.Qmgr{
+		Qmgr:       Qmgr{
 			Name:   "",
-			Access: mqsc.Chlauth{},
-			Authority: []mqsc.Authrec{
-				{
-					Group:     nil,
-					Principal: nil,
-					Grant:     nil,
-					Revoke:    nil,
-				},
-			},
+			//Access: mqsc.Chlauth{},
+			//Authority: []mqsc.Authrec{
+			//	{
+			//		Group:     nil,
+			//		Principal: nil,
+			//		Grant:     nil,
+			//		Revoke:    nil,
+			//	},
+			//},
 			Alter:     nil,
 		},
 		Auth: Auth{},
-		Svrconn:    []mqsc.Svrconn{
-			{
-				SvrconnProperties: mqsc.SvrconnProperties{
-					Name:     "",
-					Descr:    "",
-					Maxmsgl:  0,
-					Tls:      mqsc.Tls{
-						Enabled:    false,
-						ClientAuth: false,
-						Ciphers:    nil,
-					},
-					discint:  0,
-					hbint:    0,
-					maxinst:  0,
-					maxinstc: 0,
-					sharecnv: 0,
-				},
-				Access: mqsc.Chlauth{},
-				Authority:         []mqsc.Authrec{{
-					Group:     nil,
-					Principal: nil,
-					Grant:     nil,
-					Revoke:    nil,
-				}},
-				Alter: nil,
-				allip: mqsc.Chlauth{},
-			},
-		},
-		Localqueue: []mqsc.Localqueue{
-			{
-				Name:               "",
-				Descr:              "",
-				Like:               "",
-				Put:                "enabled",
-				Get:                "enabled",
-				DefaultPriority:    0,
-				DefaultPersistence: false,
-				Maxdepth:           0,
-				Maxfsize:           0,
-				Maxmsgl:            0,
-				MsgDeliverySeq:     "",
-				Qtrigger:           mqsc.Qtrigger{},
-				Qevents:            mqsc.Qevents{},
-				Qcluster:           mqsc.Qcluster{},
-				acctq:              "",
-				monq:               "",
-				statq:              "",
-				usage:              "",
-				share:              false,
-				Authority:          nil,
-				Alter:              nil,
-			},
-		},
+		//Svrconn:    []mqsc.Svrconn{
+		//	{
+		//		SvrconnProperties: mqsc.SvrconnProperties{
+		//			Name:     "",
+		//			Descr:    "",
+		//			Maxmsgl:  0,
+		//			Tls:      mqsc.Tls{
+		//				Enabled:    false,
+		//				ClientAuth: false,
+		//				Ciphers:    nil,
+		//			},
+		//			discint:  0,
+		//			hbint:    0,
+		//			maxinst:  0,
+		//			maxinstc: 0,
+		//			sharecnv: 0,
+		//		},
+		//		Access: mqsc.Chlauth{},
+		//		Authority:         []mqsc.Authrec{{
+		//			Group:     nil,
+		//			Principal: nil,
+		//			Grant:     nil,
+		//			Revoke:    nil,
+		//		}},
+		//		Alter: nil,
+		//		allip: mqsc.Chlauth{},
+		//	},
+		//},
+		//Localqueue: []mqsc.Localqueue{
+		//	{
+		//		Name:               "",
+		//		Descr:              "",
+		//		Like:               "",
+		//		Put:                "enabled",
+		//		Get:                "enabled",
+		//		DefaultPriority:    0,
+		//		DefaultPersistence: false,
+		//		Maxdepth:           0,
+		//		Maxfsize:           0,
+		//		Maxmsgl:            0,
+		//		MsgDeliverySeq:     "",
+		//		Qtrigger:           mqsc.Qtrigger{},
+		//		Qevents:            mqsc.Qevents{},
+		//		Qcluster:           mqsc.Qcluster{},
+		//		acctq:              "",
+		//		monq:               "",
+		//		statq:              "",
+		//		usage:              "",
+		//		share:              false,
+		//		Authority:          nil,
+		//		Alter:              nil,
+		//	},
+		//},
 		Alter:      nil,
 	}
 
@@ -95,15 +94,15 @@ func TestMq_Mqsc2(t *testing.T) {
 	data := `
 qmgr:
   name: "qm1"
-  access:
-    defaultuser: ""
-    blockip: []
-    blockuser: []
-    allowip: []
-  authority:
-  - group: [devs]
-    principal: [karson]
-    grant: [connect]
+  //access:
+  //  defaultuser: ""
+  //  blockip: []
+  //  blockuser: []
+  //  allowip: []
+  //authority:
+  //- group: [devs]
+  //  principal: [karson]
+  //  grant: [connect]
   alter: []
 
 auth:
@@ -125,32 +124,32 @@ auth:
       usernameattr: "uid"
       shortusernameattr: "cn"
 
-svrconn:
-- svrconnproperties:
-    name: app.channel
-    maxmsgl: 4096
-  tls:
-    enabled: false
-    clientauth: false
-    ciphers: []
-  access:
-    defaultuser: ""
-    blockip: ["10.2.100.*"]
-    blockuser: []
-    allowip: []
-  authority: []
-  alter:
-  - monchl(off)
-  - alter channel(app.channel) monchl(low)
-
-localqueue:
-- name: q.a
-  put: true
-  get: true
-  defaultprioprity: 2
-  defaultpersistence: true
-- name: q.b
-  like: q.a
+//svrconn:
+//- svrconnproperties:
+//    name: app.channel
+//    maxmsgl: 4096
+//  tls:
+//    enabled: false
+//    clientauth: false
+//    ciphers: []
+//  access:
+//    defaultuser: ""
+//    blockip: ["10.2.100.*"]
+//    blockuser: []
+//    allowip: []
+//  authority: []
+//  alter:
+//  - monchl(off)
+//  - alter channel(app.channel) monchl(low)
+//
+//localqueue:
+//- name: q.a
+//  put: true
+//  get: true
+//  defaultprioprity: 2
+//  defaultpersistence: true
+//- name: q.b
+//  like: q.a
 
 alter: []
 `
@@ -171,15 +170,15 @@ func TestOutputmqsc(t *testing.T) {
 	data := `
 qmgr:
   name: "qm1"
-  access:
-    defaultuser: ""
-    blockip: []
-    blockuser: []
-    allowip: []
-  authority:
-  - group: [devs]
-    principal: [karson]
-    grant: [connect]
+  //access:
+  //  defaultuser: ""
+  //  blockip: []
+  //  blockuser: []
+  //  allowip: []
+  //authority:
+  //- group: [devs]
+  //  principal: [karson]
+  //  grant: [connect]
   alter: []
 
 auth:
@@ -201,32 +200,32 @@ auth:
       usernameattr: "uid"
       shortusernameattr: "cn"
 
-svrconn:
-- svrconnproperties:
-    name: app.channel
-    maxmsgl: 4096
-  tls:
-    enabled: false
-    clientauth: false
-    ciphers: []
-  access:
-    defaultuser: ""
-    blockip: ["10.2.100.*"]
-    blockuser: []
-    allowip: []
-  authority: []
-  alter:
-  - monchl(off)
-  - alter channel(app.channel) monchl(low)
+//svrconn:
+//- svrconnproperties:
+//    name: app.channel
+//    maxmsgl: 4096
+//  tls:
+//    enabled: false
+//    clientauth: false
+//    ciphers: []
+//  access:
+//    defaultuser: ""
+//    blockip: ["10.2.100.*"]
+//    blockuser: []
+//    allowip: []
+//  authority: []
+//  alter:
+//  - monchl(off)
+//  - alter channel(app.channel) monchl(low)
 
-localqueue:
-- name: q.a
-  put: true
-  get: true
-  defaultprioprity: 2
-  defaultpersistence: true
-- name: q.b
-  like: q.a
+//localqueue:
+//- name: q.a
+//  put: true
+//  get: true
+//  defaultprioprity: 2
+//  defaultpersistence: true
+//- name: q.b
+//  like: q.a
 
 alter: []
 `

@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 	"szesto.com/mqrunner/logger"
-	"szesto.com/mqrunner/mqsc"
+	"szesto.com/mqrunner/mqmodel"
 )
 
 const _qmgrstarting = "starting"
@@ -647,6 +647,6 @@ func GetCertLabel(qmgr string) (string, error) {
 }
 
 func ClearEnvSecrets() bool {
-	_ = mqsc.ClearLdapBindPasswordEnv()
+	_ = mqmodel.ClearLdapBindPasswordEnv()
 	return true
 }

@@ -1,19 +1,18 @@
-package mqsc
+package mqmodel
 
 import (
 	"fmt"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"strings"
-	"szesto.com/mqrunner/mqmodel"
 )
 
 type Mq struct {
-	Qmgr    Qmgr
-	Auth    mqmodel.Auth
-	Svrconn []Svrconn
-	Localqueue []Localqueue
-	Alter []string
+	Qmgr Qmgr
+	Auth Auth
+	//Svrconn    []mqsc.Svrconn
+	//Localqueue []mqsc.Localqueue
+	Alter      []string
 }
 
 func (mq *Mq) Mqsc() string {
@@ -32,21 +31,21 @@ func (mq *Mq) Mqsc() string {
 	qmgr := mq.Qmgr.Mqsc()
 	mqsc = append(mqsc, qmgr)
 
-	for _, svrconn := range mq.Svrconn {
-		comment = fmt.Sprintf("svrconn channel %s", svrconn.Name)
-		mqsc = append(mqsc, formatComment(comment))
-
-		svrc := svrconn.Mqsc()
-		mqsc = append(mqsc, svrc)
-	}
-
-	for _, lq := range mq.Localqueue {
-		comment = fmt.Sprintf("local queue %s", lq.Name)
-		mqsc = append(mqsc, formatComment(comment))
-
-		qs := lq.Mqsc()
-		mqsc = append(mqsc, qs)
-	}
+	//for _, svrconn := range mq.Svrconn {
+	//	comment = fmt.Sprintf("svrconn channel %s", svrconn.Name)
+	//	mqsc = append(mqsc, formatComment(comment))
+	//
+	//	svrc := svrconn.Mqsc()
+	//	mqsc = append(mqsc, svrc)
+	//}
+	//
+	//for _, lq := range mq.Localqueue {
+	//	comment = fmt.Sprintf("local queue %s", lq.Name)
+	//	mqsc = append(mqsc, formatComment(comment))
+	//
+	//	qs := lq.Mqsc()
+	//	mqsc = append(mqsc, qs)
+	//}
 
 	comment = fmt.Sprintf("%s", "alter statements")
 	mqsc = append(mqsc, formatComment(comment))
