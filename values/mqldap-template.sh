@@ -2,79 +2,57 @@
 
 envfile=$1
 
-if [[ -z $envfile ]]; then
-echo env file parameter required: mqmodel-template.sh \<envfile\>
+if [[ -z ${envfile} ]]; then
+echo env file parameter required: mqmodel-template.sh 'envfile'
 exit 1
 fi
 
 # read env
-. $envfile
+. ${envfile}
 
 outdir=output
 
-cat <<EOF > $outdir/mqmodel.yaml
+if [[ ${LDAP_TYPE} == "activedirectory" ]]; then
+userobjectclass="USER"
+usernameattr="sAMAccountName"
+shortuser="employeeID"
+groupobjectclass="GROUP"
+groupnameattr="sAMAccountName"
+groupmembershipattr="member"
+else
+# default: openldap
+userobjectclass="inetOrgPerson"
+usernameattr="uid"
+shortuser="cn"
+groupobjectclass="groupOfNames"
+groupnameattr="cn"
+groupmembershipattr="member"
+fi
+
+cat <<EOF > $outdir/mqldap.yaml
 mq:
   qmgr:
-    name: $QMNAME
-    access:
-      allowip: ["*"]
-    authority:
-    - group: [devs]
-      grant: [connect, inq]
-    - group: [devs]
-      grant: [alladm]
+    name: ${QMNAME}
     alter: []
 
   auth:
     ldap:
       connect:
-        ldaphost: "$LDAP_HOST"
-        ldapport: $LDAP_PORT
-        binddn: "$LDAP_USER"
+        ldaphost: "${LDAP_HOST}"
+        ldapport: ${LDAP_PORT}
+        binddn: "${LDAP_USER}"
         bindpassword: ""
         tls: false
       groups:
-        groupsearchbasedn: "$BASEDN_GROUPS"
-        objectclass: "groupOfNames"
-        groupnameattr: "cn"
-        groupmembershipattr: "member"
+        groupsearchbasedn: "${BASEDN_GROUPS}"
+        objectclass: "${groupobjectclass}"
+        groupnameattr: "${groupnameattr}"
+        groupmembershipattr: "${groupmembershipattr}"
       users:
-        usersearchbasedn: "$BASEDN_USERS"
-        objectclass: "inetOrgPerson"
-        usernameattr: "uid"
-        shortusernameattr: "cn"
+        usersearchbasedn: "${BASEDN_USERS}"
+        objectclass: "${userobjectclass}"
+        usernameattr: "${usernameattr}"
+        shortusernameattr: "${shortuser}"
 
-  svrconn:
-  - svrconnproperties:
-      name: APP.SVRCONN
-      maxmsgl: 4096
-    tls:
-      enabled: true
-      clientauth: true
-      ciphers: [TLS_RSA_WITH_AES_128_CBC_SHA256]
-    access:
-      allowip: ['*']
-    authority:
-      - group: [devs]
-        grant: [chg, crt, dlt, dsp, ctrl, ctrlx]
-      - group: [devs]
-        grant: [alladm]
-    alter:
-      - ALTER CHANNEL(APP.SVRCONN) CHLTYPE(SVRCONN) SSLCAUTH(REQUIRED)
-
-  localqueue:
-  - name: q.a
-
-    defaultprioprity: 2
-    defaultpersistence: true
-
-    maxmsgl: 4096
-    maxdepth: 1000
-
-    authority:
-    - group: [devs]
-      grant: [put, get, dsp]
-    - group: [devs]
-      grant: [alladm]
-      revoke: [dlt]
+  alter: []
 EOF

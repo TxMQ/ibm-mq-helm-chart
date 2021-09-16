@@ -1,59 +1,35 @@
 qmenv=$1
 
 if [[ -z $qmenv ]]; then
-echo qm environment file required: ./mqscic-template.sh \<envfile\>
+echo qm environment file required: ./mqscic-template.sh 'envfile'
 exit 1
 fi
 
 # load environment
 . $qmenv
 
-if [[ $LDAP_TYPE == "activedirectory" ]]; then
-userobjectclass="USER"
-usernameattr="sAMAccountName"
-shortuser="employeeID"
-groupobjectclass="GROUP"
-groupnameattr="sAMAccountName"
-groupmembershipattr="member"
-else
-# default: openldap
-userobjectclass="inetOrgPerson"
-usernameattr="uid"
-shortuser="cn"
-groupobjectclass="groupOfNames"
-groupnameattr="cn"
-groupmembershipattr="member"
-fi
-
 cat <<EOF > output/mqscic.yaml
 mqscic: |
-  DEFINE QLOCAL(Q.B) REPLACE DEFPSIST(YES)
-  DEFINE QLOCAL(Q.C) REPLACE DEFPSIST(YES)
-  *
-  *ALTER QMGR CONNAUTH(USE.LDAP)
-  *
-  *DEFINE AUTHINFO(USE.LDAP) + 
-  *AUTHTYPE(IDPWLDAP) + 
-  *ADOPTCTX(YES) + 
-  *AUTHORMD(SEARCHGRP) + 
-  *BASEDNG('$BASEDN_GROUPS') + 
-  *BASEDNU('$BASEDN_USERS') + 
-  *CLASSGRP($groupobjectclass) + 
-  *CLASSUSR($userobjectclass) + 
-  *CONNAME('$LDAP_HOST($LDAP_PORT)') + 
-  *CHCKCLNT(required) + 
-  *CHCKLOCL(optional) + 
-  *DESCR('ldap authinfo') + 
-  *FAILDLAY(1) + 
-  *FINDGRP($groupmembershipattr) + 
-  *GRPFIELD($groupnameattr) + 
-  *LDAPPWD('admin') + 
-  *LDAPUSER('$LDAP_USER') + 
-  *NESTGRP(yes) + 
-  *SECCOMM(no) + 
-  *SHORTUSR($shortuser) + 
-  *USRFIELD($usernameattr) + 
-  *REPLACE
-  *
-  *REFRESH SECURITY TYPE(CONNAUTH)
+  * define channel
+  DEFINE CHANNEL(APPROOT.MYAPP.CHANNEL) CHLTYPE(SVRCONN) SSLCIPH(ANY_TLS13) SSLCAUTH(OPTIONAL) REPLACE
+
+  * define channel rules
+  SET CHLAUTH(APPROOT.MYAPP.CHANNEL) TYPE(ADDRESSMAP) USERSRC(CHANNEL) ADDRESS(*) ACTION(REPLACE)
+
+  * grant connect to qmgr
+  SET AUTHREC OBJTYPE(QMGR) GROUP(${APPL_GROUP}) AUTHADD(CONNECT, INQ, DSP)
+  SET AUTHREC OBJTYPE(QMGR) GROUP(${ADMIN_GROUP}) AUTHADD(CONNECT, INQ, DSP)
+
+  * create queues
+  DEFINE QLOCAL(APPROOT.MYAPP.QA) USAGE(NORMAL) PUT(ENABLED) GET(ENABLED) DEFPSIST(YES) REPLACE
+  DEFINE QLOCAL(APPROOT.MYAPP.QB) USAGE(NORMAL) PUT(ENABLED) GET(ENABLED) DEFPSIST(YES) REPLACE
+
+  * application role
+  SET AUTHREC PROFILE('APPROOT.MYAPP.QA') OBJTYPE(QUEUE) GROUP(${APPL_GROUP}) AUTHADD(PUT, GET, INQ, DSP)
+  SET AUTHREC PROFILE('APPROOT.MYAPP.QB') OBJTYPE(QUEUE) GROUP(${APPL_GROUP}) AUTHADD(PUT, GET, INQ, DSP)
+
+  * application admin role
+  SET AUTHREC PROFILE('APPROOT.MYAPP.**') OBJTYPE(QUEUE) GROUP(${ADMIN_GROUP}) AUTHADD(ALLADM,ALLMQI,CRT)
+  SET AUTHREC PROFILE('APPROOT.MYAPP.**') OBJTYPE(TOPIC) GROUP(${ADMIN_GROUP}) AUTHADD(ALLADM,ALLMQI,CRT)
+  SET AUTHREC PROFILE('APPROOT.MYAPP.**') OBJTYPE(CHANNEL) GROUP(${ADMIN_GROUP}) AUTHADD(ALLADM,ALLMQI,CRT)
 EOF

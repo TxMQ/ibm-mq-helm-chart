@@ -12,7 +12,7 @@ ldaphost=${LDAP_HOST:-openldap.$ldapns.svc.cluster.local}
 ldapport=${LDAP_PORT:-389}
 ldaproot=${LDAP_ROOT:-dc=mqldap,dc=com}
 ldapuser=${LDAP_USER:-cn=admin,$ldaproot}
-basednu=${BASEDN_USERS:-ou=users,dc=$ldaproot}
+basednu=${BASEDN_USERS:-ou=users,$ldaproot}
 basedng=${BASEDN_GROUPS:-ou=groups,$ldaproot}
 
 cat <<EOF > output/$qmname.env
@@ -34,4 +34,9 @@ LDAP_ROOT=$ldaproot
 LDAP_USER=$ldapuser
 BASEDN_USERS=$basednu
 BASEDN_GROUPS=$basedng
+
+# application group names
+APPL_GROUP="devs"
+ADMIN_GROUP="admins"
+READ_ADMIN_GROUP="readadmins"
 EOF

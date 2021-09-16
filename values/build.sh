@@ -22,8 +22,12 @@ if [[ ! -f output/mqscic.yaml ]]; then
 ./mqscic-template.sh $envfile
 fi
 
-if [[ ! -f output/mqmodel.yaml ]]; then
-./mqmodel-template.sh $envfile
+if [[ ! -f output/mqldap.yaml ]]; then
+./mqldap-template.sh $envfile
+fi
+
+if [[ ! -f output/mqexplorer-mqsc.yaml ]]; then
+./mqexplorer-mqsc-template.sh $envfile
 fi
 
 if [[ ! -f output/qmini.yaml ]]; then
