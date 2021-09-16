@@ -1,4 +1,4 @@
-package mqsc
+package mqmodel
 
 import (
 	"fmt"
@@ -6,16 +6,17 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"szesto.com/mqrunner/mqsc"
 	"testing"
 )
 
 func TestMq_Mqsc(t *testing.T) {
 
 	mq := Mq{
-		Qmgr:       Qmgr{
-			Name:      "",
-			Access:    Chlauth{},
-			Authority: []Authrec{
+		Qmgr:       mqsc.Qmgr{
+			Name:   "",
+			Access: mqsc.Chlauth{},
+			Authority: []mqsc.Authrec{
 				{
 					Group:     nil,
 					Principal: nil,
@@ -25,14 +26,14 @@ func TestMq_Mqsc(t *testing.T) {
 			},
 			Alter:     nil,
 		},
-		Auth:       Auth{},
-		Svrconn:    []Svrconn {
+		Auth: Auth{},
+		Svrconn:    []mqsc.Svrconn{
 			{
-				SvrconnProperties: SvrconnProperties{
+				SvrconnProperties: mqsc.SvrconnProperties{
 					Name:     "",
 					Descr:    "",
 					Maxmsgl:  0,
-					Tls:      Tls{
+					Tls:      mqsc.Tls{
 						Enabled:    false,
 						ClientAuth: false,
 						Ciphers:    nil,
@@ -43,18 +44,18 @@ func TestMq_Mqsc(t *testing.T) {
 					maxinstc: 0,
 					sharecnv: 0,
 				},
-				Access:            Chlauth{},
-				Authority:         []Authrec{{
+				Access: mqsc.Chlauth{},
+				Authority:         []mqsc.Authrec{{
 					Group:     nil,
 					Principal: nil,
 					Grant:     nil,
 					Revoke:    nil,
 				}},
-				Alter:             nil,
-				allip:             Chlauth{},
+				Alter: nil,
+				allip: mqsc.Chlauth{},
 			},
 		},
-		Localqueue: []Localqueue{
+		Localqueue: []mqsc.Localqueue{
 			{
 				Name:               "",
 				Descr:              "",
@@ -67,9 +68,9 @@ func TestMq_Mqsc(t *testing.T) {
 				Maxfsize:           0,
 				Maxmsgl:            0,
 				MsgDeliverySeq:     "",
-				Qtrigger:           Qtrigger{},
-				Qevents:            Qevents{},
-				Qcluster:           Qcluster{},
+				Qtrigger:           mqsc.Qtrigger{},
+				Qevents:            mqsc.Qevents{},
+				Qcluster:           mqsc.Qcluster{},
 				acctq:              "",
 				monq:               "",
 				statq:              "",

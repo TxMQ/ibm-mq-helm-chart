@@ -1,4 +1,4 @@
-package mqsc
+package mqmodel
 
 import (
 	"fmt"

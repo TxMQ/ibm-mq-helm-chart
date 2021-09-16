@@ -5,11 +5,12 @@ import (
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"strings"
+	"szesto.com/mqrunner/mqmodel"
 )
 
 type Mq struct {
-	Qmgr Qmgr
-	Auth Auth
+	Qmgr    Qmgr
+	Auth    mqmodel.Auth
 	Svrconn []Svrconn
 	Localqueue []Localqueue
 	Alter []string
