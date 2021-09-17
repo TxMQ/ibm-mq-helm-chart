@@ -94,15 +94,6 @@ func TestMq_Mqsc2(t *testing.T) {
 	data := `
 qmgr:
   name: "qm1"
-  //access:
-  //  defaultuser: ""
-  //  blockip: []
-  //  blockuser: []
-  //  allowip: []
-  //authority:
-  //- group: [devs]
-  //  principal: [karson]
-  //  grant: [connect]
   alter: []
 
 auth:
@@ -124,33 +115,6 @@ auth:
       usernameattr: "uid"
       shortusernameattr: "cn"
 
-//svrconn:
-//- svrconnproperties:
-//    name: app.channel
-//    maxmsgl: 4096
-//  tls:
-//    enabled: false
-//    clientauth: false
-//    ciphers: []
-//  access:
-//    defaultuser: ""
-//    blockip: ["10.2.100.*"]
-//    blockuser: []
-//    allowip: []
-//  authority: []
-//  alter:
-//  - monchl(off)
-//  - alter channel(app.channel) monchl(low)
-//
-//localqueue:
-//- name: q.a
-//  put: true
-//  get: true
-//  defaultprioprity: 2
-//  defaultpersistence: true
-//- name: q.b
-//  like: q.a
-
 alter: []
 `
 	mq := Mq{}
@@ -170,15 +134,6 @@ func TestOutputmqsc(t *testing.T) {
 	data := `
 qmgr:
   name: "qm1"
-  //access:
-  //  defaultuser: ""
-  //  blockip: []
-  //  blockuser: []
-  //  allowip: []
-  //authority:
-  //- group: [devs]
-  //  principal: [karson]
-  //  grant: [connect]
   alter: []
 
 auth:
@@ -199,33 +154,6 @@ auth:
       objectclass: "inetOrgPerson"
       usernameattr: "uid"
       shortusernameattr: "cn"
-
-//svrconn:
-//- svrconnproperties:
-//    name: app.channel
-//    maxmsgl: 4096
-//  tls:
-//    enabled: false
-//    clientauth: false
-//    ciphers: []
-//  access:
-//    defaultuser: ""
-//    blockip: ["10.2.100.*"]
-//    blockuser: []
-//    allowip: []
-//  authority: []
-//  alter:
-//  - monchl(off)
-//  - alter channel(app.channel) monchl(low)
-
-//localqueue:
-//- name: q.a
-//  put: true
-//  get: true
-//  defaultprioprity: 2
-//  defaultpersistence: true
-//- name: q.b
-//  like: q.a
 
 alter: []
 `

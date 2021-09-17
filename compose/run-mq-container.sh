@@ -44,12 +44,15 @@ ldap="-e LDAP_BIND_PASSWORD=$LDAP_BIND_PASSWORD"
 # special value DEFAULT_FILTER will apply AMQ filter to mq output
 logfilter="-e MQ_LOG_FILTER=$MQ_LOG_FILTER"
 
+# multi-instance qmgr
+mist="-e MULTI_INSTANCE_QMGR_1=false -e MULTI_INSTANCE_QMGR_2=false"
+
 # qmgr, required
 qmgr="-e MQ_QMGR_NAME=$qmname"
 
 # all envs
-envars="$qmgr $debug $tls $web $vault $git $ldap $logfilter"
+envars="$qmgr $debug $tls $web $vault $git $ldap $logfilter $mist"
 
 # run
 # -v mqdata:/mnt/data/mqm
-sudo podman run --rm --name $qmname --network $net -v mqmq:/mnt/data/mqm -v mqmd:/mnt/data/md -v mqld:/mnt/data/ld -v qmini:/etc/mqm/qmini -v mqsc:/etc/mqm/mqsc -v qmtls:/etc/mqm/pki/cert -v qmtrust:/etc/mqm/pki/trust -v webuser:/etc/mqm/webuser $envars -p 1414:1414 -p 9443:9443 -p 40000:40000 $img
+sudo podman run --rm --name $qmname --network $net -v mqmq:/mnt/data/mqm -v mqmd:/mnt/data/md -v mqld:/mnt/data/ld -v qmini:/etc/mqm/qmini -v mqsc:/etc/mqm/mqsc -v mqyaml:/etc/mqm/mqyaml -v qmtls:/etc/mqm/pki/cert -v qmtrust:/etc/mqm/pki/trust -v webuser:/etc/mqm/webuser $envars -p 1414:1414 -p 9443:9443 -p 40000:40000 $img

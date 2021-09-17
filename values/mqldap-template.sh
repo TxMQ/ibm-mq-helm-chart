@@ -3,7 +3,7 @@
 envfile=$1
 
 if [[ -z ${envfile} ]]; then
-echo env file parameter required: mqmodel-template.sh 'envfile'
+echo env file parameter required: mqldap-template.sh 'envfile'
 exit 1
 fi
 

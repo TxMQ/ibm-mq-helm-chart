@@ -19,6 +19,12 @@ if [[ ! -f $qmenv ]]; then
 ./set-mq-container-env.sh $qmenv $qmname
 fi
 
+# mqldap
+if [[ ! -d output/etc/mqm/mqyaml ]]; then
+mkdir -p output/etc/mqm/mqyaml
+./mqldap-template.sh $qmenv
+fi
+
 # webuser
 if [[ ! -d output/etc/mqm/webuser ]]; then
 mkdir -p output/etc/mqm/webuser
@@ -29,6 +35,7 @@ fi
 if [[ ! -d output/etc/mqm/mqsc ]]; then
 mkdir -p output/etc/mqm/mqsc
 ./mqscic-template.sh $qmenv
+./mqexplorer-mqsc-template.sh $qmenv
 fi
 
 # qmini
@@ -36,8 +43,6 @@ if [[ ! -d output/etc/mqm/qmini ]]; then
 mkdir -p output/etc/mqm/qmini
 ./qmini-template.sh $qmenv
 fi
-
-# mqmodel
 
 # ldif
 if [[ ! -d output/ldif ]]; then

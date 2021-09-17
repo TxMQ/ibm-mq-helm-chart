@@ -57,4 +57,9 @@ BASEDN_GROUPS=$basedng
 
 # ldap password
 LDAP_BIND_PASSWORD=${LDAP_BIND_PASSWORD:-admin}
+
+# application group names
+APPL_GROUP="devs"
+ADMIN_GROUP="admins"
+READ_ADMIN_GROUP="readadmins"
 EOF

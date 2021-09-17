@@ -52,6 +52,7 @@ services:
       - mqmd:/mnt/data/md
       - mqld:/mnt/data/ld
       - qmini:/etc/mqm/qmini
+      - mqyaml:/etc/mqm/mqyaml
       - mqsc:/etc/mqm/mqsc
       - qmtls:/etc/mqm/pki/cert 
       - qmtrust:/etc/mqm/pki/trust
@@ -71,6 +72,8 @@ services:
       - VAULT_TLS_KEY_INJECT_PATH= 
       - VAULT_TLS_CERT_INJECT_PATH= 
       - VAULT_TLS_CA_INJECT_PATH=
+      - MULTI_INSTANCE_QMGR_1= 
+      - MULTI_INSTANCE_QMGR_2=
 
 volumes:
   mqmq:
@@ -78,6 +81,9 @@ volumes:
   mqld:
 
   qmini:
+    external: true
+
+  mqyaml:
     external: true
 
   mqsc:
