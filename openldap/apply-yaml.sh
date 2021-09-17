@@ -1,6 +1,6 @@
 #!/bin/bash
 
-if [[ ! -f output/ldap-config-map.yaml ]]; then
+if [[ ! -f output/ldif-config-map.yaml ]]; then
 echo Run \'./ldif-template.sh\' script to create \'output/ldif-config-map.yaml\' file.
 exit 1
 fi
