@@ -38,14 +38,26 @@ func main() {
 		logger.Logmsg(err)
 	}
 
-	if err := qmgr.CreateQmgr(qmname); err != nil {
-		logger.Logmsg(err)
+	maxtries := 5
+	created := false
+	for retryCount := 0; retryCount < maxtries && !created; retryCount++ {
 
-		if util.IsQmgrIniMissing(qmname, err) {
-			// multi-instance leader did not create qmgr
-			if err := qmgr.WaitForQmgrCreate(qmname); err != nil {
-				logger.Logmsg(err)
+		if err := qmgr.CreateQmgr(qmname, retryCount); err != nil {
+			logger.Logmsg(err)
+
+			if util.IsQmgrIniMissing(qmname, err) {
+				// multi-instance leader did not create qmgr yet
+				if err := qmgr.WaitForQmgrCreate(qmname); err != nil {
+					logger.Logmsg(err)
+				}
+
+			} else {
+				// create error, do not retry
+				break
 			}
+
+		} else {
+			created = true
 		}
 	}
 

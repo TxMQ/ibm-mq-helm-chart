@@ -96,8 +96,8 @@ func WaitForQmgrCreate(qmgr string) error {
 	}
 }
 
-func CreateQmgr(qmgr string) error {
-	logger.Logmsg(fmt.Sprintf("creating queue manager '%s'", qmgr))
+func CreateQmgr(qmgr string, retryCount int) error {
+	logger.Logmsg(fmt.Sprintf("creating queue manager '%s', retry count %d", qmgr, retryCount))
 
 	t := time.Now()
 	defer logger.Logmsg(fmt.Sprintf("create queue manager time: %v", time.Since(t)))
