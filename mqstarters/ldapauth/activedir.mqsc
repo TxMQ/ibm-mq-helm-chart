@@ -1,0 +1,41 @@
+* ldap connection authentication
+
+ALTER QMGR CONNAUTH(USE.LDAP)
+
+DEFINE AUTHINFO(USE.LDAP) +
+AUTHTYPE(IDPWLDAP) + 
+ADOPTCTX(YES) +
+AUTHORMD(SEARCHGRP) +
+* group search base dn
+BASEDNG('ou=groups,dc=mqldap,dc=com') +
+* user search base dn
+BASEDNU('ou=users,dc=mqldap,dc=com') +
+* group object class: GROUP
+CLASSGRP(GROUP) +
+* user object class: USER
+CLASSUSR(USER) +
+* ldaphost(ldapport)
+CONNAME('openldap(389)') +
+* authenticate clients connecting over channels
+CHCKCLNT(required) +
+* optionally authenticate clients connecting over ipc
+CHCKLOCL(optional) +
+DESCR('ldap authinfo') +
+FAILEDDLAY(1) +
+* group membership attribute in group object class: member
+FINDGRP(member) +
+* group name attribute in group object class: sAMAccountName
+GRPFIELD(sAMAccountName) +
+* ldap bind password
+LDAPPWD('admin') +
+* ldap bind user
+LDAPUSER('cn=admin,dc=mqldap,dc=com') +
+NESTGRP(yes) +
+SECCOMM(no) +
+* short user name attribute in user object class: employeeID
+SHORTUSR(employeeID) +
+* user name attribute in user object class: sAMAccountName
+USRFIELD(sAMAccountName) +
+REPLACE
+*
+REFRESH SECURITY TYPE(CONNAUTH)
