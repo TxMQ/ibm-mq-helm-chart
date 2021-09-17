@@ -83,7 +83,7 @@ type Webuser struct {
 	Webroles []Approle
 	Apiroles []Approle
 	Ldapregistry Ldapregistry
-	AllowedHosts []string // hosts allowed to connect to mqweb
+	AllowedHosts []string
 	Clientauth Clientauth
 	// replace variables with keys
 	Variables []Variable

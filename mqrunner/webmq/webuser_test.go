@@ -194,10 +194,12 @@ func TestCreateWebmqKeystore(t *testing.T) {
 		log.Fatalf("error: %v", err)
 	}
 
-	certdir := u.HomeDir + "/etc/mqm/pki/cert"
+	certpath := u.HomeDir + "/etc/mqm/pki/cert"
 	ssldir := u.HomeDir + "/etc/mqm/ssl"
+	capath := u.HomeDir + "/etc/mqm/pki/trust"
+	keypath := u.HomeDir + "/etc/mqm/ssl/key.pem"
 
-	p12path, encpass, err := CreateWebmqKeystore(ssldir, certdir, true)
+	p12path, encpass, err := CreateWebmqKeystore(ssldir, keypath, certpath, capath, true)
 	if err != nil {
 		log.Fatalf("error: %v", err)
 	}

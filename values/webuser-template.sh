@@ -13,28 +13,28 @@ fi
 if [[ $LDAP_TYPE == "activedirectory" ]]; then
 # active directory
 groupdef="
-  groupdef:
-    objectclass: GROUP
-    groupnameattr: sAMAccountName
-    groupmembershipattr: member
+    groupdef:
+      objectclass: GROUP
+      groupnameattr: sAMAccountName
+      groupmembershipattr: member
 "
 userdef="
-  userdef:
-    objectclass: USER
-    usernameattr: sAMAccountName
+    userdef:
+      objectclass: USER
+      usernameattr: sAMAccountName
 "
 else
 # default: openldap
 groupdef="
-  groupdef:
-    objectclass: groupOfNames
-    groupnameattr: cn
-    groupmembershipattr: member
+    groupdef:
+      objectclass: groupOfNames
+      groupnameattr: cn
+      groupmembershipattr: member
 "
 userdef="
-  userdef:
-    objectclass: inetOrgPerson
-    usernameattr: uid
+    userdef:
+      objectclass: inetOrgPerson
+      usernameattr: uid
 "
 fi
 
