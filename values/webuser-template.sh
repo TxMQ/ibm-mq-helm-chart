@@ -42,19 +42,19 @@ cat <<EOF > output/webuser.yaml
 webuser:
   webroles:
   - name: MQWebAdmin
-    groups: [devs]
+    groups: ["$ADMIN_GROUP"]
   - name: MQWebAdminRO
-    groups: [devs]
+    groups: ["$READ_ADMIN_GROUP"]
   - name: MQWebUser
-    groups: [devs]
+    groups: ["$APPL_GROUP"]
 
   apiroles:
   - name: MQWebAdmin
-    groups: [devs]
+    groups: ["$ADMIN_GROUP"]
   - name: MQWebAdminRO
-    groups: [devs]
+    groups: ["$READ_ADMIN_GROUP"]
   - name: MQWebUser
-    groups: ["devs"]
+    groups: ["$APPL_GROUP"]
 
   ldapregistry:
     connect:

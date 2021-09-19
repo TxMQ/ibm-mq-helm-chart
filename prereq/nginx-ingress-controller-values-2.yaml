@@ -1,0 +1,7 @@
+controller:
+  admissionWebhooks:
+    enabled: false
+
+  extraArgs:
+    enable-ssl-passthrough: "true"
+    v: 3

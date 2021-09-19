@@ -8,7 +8,16 @@ metadata:
   name: {{ include "mqchart.fullname" . | trunc 54 }}-{{ .Values.qmspec.name | trunc 8 }}
 spec:
   ingressClassName: nginx
+  tls:
+  - hosts:
+{{- if .Values.qmspec.ingress.webcHostname }}
+    - {{ .Values.qmspec.ingress.webcHostname }}
+{{- end }}
+{{- if .Values.qmspec.ingress.qmgrHostname }}
+    - {{ .Values.qmspec.ingress.qmgrHostname }}
+{{- end }}
   rules:
+{{- if .Values.qmspec.ingress.webcHostname }}
   - host: {{ .Values.qmspec.ingress.webcHostname }}
     http:
       paths:
@@ -19,6 +28,8 @@ spec:
               number: {{ .Values.qmspec.service.httpswebcPort }}
         path: /
         pathType: Prefix
+{{- end }}
+{{- if .Values.qmspec.ingress.qmgrHostname }}
   - host: {{ .Values.qmspec.ingress.qmgrHostname }}
     http:
       paths:
@@ -29,5 +40,6 @@ spec:
               number: {{ .Values.qmspec.service.qmgrPort }}
         path: /
         pathType: Prefix
+{{- end }}
 {{- end }}
 {{- end }}
