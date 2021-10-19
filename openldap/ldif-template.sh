@@ -48,7 +48,7 @@ data:
     sn: user1
     userPassword: $userpassword
 
-    dn: uid=user2,ou=users,dc=$ldaproot
+    dn: uid=user2,ou=users,$ldaproot
     objectClass: inetOrgPerson
     uid: user2
     cn: user2
